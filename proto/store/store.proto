@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/Mitra-Apps/be-store-service/domain/proto/store;store";
+
+import "google/api/annotations.proto";
+
+message Store {
+    string id = 1;
+    string user_id = 2;
+    string name = 3;
+    string address = 4;
+    string map_location = 5;
+    string status = 6;
+    bool is_active = 7;
+    string logoImageId = 8;
+}
+
+message GetStoresRequest {}
+
+message GetStoresResponse {
+    repeated Store stores = 1;
+}
+
+service StoreService {
+    rpc GetStores(GetStoresRequest) returns (GetStoresResponse) {
+        option (google.api.http) = {
+            get: "/stores"
+        };
+    }
+}
