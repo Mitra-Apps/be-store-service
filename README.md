@@ -1,24 +1,24 @@
-# USER-SERVICE
+# STORE-SERVICE
 
-## Installation
-### Create new database
-install postgre
-create new database using postgre and add the connection information to .env file
-run this sql query to add GUID datatype : CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+## Install docker
+If use wsl : https://docs.docker.com/engine/install/ubuntu/
 
-### Install protobuf
-Install go version 1.21.3
-Install protobuf : https://github.com/protocolbuffers/protobuf/releases/tag/v25.1
-Execute command line in terminal :
-go get -u google.golang.org/protobuf
-go get -u google.golang.org/grpc       
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-go mod tidy
-go mod vendor
+## Configure visual studio code to use WSL
+https://code.visualstudio.com/docs/remote/wsl
 
 ## How to run
-run the apps using command : go run main.go
+run the apps using command : 
+go mod tidy
+go mod vendor
+sudo docker compose up --build
 
 ## Generate pb file from proto file
-Run this command :
-buf generate
+### Install buf
+https://buf.build/docs/installation
+If failed, run : brew install buf
+
+### generate protobuf
+Run : buf generate
+
+## Reset database structures (Dont run this! Only if needed)
+run : sudo docker compose down --volumes

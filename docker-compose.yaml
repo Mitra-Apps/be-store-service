@@ -1,0 +1,43 @@
+version: "3.0"
+services:
+  app:
+    build: .
+    ports:
+      - "9100:9100"
+    environment:
+      - APP_PORT=:9100
+      - DB_HOST=database
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=123456
+      - DB_NAME=store-service
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - store-net
+  database:
+    image: postgres:9.6
+    restart: always
+    volumes:
+      - ./ignoredmodule/postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=store-service
+    ports:
+      - 5434:5432
+    expose:
+      - 5434
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - store-net
+volumes:
+  db:
+    driver: local
+networks:
+  store-net:
+    driver: bridge
