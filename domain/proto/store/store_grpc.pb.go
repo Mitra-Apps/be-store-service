@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	StoreService_GetStores_FullMethodName = "/proto.StoreService/GetStores"
+	StoreService_GetStore_FullMethodName  = "/proto.StoreService/GetStore"
 )
 
 // StoreServiceClient is the client API for StoreService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StoreServiceClient interface {
 	GetStores(ctx context.Context, in *GetStoresRequest, opts ...grpc.CallOption) (*GetStoresResponse, error)
+	GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*GetStoreResponse, error)
 }
 
 type storeServiceClient struct {
@@ -46,11 +48,21 @@ func (c *storeServiceClient) GetStores(ctx context.Context, in *GetStoresRequest
 	return out, nil
 }
 
+func (c *storeServiceClient) GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*GetStoreResponse, error) {
+	out := new(GetStoreResponse)
+	err := c.cc.Invoke(ctx, StoreService_GetStore_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StoreServiceServer is the server API for StoreService service.
 // All implementations must embed UnimplementedStoreServiceServer
 // for forward compatibility
 type StoreServiceServer interface {
 	GetStores(context.Context, *GetStoresRequest) (*GetStoresResponse, error)
+	GetStore(context.Context, *GetStoreRequest) (*GetStoreResponse, error)
 	mustEmbedUnimplementedStoreServiceServer()
 }
 
@@ -60,6 +72,9 @@ type UnimplementedStoreServiceServer struct {
 
 func (UnimplementedStoreServiceServer) GetStores(context.Context, *GetStoresRequest) (*GetStoresResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStores not implemented")
+}
+func (UnimplementedStoreServiceServer) GetStore(context.Context, *GetStoreRequest) (*GetStoreResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStore not implemented")
 }
 func (UnimplementedStoreServiceServer) mustEmbedUnimplementedStoreServiceServer() {}
 
@@ -92,6 +107,24 @@ func _StoreService_GetStores_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_GetStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStoreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).GetStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_GetStore_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).GetStore(ctx, req.(*GetStoreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StoreService_ServiceDesc is the grpc.ServiceDesc for StoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +135,10 @@ var StoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetStores",
 			Handler:    _StoreService_GetStores_Handler,
+		},
+		{
+			MethodName: "GetStore",
+			Handler:    _StoreService_GetStore_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
