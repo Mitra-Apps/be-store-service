@@ -1,22 +1,24 @@
 version: "3.0"
 services:
-  app:
+  store-service:
     build: .
     ports:
-      - "9100:9100"
+      - 9100:9100
+      - 9101:9101
     environment:
-      - APP_PORT=:9100
-      - DB_HOST=database
+      - GRPC_PORT=9100
+      - HTTP_PORT=9101
+      - DB_HOST=store-database
       - DB_USERNAME=postgres
       - DB_PASSWORD=123456
       - DB_NAME=store-service
     depends_on:
-      database:
+      store-database:
         condition: service_healthy
     networks:
-      - store-net
-  database:
-    image: postgres:9.6
+      - grpc_network
+  store-database:
+    image: postgres:14-alpine
     restart: always
     volumes:
       - ./ignoredmodule/postgres-data:/var/lib/postgresql/data
@@ -34,10 +36,10 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - store-net
+      - grpc_network
 volumes:
   db:
     driver: local
 networks:
-  store-net:
-    driver: bridge
+  grpc_network:
+    external: true
