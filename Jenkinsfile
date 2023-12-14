@@ -22,7 +22,7 @@ pipeline {
                 script {
                     def dockerComposeCmd = "docker compose up -d"
                     sh dockerComposeCmd
-                    echo "INFO: Successfully deployed"
+                    echo "INFO: Successfully deployed to server"
                 }
             }
         }
