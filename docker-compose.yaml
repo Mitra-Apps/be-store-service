@@ -18,8 +18,6 @@ services:
   database:
     image: postgres:9.6
     restart: always
-    volumes:
-      - ./ignoredmodule/postgres-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=123456

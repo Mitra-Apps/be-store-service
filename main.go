@@ -14,10 +14,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-type server struct {
-	pb.UnimplementedStoreServiceServer
-}
-
 func main() {
 	lis, err := net.Listen("tcp", os.Getenv("APP_PORT"))
 	if err != nil {
