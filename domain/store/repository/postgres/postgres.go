@@ -13,8 +13,8 @@ type postgres struct {
 	db *gorm.DB
 }
 
-// NewPostgre creates a new instance of the PostgreSQL store repository.
-func NewPostgre(db *gorm.DB) repository.StoreServiceRepository {
+// NewPostgres creates a new instance of the PostgreSQL store repository.
+func NewPostgres(db *gorm.DB) repository.StoreServiceRepository {
 	return &postgres{db}
 }
 
@@ -82,7 +82,7 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 		return nil, err
 	}
 
-	if err := p.updateStoreCategories(ctx, existingStore, update.Categories); err != nil {
+	if err := p.updateStoreCategories(ctx, existingStore, update.Tags); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -153,9 +153,9 @@ func (p *postgres) updateStoreImages(ctx context.Context, existingStore entity.S
 	return nil
 }
 
-func (p *postgres) updateStoreCategories(ctx context.Context, existingStore entity.Store, updatedCategories []entity.StoreCategory) error {
+func (p *postgres) updateStoreCategories(ctx context.Context, existingStore entity.Store, updatedCategories []entity.StoreTag) error {
 	// Delete existing categories not present in the updated list
-	for _, existingCategory := range existingStore.Categories {
+	for _, existingCategory := range existingStore.Tags {
 		found := false
 		for _, updatedCategory := range updatedCategories {
 			if existingCategory.ID == updatedCategory.ID {
@@ -173,7 +173,7 @@ func (p *postgres) updateStoreCategories(ctx context.Context, existingStore enti
 	// Update or create updated categories
 	for _, updatedCategory := range updatedCategories {
 		// Find the corresponding existing category
-		var existingCategory entity.StoreCategory
+		var existingCategory entity.StoreTag
 		if updatedCategory.ID.String() != "" {
 			if err := p.db.WithContext(ctx).Where("id = ?", updatedCategory.ID).First(&existingCategory).Error; err != nil {
 				return err
@@ -182,7 +182,7 @@ func (p *postgres) updateStoreCategories(ctx context.Context, existingStore enti
 
 		// Update or create the existing category
 		if err := p.db.WithContext(ctx).Model(&existingCategory).Updates(map[string]interface{}{
-			"category_name": updatedCategory.CategoryName,
+			"category_name": updatedCategory.TagName,
 		}).Error; err != nil {
 			return err
 		}

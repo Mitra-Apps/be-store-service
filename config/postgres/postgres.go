@@ -31,7 +31,7 @@ func Connection() *gorm.DB {
 	err = db.AutoMigrate(
 		&entity.Store{},
 		&entity.StoreImage{},
-		&entity.StoreCategory{},
+		&entity.StoreTag{},
 		&entity.StoreHour{},
 	)
 	if err != nil {

@@ -43,9 +43,9 @@ type Store struct {
 	Email       string `gorm:"not null;unique"`
 	Website     string
 	MapLocation string
-	Categories  []StoreCategory `gorm:"many2many:store_store_categories"`
-	Hours       []StoreHour     `gorm:"foreignKey:StoreID"`
-	Images      []StoreImage    `gorm:"foreignKey:StoreID"`
+	Tags        []StoreTag   `gorm:"many2many:store_store_tags"`
+	Hours       []StoreHour  `gorm:"foreignKey:StoreID"`
+	Images      []StoreImage `gorm:"foreignKey:StoreID"`
 }
 
 // StoreImage represents an image associated with a store.
@@ -56,10 +56,10 @@ type StoreImage struct {
 	ImageURL  string    `gorm:"not null"`
 }
 
-// StoreCategory represents a category associated with a store.
-type StoreCategory struct {
+// StoreTag represents a tag associated with a store.
+type StoreTag struct {
 	BaseModel
-	CategoryName string `gorm:"not null;unique"`
+	TagName string `gorm:"not null;unique"`
 }
 
 // StoreHour represents the operating hours of a store.
