@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,16 +20,27 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	StoreService_GetStores_FullMethodName = "/proto.StoreService/GetStores"
-	StoreService_GetStore_FullMethodName  = "/proto.StoreService/GetStore"
+	StoreService_CreateStore_FullMethodName = "/StoreService/CreateStore"
+	StoreService_GetStore_FullMethodName    = "/StoreService/GetStore"
+	StoreService_UpdateStore_FullMethodName = "/StoreService/UpdateStore"
+	StoreService_DeleteStore_FullMethodName = "/StoreService/DeleteStore"
+	StoreService_ListStores_FullMethodName  = "/StoreService/ListStores"
 )
 
 // StoreServiceClient is the client API for StoreService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StoreServiceClient interface {
-	GetStores(ctx context.Context, in *GetStoresRequest, opts ...grpc.CallOption) (*GetStoresResponse, error)
-	GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*GetStoreResponse, error)
+	// Create a new store
+	CreateStore(ctx context.Context, in *CreateStoreRequest, opts ...grpc.CallOption) (*Store, error)
+	// Get a store by ID
+	GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*Store, error)
+	// Update an existing store
+	UpdateStore(ctx context.Context, in *UpdateStoreRequest, opts ...grpc.CallOption) (*Store, error)
+	// Delete a store by ID
+	DeleteStore(ctx context.Context, in *DeleteStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// List all stores
+	ListStores(ctx context.Context, in *ListStoresRequest, opts ...grpc.CallOption) (*ListStoresResponse, error)
 }
 
 type storeServiceClient struct {
@@ -39,18 +51,45 @@ func NewStoreServiceClient(cc grpc.ClientConnInterface) StoreServiceClient {
 	return &storeServiceClient{cc}
 }
 
-func (c *storeServiceClient) GetStores(ctx context.Context, in *GetStoresRequest, opts ...grpc.CallOption) (*GetStoresResponse, error) {
-	out := new(GetStoresResponse)
-	err := c.cc.Invoke(ctx, StoreService_GetStores_FullMethodName, in, out, opts...)
+func (c *storeServiceClient) CreateStore(ctx context.Context, in *CreateStoreRequest, opts ...grpc.CallOption) (*Store, error) {
+	out := new(Store)
+	err := c.cc.Invoke(ctx, StoreService_CreateStore_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *storeServiceClient) GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*GetStoreResponse, error) {
-	out := new(GetStoreResponse)
+func (c *storeServiceClient) GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*Store, error) {
+	out := new(Store)
 	err := c.cc.Invoke(ctx, StoreService_GetStore_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storeServiceClient) UpdateStore(ctx context.Context, in *UpdateStoreRequest, opts ...grpc.CallOption) (*Store, error) {
+	out := new(Store)
+	err := c.cc.Invoke(ctx, StoreService_UpdateStore_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storeServiceClient) DeleteStore(ctx context.Context, in *DeleteStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, StoreService_DeleteStore_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storeServiceClient) ListStores(ctx context.Context, in *ListStoresRequest, opts ...grpc.CallOption) (*ListStoresResponse, error) {
+	out := new(ListStoresResponse)
+	err := c.cc.Invoke(ctx, StoreService_ListStores_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +100,16 @@ func (c *storeServiceClient) GetStore(ctx context.Context, in *GetStoreRequest, 
 // All implementations must embed UnimplementedStoreServiceServer
 // for forward compatibility
 type StoreServiceServer interface {
-	GetStores(context.Context, *GetStoresRequest) (*GetStoresResponse, error)
-	GetStore(context.Context, *GetStoreRequest) (*GetStoreResponse, error)
+	// Create a new store
+	CreateStore(context.Context, *CreateStoreRequest) (*Store, error)
+	// Get a store by ID
+	GetStore(context.Context, *GetStoreRequest) (*Store, error)
+	// Update an existing store
+	UpdateStore(context.Context, *UpdateStoreRequest) (*Store, error)
+	// Delete a store by ID
+	DeleteStore(context.Context, *DeleteStoreRequest) (*emptypb.Empty, error)
+	// List all stores
+	ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error)
 	mustEmbedUnimplementedStoreServiceServer()
 }
 
@@ -70,11 +117,20 @@ type StoreServiceServer interface {
 type UnimplementedStoreServiceServer struct {
 }
 
-func (UnimplementedStoreServiceServer) GetStores(context.Context, *GetStoresRequest) (*GetStoresResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetStores not implemented")
+func (UnimplementedStoreServiceServer) CreateStore(context.Context, *CreateStoreRequest) (*Store, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateStore not implemented")
 }
-func (UnimplementedStoreServiceServer) GetStore(context.Context, *GetStoreRequest) (*GetStoreResponse, error) {
+func (UnimplementedStoreServiceServer) GetStore(context.Context, *GetStoreRequest) (*Store, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStore not implemented")
+}
+func (UnimplementedStoreServiceServer) UpdateStore(context.Context, *UpdateStoreRequest) (*Store, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateStore not implemented")
+}
+func (UnimplementedStoreServiceServer) DeleteStore(context.Context, *DeleteStoreRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteStore not implemented")
+}
+func (UnimplementedStoreServiceServer) ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListStores not implemented")
 }
 func (UnimplementedStoreServiceServer) mustEmbedUnimplementedStoreServiceServer() {}
 
@@ -89,20 +145,20 @@ func RegisterStoreServiceServer(s grpc.ServiceRegistrar, srv StoreServiceServer)
 	s.RegisterService(&StoreService_ServiceDesc, srv)
 }
 
-func _StoreService_GetStores_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetStoresRequest)
+func _StoreService_CreateStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateStoreRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StoreServiceServer).GetStores(ctx, in)
+		return srv.(StoreServiceServer).CreateStore(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: StoreService_GetStores_FullMethodName,
+		FullMethod: StoreService_CreateStore_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StoreServiceServer).GetStores(ctx, req.(*GetStoresRequest))
+		return srv.(StoreServiceServer).CreateStore(ctx, req.(*CreateStoreRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -125,20 +181,86 @@ func _StoreService_GetStore_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_UpdateStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateStoreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).UpdateStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_UpdateStore_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).UpdateStore(ctx, req.(*UpdateStoreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StoreService_DeleteStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteStoreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).DeleteStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_DeleteStore_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).DeleteStore(ctx, req.(*DeleteStoreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StoreService_ListStores_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListStoresRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).ListStores(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_ListStores_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).ListStores(ctx, req.(*ListStoresRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StoreService_ServiceDesc is the grpc.ServiceDesc for StoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var StoreService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.StoreService",
+	ServiceName: "StoreService",
 	HandlerType: (*StoreServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetStores",
-			Handler:    _StoreService_GetStores_Handler,
+			MethodName: "CreateStore",
+			Handler:    _StoreService_CreateStore_Handler,
 		},
 		{
 			MethodName: "GetStore",
 			Handler:    _StoreService_GetStore_Handler,
+		},
+		{
+			MethodName: "UpdateStore",
+			Handler:    _StoreService_UpdateStore_Handler,
+		},
+		{
+			MethodName: "DeleteStore",
+			Handler:    _StoreService_DeleteStore_Handler,
+		},
+		{
+			MethodName: "ListStores",
+			Handler:    _StoreService_ListStores_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Mitra-Apps/be-store-service/config/postgre"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
-	storePostgreRepo "github.com/Mitra-Apps/be-store-service/domain/store/repository/postgre"
 	grpcRoute "github.com/Mitra-Apps/be-store-service/handler/grpc"
 	"github.com/Mitra-Apps/be-store-service/service"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -37,8 +35,8 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	db := postgre.Connection()
-	usrRepo := storePostgreRepo.NewPostgre(db)
+	db := postgres.Connection()
+	usrRepo := repositoryPostgres.NewPostgre(db)
 	svc := service.New(usrRepo)
 	grpcServer := GrpcNewServer(ctx, []grpc.ServerOption{})
 	route := grpcRoute.New(svc)

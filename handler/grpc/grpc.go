@@ -5,6 +5,7 @@ import (
 
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/Mitra-Apps/be-store-service/service"
+	"github.com/golang/protobuf/ptypes/empty"
 )
 
 type GrpcRoute struct {
@@ -18,18 +19,22 @@ func New(service service.ServiceInterface) pb.StoreServiceServer {
 	}
 }
 
-func (g *GrpcRoute) GetStores(ctx context.Context, req *pb.GetStoresRequest) (*pb.GetStoresResponse, error) {
-	stores, err := g.service.GetAll(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (s *GrpcRoute) CreateStore(ctx context.Context, req *pb.CreateStoreRequest) (*pb.Store, error) {
+	return nil, nil
+}
 
-	protoStores := []*pb.Store{}
-	for _, store := range stores {
-		protoStores = append(protoStores, store.ToProto())
-	}
+func (s *GrpcRoute) GetStore(ctx context.Context, req *pb.GetStoreRequest) (*pb.Store, error) {
+	return nil, nil
+}
 
-	return &pb.GetStoresResponse{
-		Stores: protoStores,
-	}, nil
+func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest) (*pb.Store, error) {
+	return nil, nil
+}
+
+func (s *GrpcRoute) DeleteStore(ctx context.Context, req *pb.DeleteStoreRequest) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (*pb.ListStoresResponse, error) {
+	return nil, nil
 }

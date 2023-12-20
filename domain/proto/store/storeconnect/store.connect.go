@@ -9,6 +9,7 @@ import (
 	context "context"
 	errors "errors"
 	store "github.com/Mitra-Apps/be-store-service/domain/proto/store"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	http "net/http"
 	strings "strings"
 )
@@ -22,7 +23,7 @@ const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// StoreServiceName is the fully-qualified name of the StoreService service.
-	StoreServiceName = "proto.StoreService"
+	StoreServiceName = "StoreService"
 )
 
 // These constants are the fully-qualified names of the RPCs defined in this package. They're
@@ -33,27 +34,47 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// StoreServiceGetStoresProcedure is the fully-qualified name of the StoreService's GetStores RPC.
-	StoreServiceGetStoresProcedure = "/proto.StoreService/GetStores"
+	// StoreServiceCreateStoreProcedure is the fully-qualified name of the StoreService's CreateStore
+	// RPC.
+	StoreServiceCreateStoreProcedure = "/StoreService/CreateStore"
 	// StoreServiceGetStoreProcedure is the fully-qualified name of the StoreService's GetStore RPC.
-	StoreServiceGetStoreProcedure = "/proto.StoreService/GetStore"
+	StoreServiceGetStoreProcedure = "/StoreService/GetStore"
+	// StoreServiceUpdateStoreProcedure is the fully-qualified name of the StoreService's UpdateStore
+	// RPC.
+	StoreServiceUpdateStoreProcedure = "/StoreService/UpdateStore"
+	// StoreServiceDeleteStoreProcedure is the fully-qualified name of the StoreService's DeleteStore
+	// RPC.
+	StoreServiceDeleteStoreProcedure = "/StoreService/DeleteStore"
+	// StoreServiceListStoresProcedure is the fully-qualified name of the StoreService's ListStores RPC.
+	StoreServiceListStoresProcedure = "/StoreService/ListStores"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	storeServiceServiceDescriptor         = store.File_proto_store_store_proto.Services().ByName("StoreService")
-	storeServiceGetStoresMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("GetStores")
-	storeServiceGetStoreMethodDescriptor  = storeServiceServiceDescriptor.Methods().ByName("GetStore")
+	storeServiceServiceDescriptor           = store.File_proto_store_store_proto.Services().ByName("StoreService")
+	storeServiceCreateStoreMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("CreateStore")
+	storeServiceGetStoreMethodDescriptor    = storeServiceServiceDescriptor.Methods().ByName("GetStore")
+	storeServiceUpdateStoreMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("UpdateStore")
+	storeServiceDeleteStoreMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("DeleteStore")
+	storeServiceListStoresMethodDescriptor  = storeServiceServiceDescriptor.Methods().ByName("ListStores")
 )
 
-// StoreServiceClient is a client for the proto.StoreService service.
+// StoreServiceClient is a client for the StoreService service.
 type StoreServiceClient interface {
-	GetStores(context.Context, *connect.Request[store.GetStoresRequest]) (*connect.Response[store.GetStoresResponse], error)
-	GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.GetStoreResponse], error)
+	// Create a new store
+	CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.Store], error)
+	// Get a store by ID
+	GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.Store], error)
+	// Update an existing store
+	UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.Store], error)
+	// Delete a store by ID
+	DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error)
+	// List all stores
+	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
 }
 
-// NewStoreServiceClient constructs a client for the proto.StoreService service. By default, it uses
-// the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
+// NewStoreServiceClient constructs a client for the StoreService service. By default, it uses the
+// Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
 // uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
 // connect.WithGRPCWeb() options.
 //
@@ -62,16 +83,34 @@ type StoreServiceClient interface {
 func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) StoreServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &storeServiceClient{
-		getStores: connect.NewClient[store.GetStoresRequest, store.GetStoresResponse](
+		createStore: connect.NewClient[store.CreateStoreRequest, store.Store](
 			httpClient,
-			baseURL+StoreServiceGetStoresProcedure,
-			connect.WithSchema(storeServiceGetStoresMethodDescriptor),
+			baseURL+StoreServiceCreateStoreProcedure,
+			connect.WithSchema(storeServiceCreateStoreMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		getStore: connect.NewClient[store.GetStoreRequest, store.GetStoreResponse](
+		getStore: connect.NewClient[store.GetStoreRequest, store.Store](
 			httpClient,
 			baseURL+StoreServiceGetStoreProcedure,
 			connect.WithSchema(storeServiceGetStoreMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		updateStore: connect.NewClient[store.UpdateStoreRequest, store.Store](
+			httpClient,
+			baseURL+StoreServiceUpdateStoreProcedure,
+			connect.WithSchema(storeServiceUpdateStoreMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		deleteStore: connect.NewClient[store.DeleteStoreRequest, emptypb.Empty](
+			httpClient,
+			baseURL+StoreServiceDeleteStoreProcedure,
+			connect.WithSchema(storeServiceDeleteStoreMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		listStores: connect.NewClient[store.ListStoresRequest, store.ListStoresResponse](
+			httpClient,
+			baseURL+StoreServiceListStoresProcedure,
+			connect.WithSchema(storeServiceListStoresMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -79,24 +118,50 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // storeServiceClient implements StoreServiceClient.
 type storeServiceClient struct {
-	getStores *connect.Client[store.GetStoresRequest, store.GetStoresResponse]
-	getStore  *connect.Client[store.GetStoreRequest, store.GetStoreResponse]
+	createStore *connect.Client[store.CreateStoreRequest, store.Store]
+	getStore    *connect.Client[store.GetStoreRequest, store.Store]
+	updateStore *connect.Client[store.UpdateStoreRequest, store.Store]
+	deleteStore *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
+	listStores  *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
 }
 
-// GetStores calls proto.StoreService.GetStores.
-func (c *storeServiceClient) GetStores(ctx context.Context, req *connect.Request[store.GetStoresRequest]) (*connect.Response[store.GetStoresResponse], error) {
-	return c.getStores.CallUnary(ctx, req)
+// CreateStore calls StoreService.CreateStore.
+func (c *storeServiceClient) CreateStore(ctx context.Context, req *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.Store], error) {
+	return c.createStore.CallUnary(ctx, req)
 }
 
-// GetStore calls proto.StoreService.GetStore.
-func (c *storeServiceClient) GetStore(ctx context.Context, req *connect.Request[store.GetStoreRequest]) (*connect.Response[store.GetStoreResponse], error) {
+// GetStore calls StoreService.GetStore.
+func (c *storeServiceClient) GetStore(ctx context.Context, req *connect.Request[store.GetStoreRequest]) (*connect.Response[store.Store], error) {
 	return c.getStore.CallUnary(ctx, req)
 }
 
-// StoreServiceHandler is an implementation of the proto.StoreService service.
+// UpdateStore calls StoreService.UpdateStore.
+func (c *storeServiceClient) UpdateStore(ctx context.Context, req *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.Store], error) {
+	return c.updateStore.CallUnary(ctx, req)
+}
+
+// DeleteStore calls StoreService.DeleteStore.
+func (c *storeServiceClient) DeleteStore(ctx context.Context, req *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.deleteStore.CallUnary(ctx, req)
+}
+
+// ListStores calls StoreService.ListStores.
+func (c *storeServiceClient) ListStores(ctx context.Context, req *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error) {
+	return c.listStores.CallUnary(ctx, req)
+}
+
+// StoreServiceHandler is an implementation of the StoreService service.
 type StoreServiceHandler interface {
-	GetStores(context.Context, *connect.Request[store.GetStoresRequest]) (*connect.Response[store.GetStoresResponse], error)
-	GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.GetStoreResponse], error)
+	// Create a new store
+	CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.Store], error)
+	// Get a store by ID
+	GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.Store], error)
+	// Update an existing store
+	UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.Store], error)
+	// Delete a store by ID
+	DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error)
+	// List all stores
+	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
 }
 
 // NewStoreServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -105,10 +170,10 @@ type StoreServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	storeServiceGetStoresHandler := connect.NewUnaryHandler(
-		StoreServiceGetStoresProcedure,
-		svc.GetStores,
-		connect.WithSchema(storeServiceGetStoresMethodDescriptor),
+	storeServiceCreateStoreHandler := connect.NewUnaryHandler(
+		StoreServiceCreateStoreProcedure,
+		svc.CreateStore,
+		connect.WithSchema(storeServiceCreateStoreMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	storeServiceGetStoreHandler := connect.NewUnaryHandler(
@@ -117,12 +182,36 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(storeServiceGetStoreMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	return "/proto.StoreService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	storeServiceUpdateStoreHandler := connect.NewUnaryHandler(
+		StoreServiceUpdateStoreProcedure,
+		svc.UpdateStore,
+		connect.WithSchema(storeServiceUpdateStoreMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	storeServiceDeleteStoreHandler := connect.NewUnaryHandler(
+		StoreServiceDeleteStoreProcedure,
+		svc.DeleteStore,
+		connect.WithSchema(storeServiceDeleteStoreMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	storeServiceListStoresHandler := connect.NewUnaryHandler(
+		StoreServiceListStoresProcedure,
+		svc.ListStores,
+		connect.WithSchema(storeServiceListStoresMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	return "/StoreService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case StoreServiceGetStoresProcedure:
-			storeServiceGetStoresHandler.ServeHTTP(w, r)
+		case StoreServiceCreateStoreProcedure:
+			storeServiceCreateStoreHandler.ServeHTTP(w, r)
 		case StoreServiceGetStoreProcedure:
 			storeServiceGetStoreHandler.ServeHTTP(w, r)
+		case StoreServiceUpdateStoreProcedure:
+			storeServiceUpdateStoreHandler.ServeHTTP(w, r)
+		case StoreServiceDeleteStoreProcedure:
+			storeServiceDeleteStoreHandler.ServeHTTP(w, r)
+		case StoreServiceListStoresProcedure:
+			storeServiceListStoresHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -132,10 +221,22 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 // UnimplementedStoreServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedStoreServiceHandler struct{}
 
-func (UnimplementedStoreServiceHandler) GetStores(context.Context, *connect.Request[store.GetStoresRequest]) (*connect.Response[store.GetStoresResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("proto.StoreService.GetStores is not implemented"))
+func (UnimplementedStoreServiceHandler) CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.Store], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.CreateStore is not implemented"))
 }
 
-func (UnimplementedStoreServiceHandler) GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.GetStoreResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("proto.StoreService.GetStore is not implemented"))
+func (UnimplementedStoreServiceHandler) GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.Store], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.GetStore is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.Store], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpdateStore is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.DeleteStore is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.ListStores is not implemented"))
 }

@@ -3,38 +3,70 @@ package entity
 import (
 	"time"
 
-	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
-type Store struct {
-	Id          uuid.UUID     `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
-	UserId      uuid.UUID     `gorm:"type:uuid;not null"`
-	Name        string        `gorm:"type:varchar(255);not null;unique"`
-	Address     string        `gorm:"type:text;null"`
-	MapLocation string        `gorm:"type:varchar(255);null"`
-	LogoImageId uuid.NullUUID `gorm:"type:varchar(255);null"`
-	Status      string        `gorm:"type:varchar(50);not null"`
-	IsActive    bool          `gorm:"type:bool;not null;default:TRUE"`
-	CreatedAt   time.Time     `gorm:"type:timestamptz;not null;default:CURRENT_TIMESTAMP"`
-	CreatedBy   uuid.UUID     `gorm:"type:uuid;not null"`
-	UpdatedAt   *time.Time    `gorm:"type:timestamptz;null"`
-	UpdatedBy   uuid.NullUUID `gorm:"type:uuid;null"`
+// DayOfWeekEnum represents the days of the week.
+type DayOfWeekEnum string
+
+const (
+	Monday    DayOfWeekEnum = "Monday"
+	Tuesday   DayOfWeekEnum = "Tuesday"
+	Wednesday DayOfWeekEnum = "Wednesday"
+	Thursday  DayOfWeekEnum = "Thursday"
+	Friday    DayOfWeekEnum = "Friday"
+	Saturday  DayOfWeekEnum = "Saturday"
+	Sunday    DayOfWeekEnum = "Sunday"
+)
+
+// BaseModel contains common fields for all models.
+type BaseModel struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	CreatedAt time.Time
+	CreatedBy uuid.UUID `gorm:"type:uuid;not null"`
+	UpdatedAt time.Time
+	UpdatedBy uuid.UUID
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+	DeletedBy uuid.UUID
 }
 
-func (s *Store) ToProto() *pb.Store {
-	var logoImageId string
-	if s.LogoImageId.Valid {
-		logoImageId = s.LogoImageId.UUID.String()
-	}
-	return &pb.Store{
-		Id:          s.Id.String(),
-		UserId:      s.UserId.String(),
-		Name:        s.Name,
-		Address:     s.Address,
-		MapLocation: s.MapLocation,
-		LogoImageId: logoImageId,
-		Status:      s.Status,
-		IsActive:    s.IsActive,
-	}
+// Store represents a store model.
+type Store struct {
+	BaseModel
+	StoreName   string `gorm:"not null;unique"`
+	Address     string `gorm:"not null,type:text"`
+	City        string `gorm:"not null"`
+	State       string `gorm:"not null"`
+	ZipCode     string `gorm:"not null"`
+	Phone       string `gorm:"not null"`
+	Email       string `gorm:"not null;unique"`
+	Website     string
+	MapLocation string
+	Categories  []StoreCategory `gorm:"many2many:store_store_categories"`
+	Hours       []StoreHour     `gorm:"foreignKey:StoreID"`
+	Images      []StoreImage    `gorm:"foreignKey:StoreID"`
+}
+
+// StoreImage represents an image associated with a store.
+type StoreImage struct {
+	BaseModel
+	StoreID   uuid.UUID `gorm:"type:uuid;index;not null"`
+	ImageType string    `gorm:"not null"`
+	ImageURL  string    `gorm:"not null"`
+}
+
+// StoreCategory represents a category associated with a store.
+type StoreCategory struct {
+	BaseModel
+	CategoryName string `gorm:"not null;unique"`
+}
+
+// StoreHour represents the operating hours of a store.
+type StoreHour struct {
+	BaseModel
+	StoreID   uuid.UUID     `gorm:"type:uuid;index;not null"`
+	DayOfWeek DayOfWeekEnum `gorm:"not null"`
+	Open      string
+	Close     string
 }
