@@ -2,6 +2,8 @@ package postgres
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
@@ -34,8 +36,20 @@ func (p *postgres) CreateStore(ctx context.Context, store *entity.Store) (*entit
 
 func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store, error) {
 	var store entity.Store
-	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Preload("Tags").Where("id = ?", storeID).First(&store).Error; err != nil {
-		return nil, err
+	err := p.db.WithContext(ctx).
+		Model(&store).
+		Preload("Hours").
+		Preload("Images").
+		Preload("Tags").
+		Select("id, store_name, address, city, state, zip_code, phone, email, website, map_location").
+		Where("id = ?", storeID).
+		Take(&store).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("store with ID %s not found", storeID)
+		}
+		return nil, fmt.Errorf("error retrieving store: %w", err)
 	}
 	return &store, nil
 }
