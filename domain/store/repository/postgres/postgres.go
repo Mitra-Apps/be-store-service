@@ -39,7 +39,7 @@ func (p *postgres) CreateStore(ctx context.Context, store *entity.Store) (*entit
 
 func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store, error) {
 	var store entity.Store
-	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Preload("Categories").Where("id = ?", storeID).First(&store).Error; err != nil {
+	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Preload("Tags").Where("id = ?", storeID).First(&store).Error; err != nil {
 		return nil, err
 	}
 	return &store, nil
@@ -50,7 +50,7 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 	tx := p.db.WithContext(ctx).Begin()
 
 	var existingStore entity.Store
-	if err := tx.Where("id = ?", storeID).Preload("Hours").Preload("Images").Preload("Categories").First(&existingStore).Error; err != nil {
+	if err := tx.Where("id = ?", storeID).Preload("Hours").Preload("Images").Preload("Tags").First(&existingStore).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 		return nil, err
 	}
 
-	// Update related entities (Hours, Images, Categories)
+	// Update related entities (Hours, Images, Tags)
 	if err := p.updateStoreHours(ctx, existingStore, update.Hours); err != nil {
 		tx.Rollback()
 		return nil, err
@@ -82,7 +82,7 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 		return nil, err
 	}
 
-	if err := p.updateStoreCategories(ctx, existingStore, update.Tags); err != nil {
+	if err := p.updateStoreTags(ctx, existingStore, update.Tags); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -153,11 +153,11 @@ func (p *postgres) updateStoreImages(ctx context.Context, existingStore entity.S
 	return nil
 }
 
-func (p *postgres) updateStoreCategories(ctx context.Context, existingStore entity.Store, updatedCategories []entity.StoreTag) error {
+func (p *postgres) updateStoreTags(ctx context.Context, existingStore entity.Store, updatedTags []entity.StoreTag) error {
 	// Delete existing categories not present in the updated list
 	for _, existingCategory := range existingStore.Tags {
 		found := false
-		for _, updatedCategory := range updatedCategories {
+		for _, updatedCategory := range updatedTags {
 			if existingCategory.ID == updatedCategory.ID {
 				found = true
 				break
@@ -171,7 +171,7 @@ func (p *postgres) updateStoreCategories(ctx context.Context, existingStore enti
 	}
 
 	// Update or create updated categories
-	for _, updatedCategory := range updatedCategories {
+	for _, updatedCategory := range updatedTags {
 		// Find the corresponding existing category
 		var existingCategory entity.StoreTag
 		if updatedCategory.ID.String() != "" {
@@ -199,7 +199,7 @@ func (p *postgres) DeleteStore(ctx context.Context, storeID string) error {
 
 func (p *postgres) ListStores(ctx context.Context) ([]*entity.Store, error) {
 	var stores []*entity.Store
-	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Preload("Categories").Find(&stores).Error; err != nil {
+	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Preload("Tags").Find(&stores).Error; err != nil {
 		return nil, err
 	}
 	return stores, nil

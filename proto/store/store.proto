@@ -32,7 +32,7 @@ message BaseModel {
 // Store image message
 message StoreImage {
     string id = 1;
-    string store_id = 2 [(validate.rules).string = {pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"}];
+    string store_id = 2;
     string image_type = 3 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string image_url = 4 [(validate.rules).string = {min_len: 1, max_len: 255}];
 }
@@ -46,7 +46,7 @@ message StoreTag {
 // Store hour message
 message StoreHour {
     string id = 1;
-    string store_id = 2 [(validate.rules).string = {pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"}];
+    string store_id = 2;
     DayOfWeekEnum day_of_week = 3;
     string open = 4 [(validate.rules).string = {pattern: "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"}];
     string close = 5 [(validate.rules).string = {pattern: "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"}];

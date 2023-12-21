@@ -7,14 +7,34 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 )
 
-type Service struct {
-	storeRepository repository.StoreInterface
+type Service interface {
+	CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error)
+	GetStore(ctx context.Context, storeID string) (*entity.Store, error)
+	ListStores(ctx context.Context) ([]*entity.Store, error)
+}
+type service struct {
+	storeRepository   repository.StoreServiceRepository
+	storageRepository repository.Storage
 }
 
-func New(storeRepository repository.StoreInterface) *Service {
-	return &Service{storeRepository: storeRepository}
+func New(
+	storeRepository repository.StoreServiceRepository,
+	storageRepository repository.Storage,
+) Service {
+	return &service{
+		storeRepository:   storeRepository,
+		storageRepository: storageRepository,
+	}
 }
 
-type ServiceInterface interface {
-	GetAll(ctx context.Context) ([]*entity.Store, error)
+func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error) {
+	return s.storeRepository.CreateStore(ctx, store)
+}
+
+func (s *service) GetStore(ctx context.Context, storeID string) (*entity.Store, error) {
+	return s.storeRepository.GetStore(ctx, storeID)
+}
+
+func (s *service) ListStores(ctx context.Context) ([]*entity.Store, error) {
+	return s.storeRepository.ListStores(ctx)
 }

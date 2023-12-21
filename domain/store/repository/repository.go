@@ -23,3 +23,7 @@ type StoreServiceRepository interface {
 	// ListStores lists all stores.
 	ListStores(ctx context.Context) ([]*entity.Store, error)
 }
+
+type Storage interface {
+	UploadImage(ctx context.Context, image string) (string, error)
+}

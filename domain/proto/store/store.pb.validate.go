@@ -253,16 +253,7 @@ func (m *StoreImage) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if !_StoreImage_StoreId_Pattern.MatchString(m.GetStoreId()) {
-		err := StoreImageValidationError{
-			field:  "StoreId",
-			reason: "value does not match regex pattern \"^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for StoreId
 
 	if l := utf8.RuneCountInString(m.GetImageType()); l < 1 || l > 255 {
 		err := StoreImageValidationError{
@@ -362,8 +353,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = StoreImageValidationError{}
-
-var _StoreImage_StoreId_Pattern = regexp.MustCompile("^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$")
 
 // Validate checks the field values on StoreTag with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -501,16 +490,7 @@ func (m *StoreHour) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if !_StoreHour_StoreId_Pattern.MatchString(m.GetStoreId()) {
-		err := StoreHourValidationError{
-			field:  "StoreId",
-			reason: "value does not match regex pattern \"^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for StoreId
 
 	// no validation rules for DayOfWeek
 
@@ -612,8 +592,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = StoreHourValidationError{}
-
-var _StoreHour_StoreId_Pattern = regexp.MustCompile("^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$")
 
 var _StoreHour_Open_Pattern = regexp.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$")
 
