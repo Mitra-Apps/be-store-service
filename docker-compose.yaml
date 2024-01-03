@@ -22,3 +22,4 @@ services:
 networks:
   grpc_network:
     driver: bridge
+
