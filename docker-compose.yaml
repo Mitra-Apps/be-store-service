@@ -1,0 +1,25 @@
+version: "3.0"
+services:
+  store-service:
+    build: .
+    ports:
+      - 9200:9200
+      - 9201:9201
+    environment:
+      GRPC_PORT: 9200
+      HTTP_PORT: 9201
+      DB_HOST: 172.19.14.120
+      DB_PORT: 5432
+      DB_USERNAME: root
+      DB_PASSWORD: SuperSecret!@#
+      DB_NAME: store_service
+      MINIO_ENDPOINT: 172.19.14.120:5000
+      MINIO_ACCESS_KEY: ae1LiTEzMxnFvg3UHnW8
+      MINIO_SECRET_KEY: mLBLwRXc6DVUovyeIZ53mL7gMy4LpWmX0OWl4vKv
+      MINIO_BUCKET_NAME: store-service
+    networks:
+      - grpc_network
+networks:
+  grpc_network:
+    driver: bridge
+

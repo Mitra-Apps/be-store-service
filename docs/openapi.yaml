@@ -4,33 +4,60 @@
 openapi: 3.0.3
 info:
     title: StoreService API
+    description: Store service definition
     version: 0.0.1
 paths:
     /v1/stores:
         get:
             tags:
                 - StoreService
-            operationId: StoreService_GetStores
+            description: List all stores
+            operationId: StoreService_ListStores
             responses:
                 "200":
                     description: OK
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/GetStoresResponse'
+                                $ref: '#/components/schemas/ListStoresResponse'
                 default:
                     description: Default error response
                     content:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
-    /v1/stores/{id}:
+        post:
+            tags:
+                - StoreService
+            description: Create a new store
+            operationId: StoreService_CreateStore
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Store'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Store'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/stores/{storeId}:
         get:
             tags:
                 - StoreService
+            description: Get a store by ID
             operationId: StoreService_GetStore
             parameters:
-                - name: id
+                - name: storeId
                   in: path
                   required: true
                   schema:
@@ -41,7 +68,58 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/GetStoreResponse'
+                                $ref: '#/components/schemas/Store'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        put:
+            tags:
+                - StoreService
+            description: Update an existing store
+            operationId: StoreService_UpdateStore
+            parameters:
+                - name: storeId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Store'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Store'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - StoreService
+            description: Delete a store by ID
+            operationId: StoreService_DeleteStore
+            parameters:
+                - name: storeId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
                 default:
                     description: Default error response
                     content:
@@ -50,18 +128,6 @@ paths:
                                 $ref: '#/components/schemas/Status'
 components:
     schemas:
-        GetStoreResponse:
-            type: object
-            properties:
-                store:
-                    $ref: '#/components/schemas/Store'
-        GetStoresResponse:
-            type: object
-            properties:
-                stores:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Store'
         GoogleProtobufAny:
             type: object
             properties:
@@ -70,6 +136,14 @@ components:
                     description: The type of the serialized message.
             additionalProperties: true
             description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        ListStoresResponse:
+            type: object
+            properties:
+                stores:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Store'
+            description: Response message for listing stores
         Status:
             type: object
             properties:
@@ -91,19 +165,71 @@ components:
             properties:
                 id:
                     type: string
-                userId:
-                    type: string
-                name:
+                storeName:
                     type: string
                 address:
                     type: string
+                city:
+                    type: string
+                state:
+                    type: string
+                zipCode:
+                    type: string
+                phone:
+                    type: string
+                email:
+                    type: string
+                website:
+                    type: string
                 mapLocation:
                     type: string
-                status:
+                tags:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/StoreTag'
+                hours:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/StoreHour'
+                images:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/StoreImage'
+            description: Store message
+        StoreHour:
+            type: object
+            properties:
+                id:
                     type: string
-                isActive:
-                    type: boolean
-                logoImageId:
+                storeId:
                     type: string
+                dayOfWeek:
+                    type: integer
+                    format: enum
+                open:
+                    type: string
+                close:
+                    type: string
+            description: Store hour message
+        StoreImage:
+            type: object
+            properties:
+                id:
+                    type: string
+                storeId:
+                    type: string
+                imageType:
+                    type: string
+                imageUrl:
+                    type: string
+            description: Store image message
+        StoreTag:
+            type: object
+            properties:
+                id:
+                    type: string
+                tagName:
+                    type: string
+            description: Store tag message
 tags:
     - name: StoreService

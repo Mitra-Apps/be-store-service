@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Mitra-Apps/be-store-service/config/postgre"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
-	storePostgreRepo "github.com/Mitra-Apps/be-store-service/domain/store/repository/postgre"
 	grpcRoute "github.com/Mitra-Apps/be-store-service/handler/grpc"
 	"github.com/Mitra-Apps/be-store-service/service"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -18,6 +16,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.elastic.co/apm/module/apmgrpc"
 
+	configPostgres "github.com/Mitra-Apps/be-store-service/config/postgres"
+	repositoryPostgres "github.com/Mitra-Apps/be-store-service/domain/store/repository/postgres"
+	"github.com/Mitra-Apps/be-store-service/domain/store/repository/storage"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -37,9 +38,10 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	db := postgre.Connection()
-	usrRepo := storePostgreRepo.NewPostgre(db)
-	svc := service.New(usrRepo)
+	db := configPostgres.Connection()
+	repoPostgres := repositoryPostgres.NewPostgres(db)
+	repoStorage := storage.New()
+	svc := service.New(repoPostgres, repoStorage)
 	grpcServer := GrpcNewServer(ctx, []grpc.ServerOption{})
 	route := grpcRoute.New(svc)
 	pb.RegisterStoreServiceServer(grpcServer, route)

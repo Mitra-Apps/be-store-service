@@ -16,7 +16,6 @@ COPY . .
 
 # Perform go mod tidy and go mod vendor
 RUN go mod tidy
-RUN go mod vendor
 
 # Build our binary at root location.
 RUN GOPATH= go build -o myapp
@@ -31,7 +30,8 @@ WORKDIR /app
 COPY --from=builder /app/myapp .
 
 # This is the port that our application will be listening on.
-EXPOSE 9100
+EXPOSE 9200
+EXPOSE 9201
 
 # This is the command that will be executed when the container is started.
-ENTRYPOINT ["./myapp"]
+ENTRYPOINT ["./store-service"]
