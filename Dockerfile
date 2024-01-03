@@ -18,7 +18,7 @@ COPY . .
 RUN go mod tidy
 
 # Build our binary at root location.
-RUN GOPATH= go build -o myapp
+RUN GOPATH= go build -o store-service
 
 ####################################################################
 # This is the actual image that we will be using in production.
@@ -27,7 +27,7 @@ FROM alpine:latest
 WORKDIR /app
 
 # We need to copy the binary from the build image to the production image.
-COPY --from=builder /app/myapp .
+COPY --from=builder /app/store-service .
 
 # This is the port that our application will be listening on.
 EXPOSE 9200
