@@ -1,6 +1,6 @@
 version: "3.0"
 services:
-  store-service:
+  prod-store-service:
     image: ${ECR_REGISTRY}/${IMAGE_NAME}:${COMMIT_HASH}
     ports:
       - 9200:9200

@@ -1,6 +1,6 @@
 version: "3.0"
 services:
-  store-service:
+  stag-store-service:
     image: ${ECR_REGISTRY}/${IMAGE_NAME}:${COMMIT_HASH}
     ports:
       - 7200:7200
