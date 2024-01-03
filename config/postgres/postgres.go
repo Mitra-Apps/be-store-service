@@ -3,6 +3,7 @@ package postgres
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
@@ -13,7 +14,16 @@ import (
 )
 
 func Connection() *gorm.DB {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta", os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"))
+	username := os.Getenv("DB_USERNAME")
+	password := os.Getenv("DB_PASSWORD")
+	host := os.Getenv("DB_HOST")
+	dbName := os.Getenv("DB_NAME")
+	port := os.Getenv("DB_PORT")
+	portStr := ""
+	if strings.Trim(port, " ") != "" {
+		portStr = fmt.Sprintf("port=%s ", port)
+	}
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s %ssslmode=disable TimeZone=Asia/Jakarta", host, username, password, dbName, portStr)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		TranslateError:         true,
 		SkipDefaultTransaction: true,
