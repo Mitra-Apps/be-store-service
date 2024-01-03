@@ -9,7 +9,6 @@ services:
       - GRPC_PORT=9200
       - HTTP_PORT=9201
       - DB_HOST=prod-postgre
-      - DB_PORT=5432
       - DB_USERNAME=postgres
       - DB_PASSWORD=123456
       - DB_NAME=store-service
