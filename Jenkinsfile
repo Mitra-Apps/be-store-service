@@ -1,11 +1,15 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['staging', 'production'], description: 'Select environment to deploy', defaultValue: 'staging')
+    }
+
     environment {
-        // Define environment variables
+        // Define environment variables based on the selected environment
         GO_VERSION = '1.21.3'
         DOCKER_COMPOSE_VERSION = '2.21.0'
-        DOCKER_COMPOSE_FILE = 'docker-compose.yaml'
+        DOCKER_COMPOSE_FILE = "${params.ENVIRONMENT == 'production' ? 'docker-compose.prod.yaml' : 'docker-compose.staging.yaml'}"
     }
 
     stages {
@@ -22,7 +26,7 @@ pipeline {
                 script {
                     def dockerComposeCmd = "docker compose up -d"
                     sh dockerComposeCmd
-                    echo "INFO: Successfully deployed to server"
+                    echo "INFO: Successfully deployed to ${params.ENVIRONMENT} server"
                 }
             }
         }
