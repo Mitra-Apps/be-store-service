@@ -13,11 +13,7 @@ import (
 )
 
 func Connection() *gorm.DB {
-	storename := os.Getenv("DB_USERNAME")
-	password := os.Getenv("DB_PASSWORD")
-	host := os.Getenv("DB_HOST")
-	dbName := os.Getenv("DB_NAME")
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=disable TimeZone=Asia/Jakarta", host, storename, password, dbName)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta", os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"))
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		TranslateError:         true,
 		SkipDefaultTransaction: true,
