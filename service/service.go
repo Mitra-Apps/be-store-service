@@ -13,17 +13,14 @@ type Service interface {
 	ListStores(ctx context.Context) ([]*entity.Store, error)
 }
 type service struct {
-	storeRepository   repository.StoreServiceRepository
-	storageRepository repository.Storage
+	storeRepository repository.StoreServiceRepository
 }
 
 func New(
 	storeRepository repository.StoreServiceRepository,
-	storageRepository repository.Storage,
 ) Service {
 	return &service{
-		storeRepository:   storeRepository,
-		storageRepository: storageRepository,
+		storeRepository: storeRepository,
 	}
 }
 

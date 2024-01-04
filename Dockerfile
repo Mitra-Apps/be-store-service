@@ -18,20 +18,17 @@ COPY . .
 RUN go mod tidy
 
 # Build our binary at root location.
-RUN GOPATH= go build -o myapp
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 GOPATH=/go \
+    go build -ldflags="-w -s" -o /usr/local/bin/store-service .
 
 ####################################################################
 # This is the actual image that we will be using in production.
 FROM alpine:latest
 
-WORKDIR /app
-
-# We need to copy the binary from the build image to the production image.
-COPY --from=builder /app/myapp .
+COPY --from=builder /usr/local/bin/store-service /usr/local/bin/store-service
 
 # This is the port that our application will be listening on.
 EXPOSE 9200
 EXPOSE 9201
 
-# This is the command that will be executed when the container is started.
-ENTRYPOINT ["./store-service"]
+ENTRYPOINT ["/usr/local/bin/store-service"]

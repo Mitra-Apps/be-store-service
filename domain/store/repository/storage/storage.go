@@ -37,17 +37,6 @@ func New() repository.Storage {
 		logrus.Fatalln("Error creating MinIO client:", err)
 	}
 
-	// exists, err := minioClient.BucketExists(context.Background(), bucketName)
-	// if err != nil {
-	// 	logrus.Fatalln("Error checking if bucket exists:", err)
-	// }
-	// if !exists {
-	// 	err := minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
-	// 	if err != nil {
-	// 		logrus.Fatalln("Error creating bucket:", err)
-	// 	}
-	// }
-
 	return &storage{
 		client: minioClient,
 		bucket: bucketName,
