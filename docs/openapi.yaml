@@ -8,6 +8,24 @@ info:
     version: 0.0.1
 paths:
     /api/v1/stores:
+        get:
+            tags:
+                - StoreService
+            description: List all stores
+            operationId: StoreService_ListStores
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListStoresResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
         post:
             tags:
                 - StoreService
@@ -51,25 +69,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Store'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
-    /v1/stores:
-        get:
-            tags:
-                - StoreService
-            description: List all stores
-            operationId: StoreService_ListStores
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ListStoresResponse'
                 default:
                     description: Default error response
                     content:

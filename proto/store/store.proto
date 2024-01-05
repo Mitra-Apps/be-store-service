@@ -107,7 +107,7 @@ service StoreService {
     // List all stores
     rpc ListStores(ListStoresRequest) returns (ListStoresResponse) {
         option (google.api.http) = {
-            get: "/v1/stores"
+            get: "/api/v1/stores"
         };
     }
 }

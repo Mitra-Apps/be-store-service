@@ -60,5 +60,19 @@ func (s *GrpcRoute) DeleteStore(ctx context.Context, req *pb.DeleteStoreRequest)
 }
 
 func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (*pb.ListStoresResponse, error) {
-	return nil, nil
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	stores, err := s.service.ListStores(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &pb.ListStoresResponse{}
+	for _, store := range stores {
+		result.Stores = append(result.Stores, store.ToProto())
+	}
+
+	return result, nil
 }
