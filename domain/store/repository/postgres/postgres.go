@@ -41,9 +41,8 @@ func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store,
 		Preload("Hours").
 		Preload("Images").
 		Preload("Tags").
-		Select("id, store_name, address, city, state, zip_code, phone, email, website, map_location").
 		Where("id = ?", storeID).
-		Take(&store).
+		First(&store).
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -64,6 +63,7 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 	}
 
 	if err := tx.Model(&existingStore).Updates(map[string]interface{}{
+		"user_id":      update.UserID,
 		"store_name":   update.StoreName,
 		"address":      update.Address,
 		"city":         update.City,
@@ -73,6 +73,8 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 		"email":        update.Email,
 		"website":      update.Website,
 		"map_location": update.MapLocation,
+		"is_active":    update.IsActive,
+		"status":       update.Status,
 	}).Error; err != nil {
 		tx.Rollback()
 		return nil, err
