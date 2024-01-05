@@ -77,7 +77,7 @@ service StoreService {
     // Create a new store
     rpc CreateStore(CreateStoreRequest) returns (Store) {
         option (google.api.http) = {
-            post: "/v1/stores"
+            post: "/api/v1/stores"
             body: "store"
         };
     }
@@ -85,7 +85,7 @@ service StoreService {
     // Get a store by ID
     rpc GetStore(GetStoreRequest) returns (Store) {
         option (google.api.http) = {
-            get: "/v1/stores/{store_id}"
+            get: "/api/v1/stores/{store_id}"
         };
     }
 
