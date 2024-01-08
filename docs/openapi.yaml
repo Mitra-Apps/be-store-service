@@ -186,12 +186,16 @@ components:
                     type: string
                 website:
                     type: string
-                mapLocation:
-                    type: string
                 status:
                     type: string
                 isActive:
                     type: boolean
+                locationLat:
+                    type: number
+                    format: double
+                locationLng:
+                    type: number
+                    format: double
                 tags:
                     type: array
                     items:

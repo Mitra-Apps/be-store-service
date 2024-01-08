@@ -82,7 +82,8 @@ func (s *Store) ToProto() *pb.Store {
 		Phone:            s.Phone,
 		Email:            s.Email,
 		Website:          s.Website,
-		MapLocation:      s.MapLocation,
+		LocationLat:      s.LocationLat,
+		LocationLng:      s.LocationLng,
 		Status:           s.Status,
 		IsActive:         s.IsActive,
 		Tags:             tags,
@@ -116,7 +117,8 @@ func (s *Store) FromProto(store *pb.Store) error {
 	s.Phone = store.Phone
 	s.Email = store.Email
 	s.Website = store.Website
-	s.MapLocation = store.MapLocation
+	s.LocationLat = store.LocationLat
+	s.LocationLng = store.LocationLng
 	s.Status = store.Status
 	s.IsActive = store.IsActive
 

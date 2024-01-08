@@ -64,13 +64,14 @@ message Store {
     string zip_code = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string phone = 9 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string email = 10 [(validate.rules).string.email = true];
-    string website = 11 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string map_location = 12 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string status = 13;
-    bool is_active = 14;
-    repeated StoreTag tags = 15;
-    repeated StoreHour hours = 16;
-    repeated StoreImage images = 17;
+    string website = 11;
+    string status = 12;
+    bool is_active = 13;
+    double location_lat = 14;
+    double location_lng = 15;
+    repeated StoreTag tags = 16;
+    repeated StoreHour hours = 17;
+    repeated StoreImage images = 18;
 }
 
 // Store service definition

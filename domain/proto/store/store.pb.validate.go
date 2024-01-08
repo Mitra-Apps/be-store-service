@@ -720,31 +720,15 @@ func (m *Store) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetWebsite()); l < 1 || l > 255 {
-		err := StoreValidationError{
-			field:  "Website",
-			reason: "value length must be between 1 and 255 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetMapLocation()); l < 1 || l > 255 {
-		err := StoreValidationError{
-			field:  "MapLocation",
-			reason: "value length must be between 1 and 255 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Website
 
 	// no validation rules for Status
 
 	// no validation rules for IsActive
+
+	// no validation rules for LocationLat
+
+	// no validation rules for LocationLng
 
 	for idx, item := range m.GetTags() {
 		_, _ = idx, item
