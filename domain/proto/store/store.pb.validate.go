@@ -642,6 +642,17 @@ func (m *Store) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if l := utf8.RuneCountInString(m.GetStoreDescription()); l < 1 || l > 512 {
+		err := StoreValidationError{
+			field:  "StoreDescription",
+			reason: "value length must be between 1 and 512 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if l := utf8.RuneCountInString(m.GetAddress()); l < 1 || l > 255 {
 		err := StoreValidationError{
 			field:  "Address",

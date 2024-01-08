@@ -170,6 +170,8 @@ components:
                     type: string
                 storeName:
                     type: string
+                storeDescription:
+                    type: string
                 address:
                     type: string
                 city:
