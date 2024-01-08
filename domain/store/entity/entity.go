@@ -45,7 +45,8 @@ type Store struct {
 	Phone            string    `gorm:"not null"`
 	Email            string    `gorm:"not null;unique"`
 	Website          string
-	MapLocation      string
+	LocationLat      float64
+	LocationLng      float64
 	Status           string
 	IsActive         bool
 	Tags             []StoreTag   `gorm:"many2many:store_store_tags"`

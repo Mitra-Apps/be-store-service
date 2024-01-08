@@ -73,7 +73,8 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 		"phone":             update.Phone,
 		"email":             update.Email,
 		"website":           update.Website,
-		"map_location":      update.MapLocation,
+		"location_lat":      update.LocationLat,
+		"location_lng":      update.LocationLng,
 		"is_active":         update.IsActive,
 		"status":            update.Status,
 	}).Error; err != nil {
