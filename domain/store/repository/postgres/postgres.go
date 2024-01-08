@@ -63,18 +63,19 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 	}
 
 	if err := tx.Model(&existingStore).Updates(map[string]interface{}{
-		"user_id":      update.UserID,
-		"store_name":   update.StoreName,
-		"address":      update.Address,
-		"city":         update.City,
-		"state":        update.State,
-		"zip_code":     update.ZipCode,
-		"phone":        update.Phone,
-		"email":        update.Email,
-		"website":      update.Website,
-		"map_location": update.MapLocation,
-		"is_active":    update.IsActive,
-		"status":       update.Status,
+		"user_id":           update.UserID,
+		"store_name":        update.StoreName,
+		"store_description": update.StoreDescription,
+		"address":           update.Address,
+		"city":              update.City,
+		"state":             update.State,
+		"zip_code":          update.ZipCode,
+		"phone":             update.Phone,
+		"email":             update.Email,
+		"website":           update.Website,
+		"map_location":      update.MapLocation,
+		"is_active":         update.IsActive,
+		"status":            update.Status,
 	}).Error; err != nil {
 		tx.Rollback()
 		return nil, err
