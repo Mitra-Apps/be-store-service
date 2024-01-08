@@ -68,20 +68,25 @@ func (s *Store) ToProto() *pb.Store {
 	for _, image := range s.Images {
 		images = append(images, image.ToProto())
 	}
+
 	return &pb.Store{
-		Id:          s.ID.String(),
-		StoreName:   s.StoreName,
-		Address:     s.Address,
-		City:        s.City,
-		State:       s.State,
-		ZipCode:     s.ZipCode,
-		Phone:       s.Phone,
-		Email:       s.Email,
-		Website:     s.Website,
-		MapLocation: s.MapLocation,
-		Tags:        tags,
-		Hours:       hours,
-		Images:      images,
+		Id:               s.ID.String(),
+		UserId:           s.UserID.String(),
+		StoreName:        s.StoreName,
+		StoreDescription: s.StoreDescription,
+		Address:          s.Address,
+		City:             s.City,
+		State:            s.State,
+		ZipCode:          s.ZipCode,
+		Phone:            s.Phone,
+		Email:            s.Email,
+		Website:          s.Website,
+		MapLocation:      s.MapLocation,
+		Status:           s.Status,
+		IsActive:         s.IsActive,
+		Tags:             tags,
+		Hours:            hours,
+		Images:           images,
 	}
 }
 
@@ -94,7 +99,15 @@ func (s *Store) FromProto(store *pb.Store) error {
 		s.ID = id
 	}
 
+	// convert user id to uuid
+	userID, err := uuid.Parse(store.UserId)
+	if err != nil {
+		return err
+	}
+
+	s.UserID = userID
 	s.StoreName = store.StoreName
+	s.StoreDescription = store.StoreDescription
 	s.Address = store.Address
 	s.City = store.City
 	s.State = store.State
@@ -103,6 +116,8 @@ func (s *Store) FromProto(store *pb.Store) error {
 	s.Email = store.Email
 	s.Website = store.Website
 	s.MapLocation = store.MapLocation
+	s.Status = store.Status
+	s.IsActive = store.IsActive
 
 	for _, tag := range store.Tags {
 		storeTag := &StoreTag{}
