@@ -57,19 +57,20 @@ message Store {
     string id = 1;
     string user_id = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string store_name = 3 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string address = 4 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string city = 5 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string state = 6 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string zip_code = 7 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string phone = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string email = 9 [(validate.rules).string.email = true];
-    string website = 10 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string map_location = 11 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string status = 12;
-    bool is_active = 13;
-    repeated StoreTag tags = 14;
-    repeated StoreHour hours = 15;
-    repeated StoreImage images = 16;
+    string store_description = 4 [(validate.rules).string = {min_len: 1, max_len: 512}];
+    string address = 5 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string city = 6 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string state = 7 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string zip_code = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string phone = 9 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string email = 10 [(validate.rules).string.email = true];
+    string website = 11 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string map_location = 12 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string status = 13;
+    bool is_active = 14;
+    repeated StoreTag tags = 15;
+    repeated StoreHour hours = 16;
+    repeated StoreImage images = 17;
 }
 
 // Store service definition

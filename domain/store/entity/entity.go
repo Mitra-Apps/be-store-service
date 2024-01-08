@@ -35,21 +35,22 @@ type BaseModel struct {
 // Store represents a store model.
 type Store struct {
 	BaseModel
-	UserID      uuid.UUID `gorm:"type:uuid;not null"`
-	StoreName   string    `gorm:"not null;unique"`
-	Address     string    `gorm:"not null,type:text"`
-	City        string    `gorm:"not null"`
-	State       string    `gorm:"not null"`
-	ZipCode     string    `gorm:"not null"`
-	Phone       string    `gorm:"not null"`
-	Email       string    `gorm:"not null;unique"`
-	Website     string
-	MapLocation string
-	Status      string
-	IsActive    bool
-	Tags        []StoreTag   `gorm:"many2many:store_store_tags"`
-	Hours       []StoreHour  `gorm:"foreignKey:StoreID"`
-	Images      []StoreImage `gorm:"foreignKey:StoreID"`
+	UserID           uuid.UUID `gorm:"type:uuid;not null"`
+	StoreName        string    `gorm:"not null;unique"`
+	StoreDescription string    `gorm:"not null,type:text"`
+	Address          string    `gorm:"not null,type:text"`
+	City             string    `gorm:"not null"`
+	State            string    `gorm:"not null"`
+	ZipCode          string    `gorm:"not null"`
+	Phone            string    `gorm:"not null"`
+	Email            string    `gorm:"not null;unique"`
+	Website          string
+	MapLocation      string
+	Status           string
+	IsActive         bool
+	Tags             []StoreTag   `gorm:"many2many:store_store_tags"`
+	Hours            []StoreHour  `gorm:"foreignKey:StoreID"`
+	Images           []StoreImage `gorm:"foreignKey:StoreID"`
 }
 
 func (s *Store) ToProto() *pb.Store {
