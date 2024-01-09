@@ -119,15 +119,36 @@ message CreateStoreRequest {
     Store store = 1;
 }
 
+// Response message for creating a store
+message CreateStoreResponse {
+    int32 code = 1;
+    string message = 2;
+    Store data = 3;
+}
+
 // Request message to get a store by ID
 message GetStoreRequest {
     string store_id = 1;
+}
+
+// Response message for getting a store
+message GetStoreResponse {
+    int32 code = 1;
+    string message = 2;
+    Store data = 3;
 }
 
 // Request message to update a store
 message UpdateStoreRequest {
     string store_id = 1;
     Store store = 2;
+}
+
+// Response message for updating a store
+message UpdateStoreResponse {
+    int32 code = 1;
+    string message = 2;
+    Store data = 3;
 }
 
 // Request message to delete a store by ID
@@ -142,5 +163,7 @@ message ListStoresRequest {
 
 // Response message for listing stores
 message ListStoresResponse {
-    repeated Store stores = 1;
+    int32 code = 1;
+    string message = 2;
+    repeated Store data = 3;
 }
