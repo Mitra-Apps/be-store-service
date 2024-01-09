@@ -7,6 +7,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/service"
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/codes"
 )
 
 type GrpcRoute struct {
@@ -20,7 +21,7 @@ func New(service service.Service) pb.StoreServiceServer {
 	}
 }
 
-func (s *GrpcRoute) CreateStore(ctx context.Context, req *pb.CreateStoreRequest) (*pb.Store, error) {
+func (s *GrpcRoute) CreateStore(ctx context.Context, req *pb.CreateStoreRequest) (*pb.CreateStoreResponse, error) {
 	if err := req.ValidateAll(); err != nil {
 		return nil, err
 	}
@@ -35,10 +36,14 @@ func (s *GrpcRoute) CreateStore(ctx context.Context, req *pb.CreateStoreRequest)
 		return nil, err
 	}
 
-	return store.ToProto(), nil
+	return &pb.CreateStoreResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    store.ToProto(),
+	}, nil
 }
 
-func (s *GrpcRoute) GetStore(ctx context.Context, req *pb.GetStoreRequest) (*pb.Store, error) {
+func (s *GrpcRoute) GetStore(ctx context.Context, req *pb.GetStoreRequest) (*pb.GetStoreResponse, error) {
 	if err := req.ValidateAll(); err != nil {
 		return nil, err
 	}
@@ -48,10 +53,14 @@ func (s *GrpcRoute) GetStore(ctx context.Context, req *pb.GetStoreRequest) (*pb.
 		return nil, err
 	}
 
-	return store.ToProto(), nil
+	return &pb.GetStoreResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    store.ToProto(),
+	}, nil
 }
 
-func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest) (*pb.Store, error) {
+func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest) (*pb.UpdateStoreResponse, error) {
 	return nil, nil
 }
 
@@ -69,9 +78,13 @@ func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (
 		return nil, err
 	}
 
-	result := &pb.ListStoresResponse{}
+	result := &pb.ListStoresResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}
+
 	for _, store := range stores {
-		result.Stores = append(result.Stores, store.ToProto())
+		result.Data = append(result.Data, store.ToProto())
 	}
 
 	return result, nil

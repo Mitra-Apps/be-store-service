@@ -642,6 +642,17 @@ func (m *Store) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if l := utf8.RuneCountInString(m.GetStoreDescription()); l < 1 || l > 512 {
+		err := StoreValidationError{
+			field:  "StoreDescription",
+			reason: "value length must be between 1 and 512 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if l := utf8.RuneCountInString(m.GetAddress()); l < 1 || l > 255 {
 		err := StoreValidationError{
 			field:  "Address",
@@ -709,31 +720,15 @@ func (m *Store) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetWebsite()); l < 1 || l > 255 {
-		err := StoreValidationError{
-			field:  "Website",
-			reason: "value length must be between 1 and 255 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetMapLocation()); l < 1 || l > 255 {
-		err := StoreValidationError{
-			field:  "MapLocation",
-			reason: "value length must be between 1 and 255 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Website
 
 	// no validation rules for Status
 
 	// no validation rules for IsActive
+
+	// no validation rules for LocationLat
+
+	// no validation rules for LocationLng
 
 	for idx, item := range m.GetTags() {
 		_, _ = idx, item
@@ -1095,6 +1090,141 @@ var _ interface {
 	ErrorName() string
 } = CreateStoreRequestValidationError{}
 
+// Validate checks the field values on CreateStoreResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateStoreResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateStoreResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateStoreResponseMultiError, or nil if none found.
+func (m *CreateStoreResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateStoreResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateStoreResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateStoreResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateStoreResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateStoreResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateStoreResponseMultiError is an error wrapping multiple validation
+// errors returned by CreateStoreResponse.ValidateAll() if the designated
+// constraints aren't met.
+type CreateStoreResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateStoreResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateStoreResponseMultiError) AllErrors() []error { return m }
+
+// CreateStoreResponseValidationError is the validation error returned by
+// CreateStoreResponse.Validate if the designated constraints aren't met.
+type CreateStoreResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateStoreResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateStoreResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateStoreResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateStoreResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateStoreResponseValidationError) ErrorName() string {
+	return "CreateStoreResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateStoreResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateStoreResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateStoreResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateStoreResponseValidationError{}
+
 // Validate checks the field values on GetStoreRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -1196,6 +1326,139 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetStoreRequestValidationError{}
+
+// Validate checks the field values on GetStoreResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetStoreResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetStoreResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetStoreResponseMultiError, or nil if none found.
+func (m *GetStoreResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetStoreResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetStoreResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetStoreResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetStoreResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetStoreResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetStoreResponseMultiError is an error wrapping multiple validation errors
+// returned by GetStoreResponse.ValidateAll() if the designated constraints
+// aren't met.
+type GetStoreResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetStoreResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetStoreResponseMultiError) AllErrors() []error { return m }
+
+// GetStoreResponseValidationError is the validation error returned by
+// GetStoreResponse.Validate if the designated constraints aren't met.
+type GetStoreResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetStoreResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetStoreResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetStoreResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetStoreResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetStoreResponseValidationError) ErrorName() string { return "GetStoreResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetStoreResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetStoreResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetStoreResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetStoreResponseValidationError{}
 
 // Validate checks the field values on UpdateStoreRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1329,6 +1592,141 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateStoreRequestValidationError{}
+
+// Validate checks the field values on UpdateStoreResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateStoreResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateStoreResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateStoreResponseMultiError, or nil if none found.
+func (m *UpdateStoreResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateStoreResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateStoreResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateStoreResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateStoreResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return UpdateStoreResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateStoreResponseMultiError is an error wrapping multiple validation
+// errors returned by UpdateStoreResponse.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateStoreResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateStoreResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateStoreResponseMultiError) AllErrors() []error { return m }
+
+// UpdateStoreResponseValidationError is the validation error returned by
+// UpdateStoreResponse.Validate if the designated constraints aren't met.
+type UpdateStoreResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateStoreResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateStoreResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateStoreResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateStoreResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateStoreResponseValidationError) ErrorName() string {
+	return "UpdateStoreResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateStoreResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateStoreResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateStoreResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateStoreResponseValidationError{}
 
 // Validate checks the field values on DeleteStoreRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1558,7 +1956,11 @@ func (m *ListStoresResponse) validate(all bool) error {
 
 	var errors []error
 
-	for idx, item := range m.GetStores() {
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
 		if all {
@@ -1566,7 +1968,7 @@ func (m *ListStoresResponse) validate(all bool) error {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, ListStoresResponseValidationError{
-						field:  fmt.Sprintf("Stores[%v]", idx),
+						field:  fmt.Sprintf("Data[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1574,7 +1976,7 @@ func (m *ListStoresResponse) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, ListStoresResponseValidationError{
-						field:  fmt.Sprintf("Stores[%v]", idx),
+						field:  fmt.Sprintf("Data[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1583,7 +1985,7 @@ func (m *ListStoresResponse) validate(all bool) error {
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ListStoresResponseValidationError{
-					field:  fmt.Sprintf("Stores[%v]", idx),
+					field:  fmt.Sprintf("Data[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}

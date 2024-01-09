@@ -32,11 +32,11 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StoreServiceClient interface {
 	// Create a new store
-	CreateStore(ctx context.Context, in *CreateStoreRequest, opts ...grpc.CallOption) (*Store, error)
+	CreateStore(ctx context.Context, in *CreateStoreRequest, opts ...grpc.CallOption) (*CreateStoreResponse, error)
 	// Get a store by ID
-	GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*Store, error)
+	GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*GetStoreResponse, error)
 	// Update an existing store
-	UpdateStore(ctx context.Context, in *UpdateStoreRequest, opts ...grpc.CallOption) (*Store, error)
+	UpdateStore(ctx context.Context, in *UpdateStoreRequest, opts ...grpc.CallOption) (*UpdateStoreResponse, error)
 	// Delete a store by ID
 	DeleteStore(ctx context.Context, in *DeleteStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// List all stores
@@ -51,8 +51,8 @@ func NewStoreServiceClient(cc grpc.ClientConnInterface) StoreServiceClient {
 	return &storeServiceClient{cc}
 }
 
-func (c *storeServiceClient) CreateStore(ctx context.Context, in *CreateStoreRequest, opts ...grpc.CallOption) (*Store, error) {
-	out := new(Store)
+func (c *storeServiceClient) CreateStore(ctx context.Context, in *CreateStoreRequest, opts ...grpc.CallOption) (*CreateStoreResponse, error) {
+	out := new(CreateStoreResponse)
 	err := c.cc.Invoke(ctx, StoreService_CreateStore_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -60,8 +60,8 @@ func (c *storeServiceClient) CreateStore(ctx context.Context, in *CreateStoreReq
 	return out, nil
 }
 
-func (c *storeServiceClient) GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*Store, error) {
-	out := new(Store)
+func (c *storeServiceClient) GetStore(ctx context.Context, in *GetStoreRequest, opts ...grpc.CallOption) (*GetStoreResponse, error) {
+	out := new(GetStoreResponse)
 	err := c.cc.Invoke(ctx, StoreService_GetStore_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -69,8 +69,8 @@ func (c *storeServiceClient) GetStore(ctx context.Context, in *GetStoreRequest, 
 	return out, nil
 }
 
-func (c *storeServiceClient) UpdateStore(ctx context.Context, in *UpdateStoreRequest, opts ...grpc.CallOption) (*Store, error) {
-	out := new(Store)
+func (c *storeServiceClient) UpdateStore(ctx context.Context, in *UpdateStoreRequest, opts ...grpc.CallOption) (*UpdateStoreResponse, error) {
+	out := new(UpdateStoreResponse)
 	err := c.cc.Invoke(ctx, StoreService_UpdateStore_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -101,11 +101,11 @@ func (c *storeServiceClient) ListStores(ctx context.Context, in *ListStoresReque
 // for forward compatibility
 type StoreServiceServer interface {
 	// Create a new store
-	CreateStore(context.Context, *CreateStoreRequest) (*Store, error)
+	CreateStore(context.Context, *CreateStoreRequest) (*CreateStoreResponse, error)
 	// Get a store by ID
-	GetStore(context.Context, *GetStoreRequest) (*Store, error)
+	GetStore(context.Context, *GetStoreRequest) (*GetStoreResponse, error)
 	// Update an existing store
-	UpdateStore(context.Context, *UpdateStoreRequest) (*Store, error)
+	UpdateStore(context.Context, *UpdateStoreRequest) (*UpdateStoreResponse, error)
 	// Delete a store by ID
 	DeleteStore(context.Context, *DeleteStoreRequest) (*emptypb.Empty, error)
 	// List all stores
@@ -117,13 +117,13 @@ type StoreServiceServer interface {
 type UnimplementedStoreServiceServer struct {
 }
 
-func (UnimplementedStoreServiceServer) CreateStore(context.Context, *CreateStoreRequest) (*Store, error) {
+func (UnimplementedStoreServiceServer) CreateStore(context.Context, *CreateStoreRequest) (*CreateStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateStore not implemented")
 }
-func (UnimplementedStoreServiceServer) GetStore(context.Context, *GetStoreRequest) (*Store, error) {
+func (UnimplementedStoreServiceServer) GetStore(context.Context, *GetStoreRequest) (*GetStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStore not implemented")
 }
-func (UnimplementedStoreServiceServer) UpdateStore(context.Context, *UpdateStoreRequest) (*Store, error) {
+func (UnimplementedStoreServiceServer) UpdateStore(context.Context, *UpdateStoreRequest) (*UpdateStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateStore not implemented")
 }
 func (UnimplementedStoreServiceServer) DeleteStore(context.Context, *DeleteStoreRequest) (*emptypb.Empty, error) {

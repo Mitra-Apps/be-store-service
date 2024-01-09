@@ -35,21 +35,23 @@ type BaseModel struct {
 // Store represents a store model.
 type Store struct {
 	BaseModel
-	UserID      uuid.UUID `gorm:"type:uuid;not null"`
-	StoreName   string    `gorm:"not null;unique"`
-	Address     string    `gorm:"not null,type:text"`
-	City        string    `gorm:"not null"`
-	State       string    `gorm:"not null"`
-	ZipCode     string    `gorm:"not null"`
-	Phone       string    `gorm:"not null"`
-	Email       string    `gorm:"not null;unique"`
-	Website     string
-	MapLocation string
-	Status      string
-	IsActive    bool
-	Tags        []StoreTag   `gorm:"many2many:store_store_tags"`
-	Hours       []StoreHour  `gorm:"foreignKey:StoreID"`
-	Images      []StoreImage `gorm:"foreignKey:StoreID"`
+	UserID           uuid.UUID `gorm:"type:uuid;not null"`
+	StoreName        string    `gorm:"not null;unique"`
+	StoreDescription string    `gorm:"not null,type:text"`
+	Address          string    `gorm:"not null,type:text"`
+	City             string    `gorm:"not null"`
+	State            string    `gorm:"not null"`
+	ZipCode          string    `gorm:"not null"`
+	Phone            string    `gorm:"not null"`
+	Email            string    `gorm:"not null;unique"`
+	Website          string
+	LocationLat      float64
+	LocationLng      float64
+	Status           string
+	IsActive         bool
+	Tags             []StoreTag   `gorm:"many2many:store_store_tags"`
+	Hours            []StoreHour  `gorm:"foreignKey:StoreID"`
+	Images           []StoreImage `gorm:"foreignKey:StoreID"`
 }
 
 func (s *Store) ToProto() *pb.Store {
@@ -67,20 +69,26 @@ func (s *Store) ToProto() *pb.Store {
 	for _, image := range s.Images {
 		images = append(images, image.ToProto())
 	}
+
 	return &pb.Store{
-		Id:          s.ID.String(),
-		StoreName:   s.StoreName,
-		Address:     s.Address,
-		City:        s.City,
-		State:       s.State,
-		ZipCode:     s.ZipCode,
-		Phone:       s.Phone,
-		Email:       s.Email,
-		Website:     s.Website,
-		MapLocation: s.MapLocation,
-		Tags:        tags,
-		Hours:       hours,
-		Images:      images,
+		Id:               s.ID.String(),
+		UserId:           s.UserID.String(),
+		StoreName:        s.StoreName,
+		StoreDescription: s.StoreDescription,
+		Address:          s.Address,
+		City:             s.City,
+		State:            s.State,
+		ZipCode:          s.ZipCode,
+		Phone:            s.Phone,
+		Email:            s.Email,
+		Website:          s.Website,
+		LocationLat:      s.LocationLat,
+		LocationLng:      s.LocationLng,
+		Status:           s.Status,
+		IsActive:         s.IsActive,
+		Tags:             tags,
+		Hours:            hours,
+		Images:           images,
 	}
 }
 
@@ -93,7 +101,15 @@ func (s *Store) FromProto(store *pb.Store) error {
 		s.ID = id
 	}
 
+	// convert user id to uuid
+	userID, err := uuid.Parse(store.UserId)
+	if err != nil {
+		return err
+	}
+
+	s.UserID = userID
 	s.StoreName = store.StoreName
+	s.StoreDescription = store.StoreDescription
 	s.Address = store.Address
 	s.City = store.City
 	s.State = store.State
@@ -101,7 +117,10 @@ func (s *Store) FromProto(store *pb.Store) error {
 	s.Phone = store.Phone
 	s.Email = store.Email
 	s.Website = store.Website
-	s.MapLocation = store.MapLocation
+	s.LocationLat = store.LocationLat
+	s.LocationLng = store.LocationLng
+	s.Status = store.Status
+	s.IsActive = store.IsActive
 
 	for _, tag := range store.Tags {
 		storeTag := &StoreTag{}
