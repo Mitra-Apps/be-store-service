@@ -43,7 +43,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/Store'
+                                $ref: '#/components/schemas/CreateStoreResponse'
                 default:
                     description: Default error response
                     content:
@@ -68,7 +68,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/Store'
+                                $ref: '#/components/schemas/GetStoreResponse'
                 default:
                     description: Default error response
                     content:
@@ -99,7 +99,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/Store'
+                                $ref: '#/components/schemas/UpdateStoreResponse'
                 default:
                     description: Default error response
                     content:
@@ -129,6 +129,28 @@ paths:
                                 $ref: '#/components/schemas/Status'
 components:
     schemas:
+        CreateStoreResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/Store'
+            description: Response message for creating a store
+        GetStoreResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/Store'
+            description: Response message for getting a store
         GoogleProtobufAny:
             type: object
             properties:
@@ -249,5 +271,16 @@ components:
                 tagName:
                     type: string
             description: Store tag message
+        UpdateStoreResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/Store'
+            description: Response message for updating a store
 tags:
     - name: StoreService
