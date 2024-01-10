@@ -90,10 +90,17 @@ func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (
 	return result, nil
 }
 
-func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRequest) (*empty.Empty, error) {
+func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRequest) (*pb.OpenCloseStoreResponse, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
 
-	return nil, s.service.OpenCloseStore(ctx, req.StoreId, req.IsActive)
+	err := s.service.OpenCloseStore(ctx, req.StoreId, req.IsActive)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.OpenCloseStoreResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
 }

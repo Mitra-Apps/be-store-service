@@ -114,7 +114,7 @@ service StoreService {
     }
 
     // Open close store
-    rpc OpenCloseStore(OpenCloseStoreRequest) returns (google.protobuf.Empty) {
+    rpc OpenCloseStore(OpenCloseStoreRequest) returns (OpenCloseStoreResponse) {
         option (google.api.http) = {
             put: "/api/v1/stores/active-toggle/{is_active}"
             body: "*"
@@ -169,14 +169,19 @@ message ListStoresRequest {
     // You can add parameters for pagination, filtering, etc. if needed
 }
 
-message OpenCloseStoreRequest {
-    string store_id = 1;
-    bool is_active = 2;
-}
-
 // Response message for listing stores
 message ListStoresResponse {
     int32 code = 1;
     string message = 2;
     repeated Store data = 3;
+}
+
+message OpenCloseStoreRequest {
+    string store_id = 1;
+    bool is_active = 2;
+}
+
+message OpenCloseStoreResponse {
+    int32 code = 1;
+    string message = 2;
 }

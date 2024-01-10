@@ -71,7 +71,10 @@ paths:
             responses:
                 "200":
                     description: OK
-                    content: {}
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/OpenCloseStoreResponse'
                 default:
                     description: Default error response
                     content:
@@ -207,6 +210,14 @@ components:
                     type: string
                 isActive:
                     type: boolean
+        OpenCloseStoreResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         Status:
             type: object
             properties:
