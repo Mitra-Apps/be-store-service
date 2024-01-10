@@ -62,10 +62,12 @@ paths:
                   required: true
                   schema:
                     type: boolean
-                - name: storeId
-                  in: query
-                  schema:
-                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/OpenCloseStoreRequest'
+                required: true
             responses:
                 "200":
                     description: OK
@@ -198,6 +200,13 @@ components:
                     items:
                         $ref: '#/components/schemas/Store'
             description: Response message for listing stores
+        OpenCloseStoreRequest:
+            type: object
+            properties:
+                storeId:
+                    type: string
+                isActive:
+                    type: boolean
         Status:
             type: object
             properties:

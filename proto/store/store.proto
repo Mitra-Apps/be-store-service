@@ -117,6 +117,7 @@ service StoreService {
     rpc OpenCloseStore(OpenCloseStoreRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             put: "/api/v1/stores/active-toggle/{is_active}"
+            body: "*"
         };
     }
 }
