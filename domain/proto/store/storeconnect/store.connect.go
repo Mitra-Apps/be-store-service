@@ -66,11 +66,11 @@ var (
 // StoreServiceClient is a client for the StoreService service.
 type StoreServiceClient interface {
 	// Create a new store
-	CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.Store], error)
+	CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.CreateStoreResponse], error)
 	// Get a store by ID
-	GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.Store], error)
+	GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.GetStoreResponse], error)
 	// Update an existing store
-	UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.Store], error)
+	UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.UpdateStoreResponse], error)
 	// Delete a store by ID
 	DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error)
 	// List all stores
@@ -89,19 +89,19 @@ type StoreServiceClient interface {
 func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) StoreServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &storeServiceClient{
-		createStore: connect.NewClient[store.CreateStoreRequest, store.Store](
+		createStore: connect.NewClient[store.CreateStoreRequest, store.CreateStoreResponse](
 			httpClient,
 			baseURL+StoreServiceCreateStoreProcedure,
 			connect.WithSchema(storeServiceCreateStoreMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		getStore: connect.NewClient[store.GetStoreRequest, store.Store](
+		getStore: connect.NewClient[store.GetStoreRequest, store.GetStoreResponse](
 			httpClient,
 			baseURL+StoreServiceGetStoreProcedure,
 			connect.WithSchema(storeServiceGetStoreMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		updateStore: connect.NewClient[store.UpdateStoreRequest, store.Store](
+		updateStore: connect.NewClient[store.UpdateStoreRequest, store.UpdateStoreResponse](
 			httpClient,
 			baseURL+StoreServiceUpdateStoreProcedure,
 			connect.WithSchema(storeServiceUpdateStoreMethodDescriptor),
@@ -130,26 +130,26 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // storeServiceClient implements StoreServiceClient.
 type storeServiceClient struct {
-	createStore    *connect.Client[store.CreateStoreRequest, store.Store]
-	getStore       *connect.Client[store.GetStoreRequest, store.Store]
-	updateStore    *connect.Client[store.UpdateStoreRequest, store.Store]
+	createStore    *connect.Client[store.CreateStoreRequest, store.CreateStoreResponse]
+	getStore       *connect.Client[store.GetStoreRequest, store.GetStoreResponse]
+	updateStore    *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
 	deleteStore    *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
 	listStores     *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
 	openCloseStore *connect.Client[store.OpenCloseStoreRequest, emptypb.Empty]
 }
 
 // CreateStore calls StoreService.CreateStore.
-func (c *storeServiceClient) CreateStore(ctx context.Context, req *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.Store], error) {
+func (c *storeServiceClient) CreateStore(ctx context.Context, req *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.CreateStoreResponse], error) {
 	return c.createStore.CallUnary(ctx, req)
 }
 
 // GetStore calls StoreService.GetStore.
-func (c *storeServiceClient) GetStore(ctx context.Context, req *connect.Request[store.GetStoreRequest]) (*connect.Response[store.Store], error) {
+func (c *storeServiceClient) GetStore(ctx context.Context, req *connect.Request[store.GetStoreRequest]) (*connect.Response[store.GetStoreResponse], error) {
 	return c.getStore.CallUnary(ctx, req)
 }
 
 // UpdateStore calls StoreService.UpdateStore.
-func (c *storeServiceClient) UpdateStore(ctx context.Context, req *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.Store], error) {
+func (c *storeServiceClient) UpdateStore(ctx context.Context, req *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.UpdateStoreResponse], error) {
 	return c.updateStore.CallUnary(ctx, req)
 }
 
@@ -171,11 +171,11 @@ func (c *storeServiceClient) OpenCloseStore(ctx context.Context, req *connect.Re
 // StoreServiceHandler is an implementation of the StoreService service.
 type StoreServiceHandler interface {
 	// Create a new store
-	CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.Store], error)
+	CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.CreateStoreResponse], error)
 	// Get a store by ID
-	GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.Store], error)
+	GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.GetStoreResponse], error)
 	// Update an existing store
-	UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.Store], error)
+	UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.UpdateStoreResponse], error)
 	// Delete a store by ID
 	DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error)
 	// List all stores
@@ -249,15 +249,15 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 // UnimplementedStoreServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedStoreServiceHandler struct{}
 
-func (UnimplementedStoreServiceHandler) CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.Store], error) {
+func (UnimplementedStoreServiceHandler) CreateStore(context.Context, *connect.Request[store.CreateStoreRequest]) (*connect.Response[store.CreateStoreResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.CreateStore is not implemented"))
 }
 
-func (UnimplementedStoreServiceHandler) GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.Store], error) {
+func (UnimplementedStoreServiceHandler) GetStore(context.Context, *connect.Request[store.GetStoreRequest]) (*connect.Response[store.GetStoreResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.GetStore is not implemented"))
 }
 
-func (UnimplementedStoreServiceHandler) UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.Store], error) {
+func (UnimplementedStoreServiceHandler) UpdateStore(context.Context, *connect.Request[store.UpdateStoreRequest]) (*connect.Response[store.UpdateStoreResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpdateStore is not implemented"))
 }
 
