@@ -112,6 +112,13 @@ service StoreService {
             get: "/api/v1/stores"
         };
     }
+
+    // Open close store
+    rpc OpenCloseStore(OpenCloseStoreRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            put: "/api/v1/stores/active-toggle/{is_active}"
+        };
+    }
 }
 
 // Request message to create a store
@@ -159,6 +166,11 @@ message DeleteStoreRequest {
 // Request message to list all stores
 message ListStoresRequest {
     // You can add parameters for pagination, filtering, etc. if needed
+}
+
+message OpenCloseStoreRequest {
+    string store_id = 1;
+    bool is_active = 2;
 }
 
 // Response message for listing stores

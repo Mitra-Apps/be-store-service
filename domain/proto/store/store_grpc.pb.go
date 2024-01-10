@@ -20,11 +20,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	StoreService_CreateStore_FullMethodName = "/StoreService/CreateStore"
-	StoreService_GetStore_FullMethodName    = "/StoreService/GetStore"
-	StoreService_UpdateStore_FullMethodName = "/StoreService/UpdateStore"
-	StoreService_DeleteStore_FullMethodName = "/StoreService/DeleteStore"
-	StoreService_ListStores_FullMethodName  = "/StoreService/ListStores"
+	StoreService_CreateStore_FullMethodName    = "/StoreService/CreateStore"
+	StoreService_GetStore_FullMethodName       = "/StoreService/GetStore"
+	StoreService_UpdateStore_FullMethodName    = "/StoreService/UpdateStore"
+	StoreService_DeleteStore_FullMethodName    = "/StoreService/DeleteStore"
+	StoreService_ListStores_FullMethodName     = "/StoreService/ListStores"
+	StoreService_OpenCloseStore_FullMethodName = "/StoreService/OpenCloseStore"
 )
 
 // StoreServiceClient is the client API for StoreService service.
@@ -41,6 +42,8 @@ type StoreServiceClient interface {
 	DeleteStore(ctx context.Context, in *DeleteStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// List all stores
 	ListStores(ctx context.Context, in *ListStoresRequest, opts ...grpc.CallOption) (*ListStoresResponse, error)
+	// Open close store
+	OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type storeServiceClient struct {
@@ -96,6 +99,15 @@ func (c *storeServiceClient) ListStores(ctx context.Context, in *ListStoresReque
 	return out, nil
 }
 
+func (c *storeServiceClient) OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, StoreService_OpenCloseStore_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StoreServiceServer is the server API for StoreService service.
 // All implementations must embed UnimplementedStoreServiceServer
 // for forward compatibility
@@ -110,6 +122,8 @@ type StoreServiceServer interface {
 	DeleteStore(context.Context, *DeleteStoreRequest) (*emptypb.Empty, error)
 	// List all stores
 	ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error)
+	// Open close store
+	OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedStoreServiceServer()
 }
 
@@ -131,6 +145,9 @@ func (UnimplementedStoreServiceServer) DeleteStore(context.Context, *DeleteStore
 }
 func (UnimplementedStoreServiceServer) ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStores not implemented")
+}
+func (UnimplementedStoreServiceServer) OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OpenCloseStore not implemented")
 }
 func (UnimplementedStoreServiceServer) mustEmbedUnimplementedStoreServiceServer() {}
 
@@ -235,6 +252,24 @@ func _StoreService_ListStores_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_OpenCloseStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OpenCloseStoreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).OpenCloseStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_OpenCloseStore_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).OpenCloseStore(ctx, req.(*OpenCloseStoreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StoreService_ServiceDesc is the grpc.ServiceDesc for StoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -261,6 +296,10 @@ var StoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListStores",
 			Handler:    _StoreService_ListStores_Handler,
+		},
+		{
+			MethodName: "OpenCloseStore",
+			Handler:    _StoreService_OpenCloseStore_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

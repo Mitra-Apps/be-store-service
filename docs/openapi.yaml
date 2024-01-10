@@ -50,6 +50,32 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/stores/active-toggle/{isActive}:
+        put:
+            tags:
+                - StoreService
+            description: Open close store
+            operationId: StoreService_OpenCloseStore
+            parameters:
+                - name: isActive
+                  in: path
+                  required: true
+                  schema:
+                    type: boolean
+                - name: storeId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/stores/{storeId}:
         get:
             tags:

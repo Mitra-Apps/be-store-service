@@ -1934,6 +1934,112 @@ var _ interface {
 	ErrorName() string
 } = ListStoresRequestValidationError{}
 
+// Validate checks the field values on OpenCloseStoreRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *OpenCloseStoreRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on OpenCloseStoreRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// OpenCloseStoreRequestMultiError, or nil if none found.
+func (m *OpenCloseStoreRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *OpenCloseStoreRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for StoreId
+
+	// no validation rules for IsActive
+
+	if len(errors) > 0 {
+		return OpenCloseStoreRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// OpenCloseStoreRequestMultiError is an error wrapping multiple validation
+// errors returned by OpenCloseStoreRequest.ValidateAll() if the designated
+// constraints aren't met.
+type OpenCloseStoreRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m OpenCloseStoreRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m OpenCloseStoreRequestMultiError) AllErrors() []error { return m }
+
+// OpenCloseStoreRequestValidationError is the validation error returned by
+// OpenCloseStoreRequest.Validate if the designated constraints aren't met.
+type OpenCloseStoreRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OpenCloseStoreRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OpenCloseStoreRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OpenCloseStoreRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OpenCloseStoreRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OpenCloseStoreRequestValidationError) ErrorName() string {
+	return "OpenCloseStoreRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e OpenCloseStoreRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOpenCloseStoreRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OpenCloseStoreRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OpenCloseStoreRequestValidationError{}
+
 // Validate checks the field values on ListStoresResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

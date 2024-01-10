@@ -47,16 +47,20 @@ const (
 	StoreServiceDeleteStoreProcedure = "/StoreService/DeleteStore"
 	// StoreServiceListStoresProcedure is the fully-qualified name of the StoreService's ListStores RPC.
 	StoreServiceListStoresProcedure = "/StoreService/ListStores"
+	// StoreServiceOpenCloseStoreProcedure is the fully-qualified name of the StoreService's
+	// OpenCloseStore RPC.
+	StoreServiceOpenCloseStoreProcedure = "/StoreService/OpenCloseStore"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	storeServiceServiceDescriptor           = store.File_proto_store_store_proto.Services().ByName("StoreService")
-	storeServiceCreateStoreMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("CreateStore")
-	storeServiceGetStoreMethodDescriptor    = storeServiceServiceDescriptor.Methods().ByName("GetStore")
-	storeServiceUpdateStoreMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("UpdateStore")
-	storeServiceDeleteStoreMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("DeleteStore")
-	storeServiceListStoresMethodDescriptor  = storeServiceServiceDescriptor.Methods().ByName("ListStores")
+	storeServiceServiceDescriptor              = store.File_proto_store_store_proto.Services().ByName("StoreService")
+	storeServiceCreateStoreMethodDescriptor    = storeServiceServiceDescriptor.Methods().ByName("CreateStore")
+	storeServiceGetStoreMethodDescriptor       = storeServiceServiceDescriptor.Methods().ByName("GetStore")
+	storeServiceUpdateStoreMethodDescriptor    = storeServiceServiceDescriptor.Methods().ByName("UpdateStore")
+	storeServiceDeleteStoreMethodDescriptor    = storeServiceServiceDescriptor.Methods().ByName("DeleteStore")
+	storeServiceListStoresMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("ListStores")
+	storeServiceOpenCloseStoreMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("OpenCloseStore")
 )
 
 // StoreServiceClient is a client for the StoreService service.
@@ -71,6 +75,8 @@ type StoreServiceClient interface {
 	DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error)
 	// List all stores
 	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
+	// Open close store
+	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewStoreServiceClient constructs a client for the StoreService service. By default, it uses the
@@ -113,16 +119,23 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(storeServiceListStoresMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		openCloseStore: connect.NewClient[store.OpenCloseStoreRequest, emptypb.Empty](
+			httpClient,
+			baseURL+StoreServiceOpenCloseStoreProcedure,
+			connect.WithSchema(storeServiceOpenCloseStoreMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // storeServiceClient implements StoreServiceClient.
 type storeServiceClient struct {
-	createStore *connect.Client[store.CreateStoreRequest, store.CreateStoreResponse]
-	getStore    *connect.Client[store.GetStoreRequest, store.GetStoreResponse]
-	updateStore *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
-	deleteStore *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
-	listStores  *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
+	createStore    *connect.Client[store.CreateStoreRequest, store.CreateStoreResponse]
+	getStore       *connect.Client[store.GetStoreRequest, store.GetStoreResponse]
+	updateStore    *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
+	deleteStore    *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
+	listStores     *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
+	openCloseStore *connect.Client[store.OpenCloseStoreRequest, emptypb.Empty]
 }
 
 // CreateStore calls StoreService.CreateStore.
@@ -150,6 +163,11 @@ func (c *storeServiceClient) ListStores(ctx context.Context, req *connect.Reques
 	return c.listStores.CallUnary(ctx, req)
 }
 
+// OpenCloseStore calls StoreService.OpenCloseStore.
+func (c *storeServiceClient) OpenCloseStore(ctx context.Context, req *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.openCloseStore.CallUnary(ctx, req)
+}
+
 // StoreServiceHandler is an implementation of the StoreService service.
 type StoreServiceHandler interface {
 	// Create a new store
@@ -162,6 +180,8 @@ type StoreServiceHandler interface {
 	DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error)
 	// List all stores
 	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
+	// Open close store
+	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewStoreServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -200,6 +220,12 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(storeServiceListStoresMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	storeServiceOpenCloseStoreHandler := connect.NewUnaryHandler(
+		StoreServiceOpenCloseStoreProcedure,
+		svc.OpenCloseStore,
+		connect.WithSchema(storeServiceOpenCloseStoreMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/StoreService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case StoreServiceCreateStoreProcedure:
@@ -212,6 +238,8 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 			storeServiceDeleteStoreHandler.ServeHTTP(w, r)
 		case StoreServiceListStoresProcedure:
 			storeServiceListStoresHandler.ServeHTTP(w, r)
+		case StoreServiceOpenCloseStoreProcedure:
+			storeServiceOpenCloseStoreHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -239,4 +267,8 @@ func (UnimplementedStoreServiceHandler) DeleteStore(context.Context, *connect.Re
 
 func (UnimplementedStoreServiceHandler) ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.ListStores is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.OpenCloseStore is not implemented"))
 }
