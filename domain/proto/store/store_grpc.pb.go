@@ -43,7 +43,7 @@ type StoreServiceClient interface {
 	// List all stores
 	ListStores(ctx context.Context, in *ListStoresRequest, opts ...grpc.CallOption) (*ListStoresResponse, error)
 	// Open close store
-	OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*OpenCloseStoreResponse, error)
 }
 
 type storeServiceClient struct {
@@ -99,8 +99,8 @@ func (c *storeServiceClient) ListStores(ctx context.Context, in *ListStoresReque
 	return out, nil
 }
 
-func (c *storeServiceClient) OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *storeServiceClient) OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*OpenCloseStoreResponse, error) {
+	out := new(OpenCloseStoreResponse)
 	err := c.cc.Invoke(ctx, StoreService_OpenCloseStore_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ type StoreServiceServer interface {
 	// List all stores
 	ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error)
 	// Open close store
-	OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*emptypb.Empty, error)
+	OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error)
 	mustEmbedUnimplementedStoreServiceServer()
 }
 
@@ -146,7 +146,7 @@ func (UnimplementedStoreServiceServer) DeleteStore(context.Context, *DeleteStore
 func (UnimplementedStoreServiceServer) ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStores not implemented")
 }
-func (UnimplementedStoreServiceServer) OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*emptypb.Empty, error) {
+func (UnimplementedStoreServiceServer) OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenCloseStore not implemented")
 }
 func (UnimplementedStoreServiceServer) mustEmbedUnimplementedStoreServiceServer() {}

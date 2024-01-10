@@ -76,7 +76,7 @@ type StoreServiceClient interface {
 	// List all stores
 	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
 	// Open close store
-	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[emptypb.Empty], error)
+	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error)
 }
 
 // NewStoreServiceClient constructs a client for the StoreService service. By default, it uses the
@@ -119,7 +119,7 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(storeServiceListStoresMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		openCloseStore: connect.NewClient[store.OpenCloseStoreRequest, emptypb.Empty](
+		openCloseStore: connect.NewClient[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse](
 			httpClient,
 			baseURL+StoreServiceOpenCloseStoreProcedure,
 			connect.WithSchema(storeServiceOpenCloseStoreMethodDescriptor),
@@ -135,7 +135,7 @@ type storeServiceClient struct {
 	updateStore    *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
 	deleteStore    *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
 	listStores     *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
-	openCloseStore *connect.Client[store.OpenCloseStoreRequest, emptypb.Empty]
+	openCloseStore *connect.Client[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse]
 }
 
 // CreateStore calls StoreService.CreateStore.
@@ -164,7 +164,7 @@ func (c *storeServiceClient) ListStores(ctx context.Context, req *connect.Reques
 }
 
 // OpenCloseStore calls StoreService.OpenCloseStore.
-func (c *storeServiceClient) OpenCloseStore(ctx context.Context, req *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[emptypb.Empty], error) {
+func (c *storeServiceClient) OpenCloseStore(ctx context.Context, req *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error) {
 	return c.openCloseStore.CallUnary(ctx, req)
 }
 
@@ -181,7 +181,7 @@ type StoreServiceHandler interface {
 	// List all stores
 	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
 	// Open close store
-	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[emptypb.Empty], error)
+	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error)
 }
 
 // NewStoreServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -269,6 +269,6 @@ func (UnimplementedStoreServiceHandler) ListStores(context.Context, *connect.Req
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.ListStores is not implemented"))
 }
 
-func (UnimplementedStoreServiceHandler) OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[emptypb.Empty], error) {
+func (UnimplementedStoreServiceHandler) OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.OpenCloseStore is not implemented"))
 }
