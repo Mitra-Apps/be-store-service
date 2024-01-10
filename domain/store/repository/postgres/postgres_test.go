@@ -35,7 +35,8 @@ func TestCreateStore(t *testing.T) {
 		Phone:       "555-1234",
 		Email:       "test@store.com",
 		Website:     "http://www.teststore.com",
-		MapLocation: "37.7749,-122.4194",
+		LocationLat: 0.0,
+		LocationLng: 0.0,
 	}
 
 	result, err := repo.CreateStore(context.Background(), store)
