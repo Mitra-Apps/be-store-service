@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
+	"github.com/google/uuid"
 )
 
 // StoreServiceRepository defines the interface for store-related operations.
@@ -22,6 +23,9 @@ type StoreServiceRepository interface {
 
 	// ListStores lists all stores.
 	ListStores(ctx context.Context) ([]*entity.Store, error)
+
+	// Activate / Deactivate store
+	OpenCloseStore(ctx context.Context, storeID uuid.UUID, isActive bool) error
 }
 
 type Storage interface {

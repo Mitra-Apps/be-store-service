@@ -76,3 +76,11 @@ func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (
 
 	return result, nil
 }
+
+func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRequest) (*empty.Empty, error) {
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	return nil, s.service.OpenCloseStore(ctx, req.StoreId, req.IsActive)
+}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
+	"github.com/google/uuid"
 
 	"gorm.io/gorm"
 )
@@ -200,4 +201,13 @@ func (p *postgres) ListStores(ctx context.Context) ([]*entity.Store, error) {
 		return nil, err
 	}
 	return stores, nil
+}
+
+func (p *postgres) OpenCloseStore(ctx context.Context, storeId uuid.UUID, isActive bool) error {
+	tx := p.db.WithContext(ctx).Model(entity.Store{}).Where("id = ?", storeId).
+		UpdateColumn("is_active", isActive)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
 }
