@@ -152,17 +152,19 @@ func (s *Store) FromProto(store *pb.Store) error {
 // StoreImage represents an image associated with a store.
 type StoreImage struct {
 	BaseModel
-	StoreID   uuid.UUID `gorm:"type:uuid;index;not null"`
-	ImageType string    `gorm:"not null"`
-	ImageURL  string    `gorm:"not null"`
+	StoreID     uuid.UUID `gorm:"type:uuid;index;not null"`
+	ImageType   string    `gorm:"not null"`
+	ImageURL    string    `gorm:"not null"`
+	ImageBase64 string    `gorm:"-"`
 }
 
 func (s *StoreImage) ToProto() *pb.StoreImage {
 	return &pb.StoreImage{
-		Id:        s.ID.String(),
-		StoreId:   s.StoreID.String(),
-		ImageType: s.ImageType,
-		ImageUrl:  s.ImageURL,
+		Id:          s.ID.String(),
+		StoreId:     s.StoreID.String(),
+		ImageType:   s.ImageType,
+		ImageUrl:    s.ImageURL,
+		ImageBase64: "",
 	}
 }
 
@@ -185,6 +187,7 @@ func (s *StoreImage) FromProto(storeImage *pb.StoreImage) error {
 
 	s.ImageType = storeImage.ImageType
 	s.ImageURL = storeImage.ImageUrl
+	s.ImageBase64 = storeImage.ImageBase64
 
 	return nil
 }

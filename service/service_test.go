@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
@@ -24,7 +25,8 @@ func Test_service_OpenCloseStore(t *testing.T) {
 	mockStoreRepo.EXPECT().OpenCloseStore(ctx, storeIdUuid, false).Return(nil)
 
 	type fields struct {
-		storeRepository *storeRepoMock.MockStoreServiceRepository
+		storeRepository   *storeRepoMock.MockStoreServiceRepository
+		storageRepository repository.Storage
 	}
 	type args struct {
 		ctx      context.Context
@@ -79,7 +81,7 @@ func Test_service_OpenCloseStore(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository)
+			s := New(tt.fields.storeRepository, nil)
 			if err := s.OpenCloseStore(tt.args.ctx, tt.args.storeID, tt.args.isActive); tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)

@@ -277,6 +277,8 @@ func (m *StoreImage) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for ImageBase64
+
 	if len(errors) > 0 {
 		return StoreImageMultiError(errors)
 	}

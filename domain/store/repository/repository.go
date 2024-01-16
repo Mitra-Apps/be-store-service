@@ -29,5 +29,5 @@ type StoreServiceRepository interface {
 }
 
 type Storage interface {
-	UploadImage(ctx context.Context, image string) (string, error)
+	UploadImage(ctx context.Context, image, userID string) (string, error)
 }

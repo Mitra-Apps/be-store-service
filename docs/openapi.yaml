@@ -308,6 +308,8 @@ components:
                     type: string
                 imageUrl:
                     type: string
+                imageBase64:
+                    type: string
             description: Store image message
         StoreTag:
             type: object

@@ -19,17 +19,28 @@ type Service interface {
 }
 type service struct {
 	storeRepository repository.StoreServiceRepository
+	storage         repository.Storage
 }
 
 func New(
 	storeRepository repository.StoreServiceRepository,
+	storage repository.Storage,
 ) Service {
 	return &service{
 		storeRepository: storeRepository,
+		storage:         storage,
 	}
 }
 
 func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error) {
+	for _, img := range store.Images {
+		imageURL, err := s.storage.UploadImage(ctx, img.ImageBase64, store.UserID.String())
+		if err != nil {
+			return nil, err
+		}
+		img.ImageURL = imageURL
+	}
+
 	return s.storeRepository.CreateStore(ctx, store)
 }
 
