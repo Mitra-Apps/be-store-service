@@ -105,7 +105,7 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 	return update, nil
 }
 
-func (p *postgres) updateStoreHours(ctx context.Context, existingStore entity.Store, updatedHours []entity.StoreHour) error {
+func (p *postgres) updateStoreHours(ctx context.Context, existingStore entity.Store, updatedHours []*entity.StoreHour) error {
 	for _, updatedHour := range updatedHours {
 		var existingHour entity.StoreHour
 		if err := p.db.WithContext(ctx).Where("id = ?", updatedHour.ID).First(&existingHour).Error; err != nil {
@@ -123,7 +123,7 @@ func (p *postgres) updateStoreHours(ctx context.Context, existingStore entity.St
 	return nil
 }
 
-func (p *postgres) updateStoreImages(ctx context.Context, existingStore entity.Store, updatedImages []entity.StoreImage) error {
+func (p *postgres) updateStoreImages(ctx context.Context, existingStore entity.Store, updatedImages []*entity.StoreImage) error {
 	for _, existingImage := range existingStore.Images {
 		found := false
 		for _, updatedImage := range updatedImages {
@@ -157,7 +157,7 @@ func (p *postgres) updateStoreImages(ctx context.Context, existingStore entity.S
 	return nil
 }
 
-func (p *postgres) updateStoreTags(ctx context.Context, existingStore entity.Store, updatedTags []entity.StoreTag) error {
+func (p *postgres) updateStoreTags(ctx context.Context, existingStore entity.Store, updatedTags []*entity.StoreTag) error {
 	for _, existingCategory := range existingStore.Tags {
 		found := false
 		for _, updatedCategory := range updatedTags {

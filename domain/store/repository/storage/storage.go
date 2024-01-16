@@ -53,22 +53,25 @@ func (s *storage) UploadImage(ctx context.Context, image, userID string) (string
 	}
 
 	fileType := http.DetectContentType(decodedImage)
-	fileExtension, err := mime.ExtensionsByType(fileType)
-	if err != nil || len(fileExtension) == 0 {
-		return "", fmt.Errorf("failed to get file extension: %w", err)
+	validFileExtensions := []string{".png", ".jpg", ".jpeg", ".svg"}
+	var fileExtension string
+
+	for _, ext := range validFileExtensions {
+		if mime.TypeByExtension(ext) == fileType {
+			fileExtension = ext
+			break
+		}
 	}
 
-	// file extension must be png, jpg, jpeg, or svg
-	if fileExtension[0] != ".png" && fileExtension[0] != ".jpg" && fileExtension[0] != ".jpeg" && fileExtension[0] != ".svg" {
+	if fileExtension == "" {
 		return "", fmt.Errorf("file extension must be png, jpg, jpeg, or svg")
 	}
 
-	// max file size is 4mb
 	if len(decodedImage) > 4*1024*1024 {
 		return "", fmt.Errorf("file size must be less than 4mb")
 	}
 
-	filename := uuid.New().String() + fileExtension[0]
+	filename := uuid.New().String() + fileExtension
 	objectName := fmt.Sprintf("stores/%s/%s", userID, filename)
 
 	_, err = s.client.PutObject(ctx, s.bucket, objectName, bytes.NewReader(decodedImage), int64(len(decodedImage)), minio.PutObjectOptions{})
@@ -76,21 +79,6 @@ func (s *storage) UploadImage(ctx context.Context, image, userID string) (string
 		return "", fmt.Errorf("failed to upload image: %w", err)
 	}
 
-	return fmt.Sprintf("%s/%s/%s", os.Getenv("MINIO_ENDPOINT"), s.bucket, objectName), nil
-}
-
-func getImageType(image string) string {
-	if strings.HasPrefix(image, "data:image/jpeg;base64") {
-		return "data:image/jpeg;base64"
-	} else if strings.HasPrefix(image, "data:image/png;base64") {
-		return "data:image/png;base64"
-	} else if strings.HasPrefix(image, "data:image/gif;base64") {
-		return "data:image/gif;base64"
-	} else {
-		return ""
-	}
-}
-
-func removeImageTypePrefix(image string, imageType string) string {
-	return strings.TrimPrefix(image, imageType)
+	minioEndpoint := os.Getenv("STORAGE_ENDPOINT")
+	return fmt.Sprintf("http://%s/%s/%s", minioEndpoint, s.bucket, objectName), nil
 }
