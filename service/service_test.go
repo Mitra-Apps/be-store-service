@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 
+	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mocks"
 	"github.com/golang/mock/gomock"
@@ -88,6 +91,97 @@ func Test_service_OpenCloseStore(t *testing.T) {
 			} else {
 				assert.Nil(t, err)
 			}
+		})
+	}
+}
+
+func TestCreateStore(t *testing.T) {
+	ctx := context.Background()
+	testCases := []struct {
+		name          string
+		setupMocks    func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage)
+		inputStore    *entity.Store
+		expectedStore *entity.Store
+		expectedError error
+	}{
+		{
+			name: "Successful store creation",
+			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
+				storeRepository.EXPECT().
+					CreateStore(ctx, gomock.Any()).
+					Do(func(ctx context.Context, store *entity.Store) {
+						fmt.Printf("Actual argument received: %+v\n", store)
+					}).
+					Return(&entity.Store{
+						UserID:    uuid.MustParse("bf8e8ba2-697b-4eba-892a-49fc682a3861"),
+						StoreName: "TestStore",
+						Images: []*entity.StoreImage{
+							{
+								ImageURL:    "http://example.com/image.jpg",
+								ImageBase64: "",
+							},
+						},
+					}, nil)
+				storage.EXPECT().
+					UploadImage(ctx, "SampleImageBase64", "bf8e8ba2-697b-4eba-892a-49fc682a3861").
+					Return("http://example.com/image.jpg", nil)
+			},
+			inputStore: &entity.Store{
+				UserID:    uuid.MustParse("bf8e8ba2-697b-4eba-892a-49fc682a3861"),
+				StoreName: "TestStore",
+				Images: []*entity.StoreImage{
+					{
+						ImageBase64: "SampleImageBase64",
+					},
+				},
+			},
+			expectedStore: &entity.Store{
+				UserID:    uuid.MustParse("bf8e8ba2-697b-4eba-892a-49fc682a3861"),
+				StoreName: "TestStore",
+				Images: []*entity.StoreImage{
+					{
+						ImageURL:    "http://example.com/image.jpg",
+						ImageBase64: "",
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Error uploading image",
+			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
+				storage.EXPECT().
+					UploadImage(ctx, "SampleImageBase64_failed", "bf8e8ba2-697b-4eba-892a-49fc682a3861").
+					Return("", errors.New("failed to upload image"))
+			},
+			inputStore: &entity.Store{
+				UserID:    uuid.MustParse("bf8e8ba2-697b-4eba-892a-49fc682a3861"),
+				StoreName: "TestStore",
+				Images: []*entity.StoreImage{
+					{
+						ImageBase64: "SampleImageBase64_failed",
+					},
+				},
+			},
+			expectedStore: nil,
+			expectedError: errors.New("failed to upload image"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+			storage := storeRepoMock.NewMockStorage(ctrl)
+			service := New(storeRepository, storage)
+
+			tc.setupMocks(storeRepository, storage)
+			resultStore, err := service.CreateStore(ctx, tc.inputStore)
+
+			assert.Equal(t, tc.expectedStore, resultStore)
+			assert.Equal(t, tc.expectedError, err)
 		})
 	}
 }
