@@ -21,8 +21,9 @@ import (
 )
 
 type storage struct {
-	client *minio.Client
-	bucket string
+	client   *minio.Client
+	bucket   string
+	endpoint string
 }
 
 func New() repository.Storage {
@@ -40,8 +41,9 @@ func New() repository.Storage {
 	}
 
 	return &storage{
-		client: minioClient,
-		bucket: bucketName,
+		client:   minioClient,
+		bucket:   bucketName,
+		endpoint: endpoint,
 	}
 }
 
@@ -72,13 +74,12 @@ func (s *storage) UploadImage(ctx context.Context, image, userID string) (string
 	}
 
 	filename := uuid.New().String() + fileExtension
-	objectName := fmt.Sprintf("stores/%s/%s", userID, filename)
+	objectName := fmt.Sprintf("%s/stores/%s", userID, filename)
 
 	_, err = s.client.PutObject(ctx, s.bucket, objectName, bytes.NewReader(decodedImage), int64(len(decodedImage)), minio.PutObjectOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to upload image: %w", err)
 	}
 
-	minioEndpoint := os.Getenv("STORAGE_ENDPOINT")
-	return fmt.Sprintf("http://%s/%s/%s", minioEndpoint, s.bucket, objectName), nil
+	return fmt.Sprintf("http://%s/%s/%s", s.endpoint, s.bucket, objectName), nil
 }
