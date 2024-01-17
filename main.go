@@ -10,6 +10,7 @@ import (
 
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	grpcRoute "github.com/Mitra-Apps/be-store-service/handler/grpc"
+	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/joho/godotenv"
@@ -75,6 +76,7 @@ func GrpcNewServer(ctx context.Context, opts []grpc.ServerOption) *grpc.Server {
 			grpc_logrus.UnaryServerInterceptor(logrusEntry, logrusOpts...),
 			grpc_recovery.UnaryServerInterceptor(),
 			apmgrpc.NewUnaryServerInterceptor(apmgrpc.WithRecovery()),
+			middleware.Auth,
 		)),
 	)
 
