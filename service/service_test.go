@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
-	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
+	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
