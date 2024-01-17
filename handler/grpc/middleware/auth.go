@@ -24,7 +24,7 @@ func Auth(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, hand
 
 	headers, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, status.Errorf(codes.Unauthenticated, "no headers provided")
+		return nil, status.Errorf(codes.InvalidArgument, "no headers provided")
 	}
 
 	token := getTokenValue(headers)
