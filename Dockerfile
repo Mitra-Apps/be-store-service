@@ -25,10 +25,13 @@ RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 GOPATH=/go \
 # This is the actual image that we will be using in production.
 FROM alpine:latest
 
+COPY --from=builder /app/docs /app/docs
 COPY --from=builder /usr/local/bin/store-service /usr/local/bin/store-service
 
 # This is the port that our application will be listening on.
 EXPOSE 9200
 EXPOSE 9201
+
+WORKDIR /app
 
 ENTRYPOINT ["/usr/local/bin/store-service"]
