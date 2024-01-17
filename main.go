@@ -86,6 +86,14 @@ func GrpcNewServer(ctx context.Context, opts []grpc.ServerOption) *grpc.Server {
 
 func HttpNewServer(ctx context.Context, grpcPort, httpPort string) error {
 	mux := runtime.NewServeMux()
+	mux.HandlePath("GET", "/docs/v1/stores/openapi.yaml", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		http.ServeFile(w, r, "docs/openapi.yaml")
+	})
+
+	mux.HandlePath("GET", "/docs/v1/stores", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		http.ServeFile(w, r, "docs/index.html")
+	})
+
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	if err := pb.RegisterStoreServiceHandlerFromEndpoint(ctx, mux, fmt.Sprintf("localhost:%s", grpcPort), opts); err != nil {
 		return err
