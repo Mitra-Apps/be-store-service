@@ -11,7 +11,17 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var excludedMethods = []string{
+	// "/StoreService/GetStore",
+}
+
 func Auth(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	for _, excludedMethod := range excludedMethods {
+		if strings.Contains(info.FullMethod, excludedMethod) {
+			return handler(ctx, req)
+		}
+	}
+
 	headers, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "no headers provided")
