@@ -35,6 +35,7 @@ message StoreImage {
     string store_id = 2;
     string image_type = 3 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string image_url = 4 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string image_base64 = 5;
 }
 
 // Store tag message

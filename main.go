@@ -18,6 +18,7 @@ import (
 
 	configPostgres "github.com/Mitra-Apps/be-store-service/config/postgres"
 	repositoryPostgres "github.com/Mitra-Apps/be-store-service/domain/store/repository/postgres"
+	"github.com/Mitra-Apps/be-store-service/domain/store/repository/storage"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -39,7 +40,8 @@ func main() {
 
 	db := configPostgres.Connection()
 	repoPostgres := repositoryPostgres.NewPostgres(db)
-	svc := service.New(repoPostgres)
+	repoStorage := storage.New()
+	svc := service.New(repoPostgres, repoStorage)
 	grpcServer := GrpcNewServer(ctx, []grpc.ServerOption{})
 	route := grpcRoute.New(svc)
 	pb.RegisterStoreServiceServer(grpcServer, route)
@@ -84,6 +86,14 @@ func GrpcNewServer(ctx context.Context, opts []grpc.ServerOption) *grpc.Server {
 
 func HttpNewServer(ctx context.Context, grpcPort, httpPort string) error {
 	mux := runtime.NewServeMux()
+	mux.HandlePath("GET", "/docs/v1/stores/openapi.yaml", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		http.ServeFile(w, r, "docs/openapi.yaml")
+	})
+
+	mux.HandlePath("GET", "/docs/v1/stores", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		http.ServeFile(w, r, "docs/index.html")
+	})
+
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	if err := pb.RegisterStoreServiceHandlerFromEndpoint(ctx, mux, fmt.Sprintf("localhost:%s", grpcPort), opts); err != nil {
 		return err

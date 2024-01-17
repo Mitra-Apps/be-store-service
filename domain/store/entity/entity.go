@@ -49,9 +49,9 @@ type Store struct {
 	LocationLng      float64
 	Status           string
 	IsActive         bool
-	Tags             []StoreTag   `gorm:"many2many:store_store_tags"`
-	Hours            []StoreHour  `gorm:"foreignKey:StoreID"`
-	Images           []StoreImage `gorm:"foreignKey:StoreID"`
+	Tags             []*StoreTag   `gorm:"many2many:store_store_tags"`
+	Hours            []*StoreHour  `gorm:"foreignKey:StoreID"`
+	Images           []*StoreImage `gorm:"foreignKey:StoreID"`
 }
 
 func (s *Store) ToProto() *pb.Store {
@@ -127,7 +127,7 @@ func (s *Store) FromProto(store *pb.Store) error {
 		if err := storeTag.FromProto(tag); err != nil {
 			return err
 		}
-		s.Tags = append(s.Tags, *storeTag)
+		s.Tags = append(s.Tags, storeTag)
 	}
 
 	for _, hour := range store.Hours {
@@ -135,7 +135,7 @@ func (s *Store) FromProto(store *pb.Store) error {
 		if err := storeHour.FromProto(hour); err != nil {
 			return err
 		}
-		s.Hours = append(s.Hours, *storeHour)
+		s.Hours = append(s.Hours, storeHour)
 	}
 
 	for _, image := range store.Images {
@@ -143,7 +143,7 @@ func (s *Store) FromProto(store *pb.Store) error {
 		if err := storeImage.FromProto(image); err != nil {
 			return err
 		}
-		s.Images = append(s.Images, *storeImage)
+		s.Images = append(s.Images, storeImage)
 	}
 
 	return nil
@@ -152,17 +152,19 @@ func (s *Store) FromProto(store *pb.Store) error {
 // StoreImage represents an image associated with a store.
 type StoreImage struct {
 	BaseModel
-	StoreID   uuid.UUID `gorm:"type:uuid;index;not null"`
-	ImageType string    `gorm:"not null"`
-	ImageURL  string    `gorm:"not null"`
+	StoreID     uuid.UUID `gorm:"type:uuid;index;not null"`
+	ImageType   string    `gorm:"not null"`
+	ImageURL    string    `gorm:"not null"`
+	ImageBase64 string    `gorm:"-"`
 }
 
 func (s *StoreImage) ToProto() *pb.StoreImage {
 	return &pb.StoreImage{
-		Id:        s.ID.String(),
-		StoreId:   s.StoreID.String(),
-		ImageType: s.ImageType,
-		ImageUrl:  s.ImageURL,
+		Id:          s.ID.String(),
+		StoreId:     s.StoreID.String(),
+		ImageType:   s.ImageType,
+		ImageUrl:    s.ImageURL,
+		ImageBase64: "",
 	}
 }
 
@@ -185,6 +187,7 @@ func (s *StoreImage) FromProto(storeImage *pb.StoreImage) error {
 
 	s.ImageType = storeImage.ImageType
 	s.ImageURL = storeImage.ImageUrl
+	s.ImageBase64 = storeImage.ImageBase64
 
 	return nil
 }
