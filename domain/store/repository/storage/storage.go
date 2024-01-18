@@ -76,10 +76,11 @@ func (s *storage) UploadImage(ctx context.Context, image, userID string) (string
 	filename := uuid.New().String() + fileExtension
 	objectName := fmt.Sprintf("%s/stores/%s", userID, filename)
 
-	_, err = s.client.PutObject(ctx, s.bucket, objectName, bytes.NewReader(decodedImage), int64(len(decodedImage)), minio.PutObjectOptions{})
-	if err != nil {
-		return "", fmt.Errorf("failed to upload image: %w", err)
-	}
+	go func() {
+		if _, err = s.client.PutObject(ctx, s.bucket, objectName, bytes.NewReader(decodedImage), int64(len(decodedImage)), minio.PutObjectOptions{}); err != nil {
+			logrus.Errorf("Failed to upload image to MinIO: %v", err)
+		}
+	}()
 
 	return fmt.Sprintf("http://%s/%s/%s", s.endpoint, s.bucket, objectName), nil
 }
