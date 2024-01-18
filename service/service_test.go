@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -97,6 +98,16 @@ func Test_service_OpenCloseStore(t *testing.T) {
 
 func TestCreateStore(t *testing.T) {
 	ctx := context.Background()
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		md = metadata.New(nil)
+	}
+
+	sessionUserID := uuid.New()
+
+	md.Set("x-user-id", sessionUserID.String())
+	ctx = metadata.NewIncomingContext(ctx, md)
+
 	testCases := []struct {
 		name          string
 		setupMocks    func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage)
@@ -109,11 +120,9 @@ func TestCreateStore(t *testing.T) {
 			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
 				storeRepository.EXPECT().
 					CreateStore(ctx, gomock.Any()).
-					Do(func(ctx context.Context, store *entity.Store) {
-						fmt.Printf("Actual argument received: %+v\n", store)
-					}).
 					Return(&entity.Store{
-						UserID:    uuid.MustParse("bf8e8ba2-697b-4eba-892a-49fc682a3861"),
+						BaseModel: entity.BaseModel{CreatedBy: sessionUserID},
+						UserID:    sessionUserID,
 						StoreName: "TestStore",
 						Images: []*entity.StoreImage{
 							{
@@ -123,11 +132,11 @@ func TestCreateStore(t *testing.T) {
 						},
 					}, nil)
 				storage.EXPECT().
-					UploadImage(ctx, "SampleImageBase64", "bf8e8ba2-697b-4eba-892a-49fc682a3861").
+					UploadImage(ctx, "SampleImageBase64", sessionUserID.String()).
 					Return("http://example.com/image.jpg", nil)
 			},
 			inputStore: &entity.Store{
-				UserID:    uuid.MustParse("bf8e8ba2-697b-4eba-892a-49fc682a3861"),
+				UserID:    sessionUserID,
 				StoreName: "TestStore",
 				Images: []*entity.StoreImage{
 					{
@@ -136,7 +145,8 @@ func TestCreateStore(t *testing.T) {
 				},
 			},
 			expectedStore: &entity.Store{
-				UserID:    uuid.MustParse("bf8e8ba2-697b-4eba-892a-49fc682a3861"),
+				BaseModel: entity.BaseModel{CreatedBy: sessionUserID},
+				UserID:    sessionUserID,
 				StoreName: "TestStore",
 				Images: []*entity.StoreImage{
 					{
@@ -151,11 +161,10 @@ func TestCreateStore(t *testing.T) {
 			name: "Error uploading image",
 			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
 				storage.EXPECT().
-					UploadImage(ctx, "SampleImageBase64_failed", "bf8e8ba2-697b-4eba-892a-49fc682a3861").
+					UploadImage(ctx, "SampleImageBase64_failed", sessionUserID.String()).
 					Return("", errors.New("failed to upload image"))
 			},
 			inputStore: &entity.Store{
-				UserID:    uuid.MustParse("bf8e8ba2-697b-4eba-892a-49fc682a3861"),
 				StoreName: "TestStore",
 				Images: []*entity.StoreImage{
 					{
@@ -179,7 +188,8 @@ func TestCreateStore(t *testing.T) {
 
 			tc.setupMocks(storeRepository, storage)
 			resultStore, err := service.CreateStore(ctx, tc.inputStore)
-
+			fmt.Printf("Actual argument received: %+v\n", resultStore)
+			fmt.Printf("Actual argument received: %+v\n", err)
 			assert.Equal(t, tc.expectedStore, resultStore)
 			assert.Equal(t, tc.expectedError, err)
 		})

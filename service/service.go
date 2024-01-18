@@ -6,6 +6,7 @@ import (
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
+	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,6 +34,14 @@ func New(
 }
 
 func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error) {
+	userID, err := middleware.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting user id")
+	}
+
+	store.UserID = userID
+	store.CreatedBy = userID
+
 	for _, img := range store.Images {
 		imageURL, err := s.storage.UploadImage(ctx, img.ImageBase64, store.UserID.String())
 		if err != nil {
