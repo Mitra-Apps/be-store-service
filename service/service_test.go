@@ -2,14 +2,18 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 
+	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
-	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
+	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -88,6 +92,106 @@ func Test_service_OpenCloseStore(t *testing.T) {
 			} else {
 				assert.Nil(t, err)
 			}
+		})
+	}
+}
+
+func TestCreateStore(t *testing.T) {
+	ctx := context.Background()
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		md = metadata.New(nil)
+	}
+
+	sessionUserID := uuid.New()
+
+	md.Set("x-user-id", sessionUserID.String())
+	ctx = metadata.NewIncomingContext(ctx, md)
+
+	testCases := []struct {
+		name          string
+		setupMocks    func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage)
+		inputStore    *entity.Store
+		expectedStore *entity.Store
+		expectedError error
+	}{
+		{
+			name: "Successful store creation",
+			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
+				storeRepository.EXPECT().
+					CreateStore(ctx, gomock.Any()).
+					Return(&entity.Store{
+						BaseModel: entity.BaseModel{CreatedBy: sessionUserID},
+						UserID:    sessionUserID,
+						StoreName: "TestStore",
+						Images: []*entity.StoreImage{
+							{
+								ImageURL:    "http://example.com/image.jpg",
+								ImageBase64: "",
+							},
+						},
+					}, nil)
+				storage.EXPECT().
+					UploadImage(ctx, "SampleImageBase64", sessionUserID.String()).
+					Return("http://example.com/image.jpg", nil)
+			},
+			inputStore: &entity.Store{
+				UserID:    sessionUserID,
+				StoreName: "TestStore",
+				Images: []*entity.StoreImage{
+					{
+						ImageBase64: "SampleImageBase64",
+					},
+				},
+			},
+			expectedStore: &entity.Store{
+				BaseModel: entity.BaseModel{CreatedBy: sessionUserID},
+				UserID:    sessionUserID,
+				StoreName: "TestStore",
+				Images: []*entity.StoreImage{
+					{
+						ImageURL:    "http://example.com/image.jpg",
+						ImageBase64: "",
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Error uploading image",
+			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
+				storage.EXPECT().
+					UploadImage(ctx, "SampleImageBase64_failed", sessionUserID.String()).
+					Return("", errors.New("failed to upload image"))
+			},
+			inputStore: &entity.Store{
+				StoreName: "TestStore",
+				Images: []*entity.StoreImage{
+					{
+						ImageBase64: "SampleImageBase64_failed",
+					},
+				},
+			},
+			expectedStore: nil,
+			expectedError: errors.New("failed to upload image"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+			storage := storeRepoMock.NewMockStorage(ctrl)
+			service := New(storeRepository, storage)
+
+			tc.setupMocks(storeRepository, storage)
+			resultStore, err := service.CreateStore(ctx, tc.inputStore)
+			fmt.Printf("Actual argument received: %+v\n", resultStore)
+			fmt.Printf("Actual argument received: %+v\n", err)
+			assert.Equal(t, tc.expectedStore, resultStore)
+			assert.Equal(t, tc.expectedError, err)
 		})
 	}
 }
