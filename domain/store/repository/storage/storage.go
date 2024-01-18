@@ -77,7 +77,7 @@ func (s *storage) UploadImage(ctx context.Context, image, userID string) (string
 	objectName := fmt.Sprintf("%s/stores/%s", userID, filename)
 
 	go func() {
-		if _, err = s.client.PutObject(ctx, s.bucket, objectName, bytes.NewReader(decodedImage), int64(len(decodedImage)), minio.PutObjectOptions{}); err != nil {
+		if _, err = s.client.PutObject(context.Background(), s.bucket, objectName, bytes.NewReader(decodedImage), int64(len(decodedImage)), minio.PutObjectOptions{}); err != nil {
 			logrus.Errorf("Failed to upload image to MinIO: %v", err)
 		}
 	}()
