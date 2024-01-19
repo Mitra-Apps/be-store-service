@@ -42,6 +42,15 @@ func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity
 	store.UserID = userID
 	store.CreatedBy = userID
 
+	exist, err := s.storeRepository.GetStoreByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if exist != nil {
+		return nil, status.Errorf(codes.AlreadyExists, "User already has a store")
+	}
+
 	for _, img := range store.Images {
 		imageURL, err := s.storage.UploadImage(ctx, img.ImageBase64, store.UserID.String())
 		if err != nil {

@@ -222,6 +222,10 @@ func (p *postgres) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (*ent
 		Preload("Images").
 		Preload("Tags").
 		First(&store, "stores.user_id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
 		return nil, err
 	}
 
