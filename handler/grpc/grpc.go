@@ -5,9 +5,11 @@ import (
 
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
+	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type GrpcRoute struct {
@@ -95,7 +97,12 @@ func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRe
 		return nil, err
 	}
 
-	err := s.service.OpenCloseStore(ctx, req.StoreId, req.IsActive)
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+
+	err = s.service.OpenCloseStore(ctx, claims.UserID, claims.RoleNames, req.StoreId, req.IsActive)
 	if err != nil {
 		return nil, err
 	}

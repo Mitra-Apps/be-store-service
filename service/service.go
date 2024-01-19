@@ -16,7 +16,7 @@ type Service interface {
 	CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error)
 	GetStore(ctx context.Context, storeID string) (*entity.Store, error)
 	ListStores(ctx context.Context) ([]*entity.Store, error)
-	OpenCloseStore(ctx context.Context, storeID string, isActive bool) error
+	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
 }
 type service struct {
 	storeRepository repository.StoreServiceRepository
@@ -34,13 +34,13 @@ func New(
 }
 
 func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error) {
-	userID, err := middleware.GetUserIDFromContext(ctx)
+	claims, err := middleware.GetClaimsFromContext(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "Error when getting user id")
 	}
 
-	store.UserID = userID
-	store.CreatedBy = userID
+	store.UserID = claims.UserID
+	store.CreatedBy = claims.UserID
 
 	for _, img := range store.Images {
 		imageURL, err := s.storage.UploadImage(ctx, img.ImageBase64, store.UserID.String())
@@ -61,13 +61,29 @@ func (s *service) ListStores(ctx context.Context) ([]*entity.Store, error) {
 	return s.storeRepository.ListStores(ctx)
 }
 
-func (s *service) OpenCloseStore(ctx context.Context, storeID string, isActive bool) error {
+func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error {
 	if strings.Trim(storeID, " ") == "" {
 		return status.Errorf(codes.InvalidArgument, "store id is required")
 	}
 	storeIDUuid, err := uuid.Parse(storeID)
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, "store id should be uuid")
+	}
+
+	store, err := s.storeRepository.GetStore(ctx, storeID)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
+	var isAdmin bool
+	for _, r := range roleNames {
+		if r == "admin" {
+			isAdmin = true
+		}
+	}
+
+	if userID != store.UserID && !isAdmin {
+		return status.Errorf(codes.PermissionDenied, "You do not have permission to open / close this store")
 	}
 
 	err = s.storeRepository.OpenCloseStore(ctx, storeIDUuid, isActive)

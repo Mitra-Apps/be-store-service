@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	userID  = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
 	storeID = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
 )
 
@@ -20,9 +21,9 @@ func TestGrpcRoute_OpenCloseStore(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	svcMock := serviceMock.NewMockService(ctrl)
 	ctx := context.Background()
-	svcMock.EXPECT().OpenCloseStore(ctx, storeID, false).
+	svcMock.EXPECT().OpenCloseStore(gomock.Any(), gomock.Any(), gomock.Any(), storeID, false).
 		Return(nil)
-	svcMock.EXPECT().OpenCloseStore(ctx, "", false).
+	svcMock.EXPECT().OpenCloseStore(gomock.Any(), gomock.Any(), gomock.Any(), "", false).
 		Return(status.Errorf(codes.InvalidArgument, codes.InvalidArgument.String()))
 
 	type args struct {
