@@ -102,9 +102,13 @@ func (s *Store) FromProto(store *pb.Store) error {
 	}
 
 	// convert user id to uuid
-	userID, err := uuid.Parse(store.UserId)
-	if err != nil {
-		return err
+	var userID uuid.UUID
+	if store.UserId != "" {
+		id, err := uuid.Parse(store.UserId)
+		if err != nil {
+			return err
+		}
+		userID = id
 	}
 
 	s.UserID = userID
