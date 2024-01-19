@@ -56,7 +56,7 @@ message StoreHour {
 // Store message
 message Store {
     string id = 1;
-    string user_id = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string user_id = 2;
     string store_name = 3 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string store_description = 4 [(validate.rules).string = {min_len: 1, max_len: 512}];
     string address = 5 [(validate.rules).string = {min_len: 1, max_len: 255}];
