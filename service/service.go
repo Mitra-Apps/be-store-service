@@ -42,7 +42,7 @@ func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity
 	store.UserID = claims.UserID
 	store.CreatedBy = claims.UserID
 
-	exist, err := s.storeRepository.GetStoreByUserID(ctx, userID)
+	exist, err := s.storeRepository.GetStoreByUserID(ctx, store.UserID)
 	if err != nil {
 		return nil, err
 	}
