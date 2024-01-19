@@ -35,7 +35,7 @@ type BaseModel struct {
 // Store represents a store model.
 type Store struct {
 	BaseModel
-	UserID           uuid.UUID `gorm:"type:uuid;not null"`
+	UserID           uuid.UUID `gorm:"type:uuid;not null;unique"`
 	StoreName        string    `gorm:"not null;unique"`
 	StoreDescription string    `gorm:"not null,type:text"`
 	Address          string    `gorm:"not null,type:text"`

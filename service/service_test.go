@@ -165,22 +165,19 @@ func TestCreateStore(t *testing.T) {
 		{
 			name: "Successful store creation",
 			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
-				storeRepository.EXPECT().
-					CreateStore(ctx, gomock.Any()).
-					Return(&entity.Store{
-						BaseModel: entity.BaseModel{CreatedBy: sessionUserID},
-						UserID:    sessionUserID,
-						StoreName: "TestStore",
-						Images: []*entity.StoreImage{
-							{
-								ImageURL:    "http://example.com/image.jpg",
-								ImageBase64: "",
-							},
+				storeRepository.EXPECT().GetStoreByUserID(ctx, gomock.Any()).Return(nil, nil)
+				storage.EXPECT().UploadImage(ctx, "SampleImageBase64", sessionUserID.String()).Return("http://example.com/image.jpg", nil)
+				storeRepository.EXPECT().CreateStore(ctx, gomock.Any()).Return(&entity.Store{
+					BaseModel: entity.BaseModel{CreatedBy: sessionUserID},
+					UserID:    sessionUserID,
+					StoreName: "TestStore",
+					Images: []*entity.StoreImage{
+						{
+							ImageURL:    "http://example.com/image.jpg",
+							ImageBase64: "",
 						},
-					}, nil)
-				storage.EXPECT().
-					UploadImage(ctx, "SampleImageBase64", sessionUserID.String()).
-					Return("http://example.com/image.jpg", nil)
+					},
+				}, nil)
 			},
 			inputStore: &entity.Store{
 				UserID:    sessionUserID,
@@ -207,6 +204,7 @@ func TestCreateStore(t *testing.T) {
 		{
 			name: "Error uploading image",
 			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
+				storeRepository.EXPECT().GetStoreByUserID(ctx, gomock.Any()).Return(nil, nil)
 				storage.EXPECT().
 					UploadImage(ctx, "SampleImageBase64_failed", sessionUserID.String()).
 					Return("", errors.New("failed to upload image"))
@@ -221,6 +219,19 @@ func TestCreateStore(t *testing.T) {
 			},
 			expectedStore: nil,
 			expectedError: errors.New("failed to upload image"),
+		},
+		{
+			name: "User already has store",
+			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
+				storeRepository.EXPECT().GetStoreByUserID(ctx, gomock.Any()).Return(&entity.Store{
+					StoreName: "TestStore",
+				}, nil)
+			},
+			inputStore: &entity.Store{
+				StoreName: "TestStore",
+			},
+			expectedStore: nil,
+			expectedError: status.Errorf(codes.AlreadyExists, "User already has a store"),
 		},
 	}
 

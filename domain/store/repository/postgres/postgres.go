@@ -213,3 +213,21 @@ func (p *postgres) OpenCloseStore(ctx context.Context, storeId uuid.UUID, isActi
 	}
 	return nil
 }
+
+// GetStoreByUserID retrieves a store by its user ID.
+func (p *postgres) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (*entity.Store, error) {
+	var store entity.Store
+	if err := p.db.WithContext(ctx).
+		Preload("Hours").
+		Preload("Images").
+		Preload("Tags").
+		First(&store, "stores.user_id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &store, nil
+}
