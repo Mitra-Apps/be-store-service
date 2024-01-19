@@ -18,24 +18,37 @@ import (
 )
 
 const (
-	storeID = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
+	userID      = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
+	otherUserID = "2f27d467-9f83-4170-96ab-36e0994f37ca"
+	storeID     = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
 )
 
 func Test_service_OpenCloseStore(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
 	ctx := context.Background()
+	userIdUuid, _ := uuid.Parse(userID)
+	otherUserIdUuid, _ := uuid.Parse(otherUserID)
 	storeIdUuid, _ := uuid.Parse(storeID)
-	mockStoreRepo.EXPECT().OpenCloseStore(ctx, storeIdUuid, false).Return(nil)
+	roleNames := []string{}
+	roleNames = append(roleNames, "merchant")
+	adminRole := []string{}
+	adminRole = append(adminRole, "admin")
+	mockStoreRepo.EXPECT().GetStore(gomock.Any(), gomock.Any()).Return(&entity.Store{
+		UserID: userIdUuid,
+	}, nil).AnyTimes()
+	mockStoreRepo.EXPECT().OpenCloseStore(ctx, storeIdUuid, false).Return(nil).AnyTimes()
 
 	type fields struct {
 		storeRepository   *storeRepoMock.MockStoreServiceRepository
 		storageRepository repository.Storage
 	}
 	type args struct {
-		ctx      context.Context
-		storeID  string
-		isActive bool
+		ctx       context.Context
+		userID    uuid.UUID
+		roleNames []string
+		storeID   string
+		isActive  bool
 	}
 	tests := []struct {
 		name          string
@@ -50,9 +63,10 @@ func Test_service_OpenCloseStore(t *testing.T) {
 				storeRepository: mockStoreRepo,
 			},
 			args: args{
-				ctx:      ctx,
-				storeID:  "",
-				isActive: false,
+				ctx:       ctx,
+				storeID:   "",
+				isActive:  false,
+				roleNames: roleNames,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "store id is required"),
@@ -63,22 +77,55 @@ func Test_service_OpenCloseStore(t *testing.T) {
 				storeRepository: mockStoreRepo,
 			},
 			args: args{
-				ctx:      ctx,
-				storeID:  "aaa",
-				isActive: false,
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   "aaa",
+				isActive:  false,
+				roleNames: roleNames,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "store id should be uuid"),
 		},
 		{
-			name: "OpenCloseStore_NoError_ReturnNil",
+			name: "OpenCloseStore_DifferentUserIDNotAdmin_DontHavePermission",
 			fields: fields{
 				storeRepository: mockStoreRepo,
 			},
 			args: args{
-				ctx:      ctx,
-				storeID:  storeID,
-				isActive: false,
+				ctx:       ctx,
+				userID:    otherUserIdUuid,
+				storeID:   storeID,
+				isActive:  false,
+				roleNames: roleNames,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.PermissionDenied, "You do not have permission to open / close this store"),
+		},
+		{
+			name: "OpenCloseStore_DifferentUserIDAdmin_DontHavePermission",
+			fields: fields{
+				storeRepository: mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    otherUserIdUuid,
+				storeID:   storeID,
+				isActive:  false,
+				roleNames: adminRole,
+			},
+			wantErr: false,
+		},
+		{
+			name: "OpenCloseStore_NoError_Success",
+			fields: fields{
+				storeRepository: mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeID,
+				isActive:  false,
+				roleNames: roleNames,
 			},
 			wantErr: false,
 		},
@@ -86,7 +133,7 @@ func Test_service_OpenCloseStore(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(tt.fields.storeRepository, nil)
-			if err := s.OpenCloseStore(tt.args.ctx, tt.args.storeID, tt.args.isActive); tt.wantErr {
+			if err := s.OpenCloseStore(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isActive); tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)
 			} else {
