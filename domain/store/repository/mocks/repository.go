@@ -80,6 +80,21 @@ func (mr *MockStoreServiceRepositoryMockRecorder) GetStore(ctx, storeID interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStore", reflect.TypeOf((*MockStoreServiceRepository)(nil).GetStore), ctx, storeID)
 }
 
+// GetStoreByUserID mocks base method.
+func (m *MockStoreServiceRepository) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (*entity.Store, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStoreByUserID", ctx, userID)
+	ret0, _ := ret[0].(*entity.Store)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStoreByUserID indicates an expected call of GetStoreByUserID.
+func (mr *MockStoreServiceRepositoryMockRecorder) GetStoreByUserID(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStoreByUserID", reflect.TypeOf((*MockStoreServiceRepository)(nil).GetStoreByUserID), ctx, userID)
+}
+
 // ListStores mocks base method.
 func (m *MockStoreServiceRepository) ListStores(ctx context.Context) ([]*entity.Store, error) {
 	m.ctrl.T.Helper()

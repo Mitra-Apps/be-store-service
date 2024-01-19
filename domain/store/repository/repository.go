@@ -26,6 +26,9 @@ type StoreServiceRepository interface {
 
 	// Activate / Deactivate store
 	OpenCloseStore(ctx context.Context, storeID uuid.UUID, isActive bool) error
+
+	// GetStoreByUserID retrieves a store by its user ID.
+	GetStoreByUserID(ctx context.Context, userID uuid.UUID) (*entity.Store, error)
 }
 
 type Storage interface {
