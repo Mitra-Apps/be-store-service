@@ -622,16 +622,7 @@ func (m *Store) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if l := utf8.RuneCountInString(m.GetUserId()); l < 1 || l > 255 {
-		err := StoreValidationError{
-			field:  "UserId",
-			reason: "value length must be between 1 and 255 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for UserId
 
 	if l := utf8.RuneCountInString(m.GetStoreName()); l < 1 || l > 255 {
 		err := StoreValidationError{

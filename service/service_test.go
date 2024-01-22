@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
-	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
@@ -40,8 +39,7 @@ func Test_service_OpenCloseStore(t *testing.T) {
 	mockStoreRepo.EXPECT().OpenCloseStore(ctx, storeIdUuid, false).Return(nil).AnyTimes()
 
 	type fields struct {
-		storeRepository   *storeRepoMock.MockStoreServiceRepository
-		storageRepository repository.Storage
+		storeRepository *storeRepoMock.MockStoreServiceRepository
 	}
 	type args struct {
 		ctx       context.Context
