@@ -14,6 +14,7 @@ import (
 
 type Service interface {
 	CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error)
+	UpdateStore(ctx context.Context, storeID string, update *entity.Store) error
 	GetStore(ctx context.Context, storeID string) (*entity.Store, error)
 	ListStores(ctx context.Context) ([]*entity.Store, error)
 	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
@@ -64,6 +65,22 @@ func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity
 
 func (s *service) GetStore(ctx context.Context, storeID string) (*entity.Store, error) {
 	return s.storeRepository.GetStore(ctx, storeID)
+}
+
+func (s *service) UpdateStore(ctx context.Context, storeID string, update *entity.Store) error {
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return status.Errorf(codes.Unauthenticated, "Error when getting user id")
+	}
+
+	update.UpdatedBy = claims.UserID
+
+	_, err = s.storeRepository.UpdateStore(ctx, storeID, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *service) ListStores(ctx context.Context) ([]*entity.Store, error) {
