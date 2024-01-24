@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	prodPostgre "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	grpcRoute "github.com/Mitra-Apps/be-store-service/handler/grpc"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
@@ -41,8 +42,9 @@ func main() {
 
 	db := configPostgres.Connection()
 	repoPostgres := repositoryPostgres.NewPostgres(db)
+	prodPostgreRepo := prodPostgre.NewPostgres(db)
 	repoStorage := storage.New()
-	svc := service.New(repoPostgres, repoStorage)
+	svc := service.New(repoPostgres, prodPostgreRepo, repoStorage)
 	grpcServer := GrpcNewServer(ctx, []grpc.ServerOption{})
 	route := grpcRoute.New(svc)
 	pb.RegisterStoreServiceServer(grpcServer, route)

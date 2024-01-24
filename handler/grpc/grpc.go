@@ -3,6 +3,8 @@ package grpc
 import (
 	"context"
 
+	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	prodPb "github.com/Mitra-Apps/be-store-service/domain/proto/product"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
@@ -121,6 +123,29 @@ func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRe
 		return nil, err
 	}
 	return &pb.OpenCloseStoreResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
+}
+
+func (s *GrpcRoute) CreateProducts(ctx context.Context, req *prodPb.CreateProductsRequest) (*prodPb.CreateProductsResponse, error) {
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	productList := []prodEntity.Product{}
+	for _, p := range req.ProductList {
+		pr := prodEntity.Product{}
+		pr.FromProto(p)
+		productList = append(productList, pr)
+	}
+
+	err := s.service.CreateProducts(ctx, productList)
+	if err != nil {
+		return nil, err
+	}
+
+	return &prodPb.CreateProductsResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
 	}, nil

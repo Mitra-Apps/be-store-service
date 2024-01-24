@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
+	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	prodRepository "github.com/Mitra-Apps/be-store-service/domain/product/repository"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
@@ -17,19 +20,23 @@ type Service interface {
 	GetStore(ctx context.Context, storeID string) (*entity.Store, error)
 	ListStores(ctx context.Context) ([]*entity.Store, error)
 	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
+	CreateProducts(ctx context.Context, products []prodEntity.Product) error
 }
 type service struct {
-	storeRepository repository.StoreServiceRepository
-	storage         repository.Storage
+	storeRepository   repository.StoreServiceRepository
+	productRepository prodRepository.ProductRepository
+	storage           repository.Storage
 }
 
 func New(
 	storeRepository repository.StoreServiceRepository,
+	prodRepository prodRepository.ProductRepository,
 	storage repository.Storage,
 ) Service {
 	return &service{
-		storeRepository: storeRepository,
-		storage:         storage,
+		storeRepository:   storeRepository,
+		productRepository: prodRepository,
+		storage:           storage,
 	}
 }
 
@@ -98,6 +105,34 @@ func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleName
 	err = s.storeRepository.OpenCloseStore(ctx, storeIDUuid, isActive)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error when opening / closing store")
+	}
+	return nil
+}
+
+func (s *service) CreateProducts(ctx context.Context, products []prodEntity.Product) error {
+	if len(products) == 0 {
+		return status.Errorf(codes.InvalidArgument, "No product inserted")
+	}
+	ids := []uuid.UUID{}
+	for _, p := range products {
+		ids = append(ids, p.ID)
+	}
+	existingProds, err := s.productRepository.GetProductsByIds(ctx, ids)
+	if err != nil {
+		return err
+	}
+	if len(existingProds) > 0 {
+		existingProdIds := []string{}
+		for _, p := range existingProds {
+			existingProdIds = append(existingProdIds, p.ID.String())
+		}
+		return status.Errorf(codes.InvalidArgument,
+			fmt.Sprintf("Product are already exist : %s", strings.Join(existingProdIds, ",")))
+	}
+
+	err = s.productRepository.CreateProducts(ctx, products)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when inserting products")
 	}
 	return nil
 }

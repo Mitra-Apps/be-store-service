@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option go_package = "github.com/Mitra-Apps/be-store-service/domain/proto/product;product";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+message ProductCategory {
+    string id = 1;
+    string name = 2;
+    bool is_active = 3;
+}
+
+message ProductType {
+    string id = 1;
+    string name = 2;
+	bool is_active = 3;
+	string product_category_id = 4;
+}
+
+message UnitOfMeasure {
+	string id = 1;
+    string name = 2;
+	bool is_active = 3;
+}
+
+message Product {
+	string id = 1;
+	string store_id = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
+	string name = 3 [(validate.rules).string = {min_len: 1, max_len: 255}];
+	bool sale_status = 4;
+    double price = 5 [(validate.rules).double = {gt: 0}];
+    int64 stock = 6 [(validate.rules).int64 = {gte: 0}];
+	string uom_id = 7 [(validate.rules).string = {min_len: 1, max_len: 255}];
+	string product_type_id = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
+}
+
+// Product service definition
+service ProductService {
+    // Create a new product
+    rpc CreateProducts(CreateProductsRequest) returns (CreateProductsResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/products"
+            body: "productList"
+        };
+    }
+}
+
+// Request message to create products
+message CreateProductsRequest {
+    repeated Product productList = 1;
+}
+
+// Response message for creating products
+message CreateProductsResponse {
+    int32 code = 1;
+    string message = 2;
+}

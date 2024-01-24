@@ -1,11 +1,10 @@
 package entity
 
 import (
-	"time"
-
+	"github.com/Mitra-Apps/be-store-service/domain/base_model"
+	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 // DayOfWeekEnum represents the days of the week.
@@ -21,20 +20,9 @@ const (
 	Sunday    DayOfWeekEnum = "Sunday"
 )
 
-// BaseModel contains common fields for all models.
-type BaseModel struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
-	CreatedAt time.Time
-	CreatedBy uuid.UUID `gorm:"type:uuid;not null"`
-	UpdatedAt time.Time
-	UpdatedBy uuid.UUID
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-	DeletedBy uuid.UUID
-}
-
 // Store represents a store model.
 type Store struct {
-	BaseModel
+	base_model.BaseModel
 	UserID           uuid.UUID `gorm:"type:uuid;not null;unique"`
 	StoreName        string    `gorm:"not null;unique"`
 	StoreDescription string    `gorm:"not null,type:text"`
@@ -49,9 +37,10 @@ type Store struct {
 	LocationLng      float64
 	Status           string
 	IsActive         bool
-	Tags             []*StoreTag   `gorm:"many2many:store_store_tags"`
-	Hours            []*StoreHour  `gorm:"foreignKey:StoreID"`
-	Images           []*StoreImage `gorm:"foreignKey:StoreID"`
+	Tags             []*StoreTag           `gorm:"many2many:store_store_tags"`
+	Hours            []*StoreHour          `gorm:"foreignKey:StoreID"`
+	Images           []*StoreImage         `gorm:"foreignKey:StoreID"`
+	Products         []*prodEntity.Product `gorm:"foreignKey:StoreID"`
 }
 
 func (s *Store) ToProto() *pb.Store {
@@ -155,7 +144,7 @@ func (s *Store) FromProto(store *pb.Store) error {
 
 // StoreImage represents an image associated with a store.
 type StoreImage struct {
-	BaseModel
+	base_model.BaseModel
 	StoreID     uuid.UUID `gorm:"type:uuid;index;not null"`
 	ImageType   string    `gorm:"not null"`
 	ImageURL    string    `gorm:"not null"`
@@ -198,7 +187,7 @@ func (s *StoreImage) FromProto(storeImage *pb.StoreImage) error {
 
 // StoreTag represents a tag associated with a store.
 type StoreTag struct {
-	BaseModel
+	base_model.BaseModel
 	TagName string `gorm:"not null;unique"`
 }
 
@@ -225,7 +214,7 @@ func (s *StoreTag) FromProto(storeTag *pb.StoreTag) error {
 
 // StoreHour represents the operating hours of a store.
 type StoreHour struct {
-	BaseModel
+	base_model.BaseModel
 	StoreID   uuid.UUID     `gorm:"type:uuid;index;not null"`
 	DayOfWeek DayOfWeekEnum `gorm:"not null"`
 	Open      string
