@@ -95,7 +95,7 @@ service StoreService {
     // Update an existing store
     rpc UpdateStore(UpdateStoreRequest) returns (UpdateStoreResponse) {
         option (google.api.http) = {
-            put: "/v1/stores/{store_id}"
+            put: "/api/v1/stores/{store_id}"
             body: "store"
         };
     }
@@ -149,7 +149,7 @@ message GetStoreResponse {
 
 // Request message to update a store
 message UpdateStoreRequest {
-    string store_id = 1;
+    string store_id = 1 [(validate.rules).string = {min_len: 1, max_len: 255}];
     Store store = 2;
 }
 

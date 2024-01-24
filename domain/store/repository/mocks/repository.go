@@ -125,12 +125,11 @@ func (mr *MockStoreServiceRepositoryMockRecorder) OpenCloseStore(ctx, storeID, i
 }
 
 // UpdateStore mocks base method.
-func (m *MockStoreServiceRepository) UpdateStore(ctx context.Context, storeID string, update *entity.Store) (*entity.Store, error) {
+func (m *MockStoreServiceRepository) UpdateStore(ctx context.Context, storeID string, update *entity.Store) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateStore", ctx, storeID, update)
-	ret0, _ := ret[0].(*entity.Store)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // UpdateStore indicates an expected call of UpdateStore.
