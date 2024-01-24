@@ -106,7 +106,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
-    /v1/stores/{storeId}:
         put:
             tags:
                 - StoreService
@@ -137,6 +136,7 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /v1/stores/{storeId}:
         delete:
             tags:
                 - StoreService

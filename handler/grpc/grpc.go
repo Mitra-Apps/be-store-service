@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
@@ -63,6 +64,7 @@ func (s *GrpcRoute) GetStore(ctx context.Context, req *pb.GetStoreRequest) (*pb.
 }
 
 func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest) (*pb.UpdateStoreResponse, error) {
+	fmt.Printf("request data: %+v\n", req)
 	if err := req.ValidateAll(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -72,6 +74,8 @@ func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
+	fmt.Printf("store_id %v\n", req.StoreId)
+	fmt.Printf("store %v\n", store)
 	err := s.service.UpdateStore(ctx, req.StoreId, store)
 	if err != nil {
 		return nil, err

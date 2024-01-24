@@ -75,12 +75,24 @@ func (s *service) UpdateStore(ctx context.Context, storeID string, update *entit
 
 	update.UpdatedBy = claims.UserID
 
-	_, err = s.storeRepository.UpdateStore(ctx, storeID, update)
-	if err != nil {
-		return err
+	for _, img := range update.Images {
+		if img.ImageBase64 != "" {
+			if img.ImageURL, err = s.storage.UploadImage(ctx, img.ImageBase64, storeID); err != nil {
+				return err
+			}
+			img.UpdatedBy = claims.UserID
+		}
 	}
 
-	return nil
+	for _, tag := range update.Tags {
+		tag.UpdatedBy = claims.UserID
+	}
+
+	for _, hour := range update.Hours {
+		hour.UpdatedBy = claims.UserID
+	}
+
+	return s.storeRepository.UpdateStore(ctx, storeID, update)
 }
 
 func (s *service) ListStores(ctx context.Context) ([]*entity.Store, error) {
