@@ -10,7 +10,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type GrpcRoute struct {
@@ -25,20 +24,7 @@ func New(service service.Service) pb.StoreServiceServer {
 }
 
 func (s *GrpcRoute) CreateStore(ctx context.Context, req *pb.CreateStoreRequest) (*pb.CreateStoreResponse, error) {
-	if err := req.ValidateAll(); err != nil {
-		st := status.New(codes.InvalidArgument, "Invalid argument").Proto()
-		errsVal, ok := err.(pb.CreateStoreRequestMultiError)
-		if ok {
-			for _, err := range errsVal {
-				errVal, ok := err.(pb.CreateStoreRequestValidationError)
-				if ok {
-					st.Details = append(st.Details, &anypb.Any{
-						Value: []byte(errVal.Error()),
-					})
-				}
-			}
-		}
-
+	if err := req.Validate(); err != nil {
 		return nil, err
 	}
 
