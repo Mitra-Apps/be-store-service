@@ -4,7 +4,6 @@ import (
 	"context"
 
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
-	prodPb "github.com/Mitra-Apps/be-store-service/domain/proto/product"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
@@ -128,7 +127,7 @@ func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRe
 	}, nil
 }
 
-func (s *GrpcRoute) CreateProducts(ctx context.Context, req *prodPb.CreateProductsRequest) (*prodPb.CreateProductsResponse, error) {
+func (s *GrpcRoute) CreateProducts(ctx context.Context, req *pb.CreateProductsRequest) (*pb.CreateProductsResponse, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
@@ -145,7 +144,7 @@ func (s *GrpcRoute) CreateProducts(ctx context.Context, req *prodPb.CreateProduc
 		return nil, err
 	}
 
-	return &prodPb.CreateProductsResponse{
+	return &pb.CreateProductsResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
 	}, nil

@@ -26,6 +26,7 @@ const (
 	StoreService_DeleteStore_FullMethodName    = "/StoreService/DeleteStore"
 	StoreService_ListStores_FullMethodName     = "/StoreService/ListStores"
 	StoreService_OpenCloseStore_FullMethodName = "/StoreService/OpenCloseStore"
+	StoreService_CreateProducts_FullMethodName = "/StoreService/CreateProducts"
 )
 
 // StoreServiceClient is the client API for StoreService service.
@@ -44,6 +45,7 @@ type StoreServiceClient interface {
 	ListStores(ctx context.Context, in *ListStoresRequest, opts ...grpc.CallOption) (*ListStoresResponse, error)
 	// Open close store
 	OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*OpenCloseStoreResponse, error)
+	CreateProducts(ctx context.Context, in *CreateProductsRequest, opts ...grpc.CallOption) (*CreateProductsResponse, error)
 }
 
 type storeServiceClient struct {
@@ -108,6 +110,15 @@ func (c *storeServiceClient) OpenCloseStore(ctx context.Context, in *OpenCloseSt
 	return out, nil
 }
 
+func (c *storeServiceClient) CreateProducts(ctx context.Context, in *CreateProductsRequest, opts ...grpc.CallOption) (*CreateProductsResponse, error) {
+	out := new(CreateProductsResponse)
+	err := c.cc.Invoke(ctx, StoreService_CreateProducts_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StoreServiceServer is the server API for StoreService service.
 // All implementations must embed UnimplementedStoreServiceServer
 // for forward compatibility
@@ -124,6 +135,7 @@ type StoreServiceServer interface {
 	ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error)
 	// Open close store
 	OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error)
+	CreateProducts(context.Context, *CreateProductsRequest) (*CreateProductsResponse, error)
 	mustEmbedUnimplementedStoreServiceServer()
 }
 
@@ -148,6 +160,9 @@ func (UnimplementedStoreServiceServer) ListStores(context.Context, *ListStoresRe
 }
 func (UnimplementedStoreServiceServer) OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenCloseStore not implemented")
+}
+func (UnimplementedStoreServiceServer) CreateProducts(context.Context, *CreateProductsRequest) (*CreateProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProducts not implemented")
 }
 func (UnimplementedStoreServiceServer) mustEmbedUnimplementedStoreServiceServer() {}
 
@@ -270,6 +285,24 @@ func _StoreService_OpenCloseStore_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_CreateProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).CreateProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_CreateProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).CreateProducts(ctx, req.(*CreateProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StoreService_ServiceDesc is the grpc.ServiceDesc for StoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -300,6 +333,10 @@ var StoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OpenCloseStore",
 			Handler:    _StoreService_OpenCloseStore_Handler,
+		},
+		{
+			MethodName: "CreateProducts",
+			Handler:    _StoreService_CreateProducts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

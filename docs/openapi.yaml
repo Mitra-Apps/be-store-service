@@ -3,15 +3,15 @@
 
 openapi: 3.0.3
 info:
-    title: ""
+    title: StoreService API
+    description: Store service definition
     version: 0.0.1
 paths:
     /api/v1/products:
         post:
             tags:
-                - ProductService
-            description: Create a new product
-            operationId: ProductService_CreateProducts
+                - StoreService
+            operationId: StoreService_CreateProducts
             requestBody:
                 content:
                     application/json:
@@ -384,7 +384,4 @@ components:
                     $ref: '#/components/schemas/Store'
             description: Response message for updating a store
 tags:
-    - name: ProductService
-      description: Product service definition
     - name: StoreService
-      description: Store service definition

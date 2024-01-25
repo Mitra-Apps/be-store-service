@@ -65,7 +65,7 @@ message Store {
     string zip_code = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string phone = 9 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string email = 10 [(validate.rules).string.email = true];
-    string website = 11;
+    string website = 11 ;
     string status = 12;
     bool is_active = 13;
     double location_lat = 14;
@@ -73,6 +73,36 @@ message Store {
     repeated StoreTag tags = 16;
     repeated StoreHour hours = 17;
     repeated StoreImage images = 18;
+}
+
+message ProductCategory {
+    string id = 1;
+    string name = 2;
+    bool is_active = 3;
+}
+
+message ProductType {
+    string id = 1;
+    string name = 2;
+	bool is_active = 3;
+	string product_category_id = 4;
+}
+
+message UnitOfMeasure {
+	string id = 1;
+    string name = 2;
+	bool is_active = 3;
+}
+
+message Product {
+	string id = 1;
+	string store_id = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
+	string name = 3 [(validate.rules).string = {min_len: 1, max_len: 255}];
+	bool sale_status = 4;
+    double price = 5 [(validate.rules).double = {gt: 0}];
+    int64 stock = 6 [(validate.rules).int64 = {gte: 0}];
+	string uom_id = 7 [(validate.rules).string = {min_len: 1, max_len: 255}];
+	string product_type_id = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
 }
 
 // Store service definition
@@ -119,6 +149,13 @@ service StoreService {
         option (google.api.http) = {
             put: "/api/v1/stores/active-toggle/{is_active}"
             body: "*"
+        };
+    }
+
+    rpc CreateProducts(CreateProductsRequest) returns (CreateProductsResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/products"
+            body: "productList"
         };
     }
 }
@@ -183,6 +220,17 @@ message OpenCloseStoreRequest {
 }
 
 message OpenCloseStoreResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+// Request message to create products
+message CreateProductsRequest {
+    repeated Product productList = 1;
+}
+
+// Response message for creating products
+message CreateProductsResponse {
     int32 code = 1;
     string message = 2;
 }

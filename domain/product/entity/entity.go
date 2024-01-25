@@ -2,7 +2,8 @@ package entity
 
 import (
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
-	pb "github.com/Mitra-Apps/be-store-service/domain/proto/product"
+	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
+
 	"github.com/google/uuid"
 )
 
