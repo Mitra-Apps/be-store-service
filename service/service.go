@@ -20,7 +20,10 @@ type Service interface {
 	GetStore(ctx context.Context, storeID string) (*entity.Store, error)
 	ListStores(ctx context.Context) ([]*entity.Store, error)
 	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
-	CreateProducts(ctx context.Context, products []prodEntity.Product) error
+	UpsertProducts(ctx context.Context, products []prodEntity.Product) error
+	UpsertUnitOfMeasure(ctx context.Context, uom prodEntity.UnitOfMeasure) error
+	UpsertProductCategory(ctx context.Context, prodCategory prodEntity.ProductCategory) error
+	UpsertProductType(ctx context.Context, prodType prodEntity.ProductType) error
 }
 type service struct {
 	storeRepository   repository.StoreServiceRepository
@@ -109,7 +112,7 @@ func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleName
 	return nil
 }
 
-func (s *service) CreateProducts(ctx context.Context, products []prodEntity.Product) error {
+func (s *service) UpsertProducts(ctx context.Context, products []prodEntity.Product) error {
 	if len(products) == 0 {
 		return status.Errorf(codes.InvalidArgument, "No product inserted")
 	}
@@ -130,9 +133,30 @@ func (s *service) CreateProducts(ctx context.Context, products []prodEntity.Prod
 			fmt.Sprintf("Product are already exist : %s", strings.Join(existingProdIds, ",")))
 	}
 
-	err = s.productRepository.CreateProducts(ctx, products)
+	err = s.productRepository.UpsertProducts(ctx, products)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error when inserting products")
+	}
+	return nil
+}
+
+func (s *service) UpsertUnitOfMeasure(ctx context.Context, uom prodEntity.UnitOfMeasure) error {
+	if err := s.productRepository.UpsertUnitOfMeasure(ctx, uom); err != nil {
+		return status.Errorf(codes.Internal, "Error when inserting / updating unit of measure")
+	}
+	return nil
+}
+
+func (s *service) UpsertProductCategory(ctx context.Context, prodCategory prodEntity.ProductCategory) error {
+	if err := s.productRepository.UpsertProductCategory(ctx, prodCategory); err != nil {
+		return status.Errorf(codes.Internal, "Error when inserting / updating product category")
+	}
+	return nil
+}
+
+func (s *service) UpsertProductType(ctx context.Context, prodType prodEntity.ProductType) error {
+	if err := s.productRepository.UpsertProductType(ctx, prodType); err != nil {
+		return status.Errorf(codes.Internal, "Error when inserting / updating product type")
 	}
 	return nil
 }

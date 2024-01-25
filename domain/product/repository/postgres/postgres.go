@@ -29,10 +29,55 @@ func (p *postgres) GetProductsByIds(ctx context.Context, ids []uuid.UUID) ([]*en
 	return prods, nil
 }
 
-func (p *postgres) CreateProducts(ctx context.Context, products []entity.Product) error {
+func (p *postgres) UpsertProducts(ctx context.Context, products []entity.Product) error {
 	tx := p.db.WithContext(ctx).Begin()
 
 	if err := tx.Save(products).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *postgres) UpsertUnitOfMeasure(ctx context.Context, uom entity.UnitOfMeasure) error {
+	tx := p.db.WithContext(ctx).Begin()
+
+	if err := tx.Save(uom).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *postgres) UpsertProductCategory(ctx context.Context, prodCategory entity.ProductCategory) error {
+	tx := p.db.WithContext(ctx).Begin()
+
+	if err := tx.Save(prodCategory).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *postgres) UpsertProductType(ctx context.Context, prodType entity.ProductType) error {
+	tx := p.db.WithContext(ctx).Begin()
+
+	if err := tx.Save(prodType).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

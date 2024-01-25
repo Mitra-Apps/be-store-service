@@ -50,21 +50,33 @@ const (
 	// StoreServiceOpenCloseStoreProcedure is the fully-qualified name of the StoreService's
 	// OpenCloseStore RPC.
 	StoreServiceOpenCloseStoreProcedure = "/StoreService/OpenCloseStore"
-	// StoreServiceCreateProductsProcedure is the fully-qualified name of the StoreService's
-	// CreateProducts RPC.
-	StoreServiceCreateProductsProcedure = "/StoreService/CreateProducts"
+	// StoreServiceUpsertProductsProcedure is the fully-qualified name of the StoreService's
+	// UpsertProducts RPC.
+	StoreServiceUpsertProductsProcedure = "/StoreService/UpsertProducts"
+	// StoreServiceUpsertUnitOfMeasureProcedure is the fully-qualified name of the StoreService's
+	// UpsertUnitOfMeasure RPC.
+	StoreServiceUpsertUnitOfMeasureProcedure = "/StoreService/UpsertUnitOfMeasure"
+	// StoreServiceUpsertProductCategoryProcedure is the fully-qualified name of the StoreService's
+	// UpsertProductCategory RPC.
+	StoreServiceUpsertProductCategoryProcedure = "/StoreService/UpsertProductCategory"
+	// StoreServiceUpsertProductTypeProcedure is the fully-qualified name of the StoreService's
+	// UpsertProductType RPC.
+	StoreServiceUpsertProductTypeProcedure = "/StoreService/UpsertProductType"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	storeServiceServiceDescriptor              = store.File_proto_store_store_proto.Services().ByName("StoreService")
-	storeServiceCreateStoreMethodDescriptor    = storeServiceServiceDescriptor.Methods().ByName("CreateStore")
-	storeServiceGetStoreMethodDescriptor       = storeServiceServiceDescriptor.Methods().ByName("GetStore")
-	storeServiceUpdateStoreMethodDescriptor    = storeServiceServiceDescriptor.Methods().ByName("UpdateStore")
-	storeServiceDeleteStoreMethodDescriptor    = storeServiceServiceDescriptor.Methods().ByName("DeleteStore")
-	storeServiceListStoresMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("ListStores")
-	storeServiceOpenCloseStoreMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("OpenCloseStore")
-	storeServiceCreateProductsMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("CreateProducts")
+	storeServiceServiceDescriptor                     = store.File_proto_store_store_proto.Services().ByName("StoreService")
+	storeServiceCreateStoreMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("CreateStore")
+	storeServiceGetStoreMethodDescriptor              = storeServiceServiceDescriptor.Methods().ByName("GetStore")
+	storeServiceUpdateStoreMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("UpdateStore")
+	storeServiceDeleteStoreMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("DeleteStore")
+	storeServiceListStoresMethodDescriptor            = storeServiceServiceDescriptor.Methods().ByName("ListStores")
+	storeServiceOpenCloseStoreMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("OpenCloseStore")
+	storeServiceUpsertProductsMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("UpsertProducts")
+	storeServiceUpsertUnitOfMeasureMethodDescriptor   = storeServiceServiceDescriptor.Methods().ByName("UpsertUnitOfMeasure")
+	storeServiceUpsertProductCategoryMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("UpsertProductCategory")
+	storeServiceUpsertProductTypeMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("UpsertProductType")
 )
 
 // StoreServiceClient is a client for the StoreService service.
@@ -81,7 +93,10 @@ type StoreServiceClient interface {
 	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
 	// Open close store
 	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error)
-	CreateProducts(context.Context, *connect.Request[store.CreateProductsRequest]) (*connect.Response[store.CreateProductsResponse], error)
+	UpsertProducts(context.Context, *connect.Request[store.UpsertProductsRequest]) (*connect.Response[store.UpsertProductsResponse], error)
+	UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error)
+	UpsertProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
+	UpsertProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
 }
 
 // NewStoreServiceClient constructs a client for the StoreService service. By default, it uses the
@@ -130,10 +145,28 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(storeServiceOpenCloseStoreMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		createProducts: connect.NewClient[store.CreateProductsRequest, store.CreateProductsResponse](
+		upsertProducts: connect.NewClient[store.UpsertProductsRequest, store.UpsertProductsResponse](
 			httpClient,
-			baseURL+StoreServiceCreateProductsProcedure,
-			connect.WithSchema(storeServiceCreateProductsMethodDescriptor),
+			baseURL+StoreServiceUpsertProductsProcedure,
+			connect.WithSchema(storeServiceUpsertProductsMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		upsertUnitOfMeasure: connect.NewClient[store.UpsertUnitOfMeasureRequest, store.UpsertUnitOfMeasureResponse](
+			httpClient,
+			baseURL+StoreServiceUpsertUnitOfMeasureProcedure,
+			connect.WithSchema(storeServiceUpsertUnitOfMeasureMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		upsertProductCategory: connect.NewClient[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse](
+			httpClient,
+			baseURL+StoreServiceUpsertProductCategoryProcedure,
+			connect.WithSchema(storeServiceUpsertProductCategoryMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		upsertProductType: connect.NewClient[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse](
+			httpClient,
+			baseURL+StoreServiceUpsertProductTypeProcedure,
+			connect.WithSchema(storeServiceUpsertProductTypeMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -141,13 +174,16 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // storeServiceClient implements StoreServiceClient.
 type storeServiceClient struct {
-	createStore    *connect.Client[store.CreateStoreRequest, store.CreateStoreResponse]
-	getStore       *connect.Client[store.GetStoreRequest, store.GetStoreResponse]
-	updateStore    *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
-	deleteStore    *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
-	listStores     *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
-	openCloseStore *connect.Client[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse]
-	createProducts *connect.Client[store.CreateProductsRequest, store.CreateProductsResponse]
+	createStore           *connect.Client[store.CreateStoreRequest, store.CreateStoreResponse]
+	getStore              *connect.Client[store.GetStoreRequest, store.GetStoreResponse]
+	updateStore           *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
+	deleteStore           *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
+	listStores            *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
+	openCloseStore        *connect.Client[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse]
+	upsertProducts        *connect.Client[store.UpsertProductsRequest, store.UpsertProductsResponse]
+	upsertUnitOfMeasure   *connect.Client[store.UpsertUnitOfMeasureRequest, store.UpsertUnitOfMeasureResponse]
+	upsertProductCategory *connect.Client[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse]
+	upsertProductType     *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
 }
 
 // CreateStore calls StoreService.CreateStore.
@@ -180,9 +216,24 @@ func (c *storeServiceClient) OpenCloseStore(ctx context.Context, req *connect.Re
 	return c.openCloseStore.CallUnary(ctx, req)
 }
 
-// CreateProducts calls StoreService.CreateProducts.
-func (c *storeServiceClient) CreateProducts(ctx context.Context, req *connect.Request[store.CreateProductsRequest]) (*connect.Response[store.CreateProductsResponse], error) {
-	return c.createProducts.CallUnary(ctx, req)
+// UpsertProducts calls StoreService.UpsertProducts.
+func (c *storeServiceClient) UpsertProducts(ctx context.Context, req *connect.Request[store.UpsertProductsRequest]) (*connect.Response[store.UpsertProductsResponse], error) {
+	return c.upsertProducts.CallUnary(ctx, req)
+}
+
+// UpsertUnitOfMeasure calls StoreService.UpsertUnitOfMeasure.
+func (c *storeServiceClient) UpsertUnitOfMeasure(ctx context.Context, req *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error) {
+	return c.upsertUnitOfMeasure.CallUnary(ctx, req)
+}
+
+// UpsertProductCategory calls StoreService.UpsertProductCategory.
+func (c *storeServiceClient) UpsertProductCategory(ctx context.Context, req *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error) {
+	return c.upsertProductCategory.CallUnary(ctx, req)
+}
+
+// UpsertProductType calls StoreService.UpsertProductType.
+func (c *storeServiceClient) UpsertProductType(ctx context.Context, req *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error) {
+	return c.upsertProductType.CallUnary(ctx, req)
 }
 
 // StoreServiceHandler is an implementation of the StoreService service.
@@ -199,7 +250,10 @@ type StoreServiceHandler interface {
 	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
 	// Open close store
 	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error)
-	CreateProducts(context.Context, *connect.Request[store.CreateProductsRequest]) (*connect.Response[store.CreateProductsResponse], error)
+	UpsertProducts(context.Context, *connect.Request[store.UpsertProductsRequest]) (*connect.Response[store.UpsertProductsResponse], error)
+	UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error)
+	UpsertProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
+	UpsertProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
 }
 
 // NewStoreServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -244,10 +298,28 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(storeServiceOpenCloseStoreMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	storeServiceCreateProductsHandler := connect.NewUnaryHandler(
-		StoreServiceCreateProductsProcedure,
-		svc.CreateProducts,
-		connect.WithSchema(storeServiceCreateProductsMethodDescriptor),
+	storeServiceUpsertProductsHandler := connect.NewUnaryHandler(
+		StoreServiceUpsertProductsProcedure,
+		svc.UpsertProducts,
+		connect.WithSchema(storeServiceUpsertProductsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	storeServiceUpsertUnitOfMeasureHandler := connect.NewUnaryHandler(
+		StoreServiceUpsertUnitOfMeasureProcedure,
+		svc.UpsertUnitOfMeasure,
+		connect.WithSchema(storeServiceUpsertUnitOfMeasureMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	storeServiceUpsertProductCategoryHandler := connect.NewUnaryHandler(
+		StoreServiceUpsertProductCategoryProcedure,
+		svc.UpsertProductCategory,
+		connect.WithSchema(storeServiceUpsertProductCategoryMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	storeServiceUpsertProductTypeHandler := connect.NewUnaryHandler(
+		StoreServiceUpsertProductTypeProcedure,
+		svc.UpsertProductType,
+		connect.WithSchema(storeServiceUpsertProductTypeMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/StoreService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -264,8 +336,14 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 			storeServiceListStoresHandler.ServeHTTP(w, r)
 		case StoreServiceOpenCloseStoreProcedure:
 			storeServiceOpenCloseStoreHandler.ServeHTTP(w, r)
-		case StoreServiceCreateProductsProcedure:
-			storeServiceCreateProductsHandler.ServeHTTP(w, r)
+		case StoreServiceUpsertProductsProcedure:
+			storeServiceUpsertProductsHandler.ServeHTTP(w, r)
+		case StoreServiceUpsertUnitOfMeasureProcedure:
+			storeServiceUpsertUnitOfMeasureHandler.ServeHTTP(w, r)
+		case StoreServiceUpsertProductCategoryProcedure:
+			storeServiceUpsertProductCategoryHandler.ServeHTTP(w, r)
+		case StoreServiceUpsertProductTypeProcedure:
+			storeServiceUpsertProductTypeHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -299,6 +377,18 @@ func (UnimplementedStoreServiceHandler) OpenCloseStore(context.Context, *connect
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.OpenCloseStore is not implemented"))
 }
 
-func (UnimplementedStoreServiceHandler) CreateProducts(context.Context, *connect.Request[store.CreateProductsRequest]) (*connect.Response[store.CreateProductsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.CreateProducts is not implemented"))
+func (UnimplementedStoreServiceHandler) UpsertProducts(context.Context, *connect.Request[store.UpsertProductsRequest]) (*connect.Response[store.UpsertProductsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpsertProducts is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpsertUnitOfMeasure is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) UpsertProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpsertProductCategory is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) UpsertProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpsertProductType is not implemented"))
 }

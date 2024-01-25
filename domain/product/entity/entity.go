@@ -3,6 +3,8 @@ package entity
 import (
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/google/uuid"
 )
@@ -25,6 +27,7 @@ type ProductType struct {
 type UnitOfMeasure struct {
 	base_model.BaseModel
 	Name     string     `gorm:"type:varchar(255);not null;unique"`
+	Symbol   string     `gorm:"type:varchar(50);not null;unique"`
 	IsActive bool       `gorm:"type:bool;not null;default:TRUE"`
 	Products []*Product `gorm:"foreignKey:UomID"`
 }
@@ -44,7 +47,7 @@ func (p *Product) FromProto(product *pb.Product) error {
 	if product.Id != "" {
 		id, err := uuid.Parse(product.Id)
 		if err != nil {
-			return err
+			return status.Errorf(codes.InvalidArgument, "Invalid uuid for product id")
 		}
 		p.ID = id
 	}
@@ -52,7 +55,7 @@ func (p *Product) FromProto(product *pb.Product) error {
 	if product.StoreId != "" {
 		storeId, err := uuid.Parse(product.StoreId)
 		if err != nil {
-			return err
+			return status.Errorf(codes.InvalidArgument, "Invalid uuid for store id")
 		}
 		p.StoreID = storeId
 	}
@@ -60,7 +63,7 @@ func (p *Product) FromProto(product *pb.Product) error {
 	if product.UomId != "" {
 		uomId, err := uuid.Parse(product.UomId)
 		if err != nil {
-			return err
+			return status.Errorf(codes.InvalidArgument, "Invalid uuid for unit of measure id")
 		}
 		p.UomID = uomId
 	}
@@ -68,7 +71,7 @@ func (p *Product) FromProto(product *pb.Product) error {
 	if product.ProductTypeId != "" {
 		prodTypeId, err := uuid.Parse(product.ProductTypeId)
 		if err != nil {
-			return err
+			return status.Errorf(codes.InvalidArgument, "Invalid uuid for product type id")
 		}
 		p.ProductTypeID = prodTypeId
 	}

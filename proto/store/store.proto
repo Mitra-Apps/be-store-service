@@ -91,18 +91,19 @@ message ProductType {
 message UnitOfMeasure {
 	string id = 1;
     string name = 2;
-	bool is_active = 3;
+    string symbol = 3;
+	bool is_active = 4;
 }
 
 message Product {
 	string id = 1;
-	string store_id = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
-	string name = 3 [(validate.rules).string = {min_len: 1, max_len: 255}];
+	string store_id = 2;
+	string name = 3;
 	bool sale_status = 4;
-    double price = 5 [(validate.rules).double = {gt: 0}];
-    int64 stock = 6 [(validate.rules).int64 = {gte: 0}];
-	string uom_id = 7 [(validate.rules).string = {min_len: 1, max_len: 255}];
-	string product_type_id = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    double price = 5;
+    int64 stock = 6;
+	string uom_id = 7;
+	string product_type_id = 8;
 }
 
 // Store service definition
@@ -152,10 +153,31 @@ service StoreService {
         };
     }
 
-    rpc CreateProducts(CreateProductsRequest) returns (CreateProductsResponse) {
+    rpc UpsertProducts(UpsertProductsRequest) returns (UpsertProductsResponse) {
         option (google.api.http) = {
             post: "/api/v1/products"
             body: "productList"
+        };
+    }
+
+    rpc UpsertUnitOfMeasure(UpsertUnitOfMeasureRequest) returns (UpsertUnitOfMeasureResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/uom"
+            body: "uom"
+        };
+    }
+
+    rpc UpsertProductCategory(UpsertProductCategoryRequest) returns (UpsertProductCategoryResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/product-category"
+            body: "productCategory"
+        };
+    }
+
+    rpc UpsertProductType(UpsertProductTypeRequest) returns (UpsertProductTypeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/product-type"
+            body: "productType"
         };
     }
 }
@@ -224,13 +246,38 @@ message OpenCloseStoreResponse {
     string message = 2;
 }
 
-// Request message to create products
-message CreateProductsRequest {
+message UpsertProductsRequest {
     repeated Product productList = 1;
 }
 
-// Response message for creating products
-message CreateProductsResponse {
+message UpsertProductsResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UpsertUnitOfMeasureRequest {
+    UnitOfMeasure uom = 1;
+}
+
+message UpsertUnitOfMeasureResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UpsertProductCategoryRequest {
+    ProductCategory productCategory = 1;
+}
+
+message UpsertProductCategoryResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UpsertProductTypeRequest {
+    ProductType productType = 1;
+}
+
+message UpsertProductTypeResponse {
     int32 code = 1;
     string message = 2;
 }

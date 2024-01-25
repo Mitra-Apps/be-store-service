@@ -127,24 +127,95 @@ func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRe
 	}, nil
 }
 
-func (s *GrpcRoute) CreateProducts(ctx context.Context, req *pb.CreateProductsRequest) (*pb.CreateProductsResponse, error) {
-	if err := req.Validate(); err != nil {
+func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRequest) (*pb.UpsertProductsResponse, error) {
+	if err := validateProduct(req.ProductList); err != nil {
 		return nil, err
 	}
 
 	productList := []prodEntity.Product{}
 	for _, p := range req.ProductList {
 		pr := prodEntity.Product{}
-		pr.FromProto(p)
+		if err := pr.FromProto(p); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, err.Error())
+		}
 		productList = append(productList, pr)
 	}
 
-	err := s.service.CreateProducts(ctx, productList)
+	err := s.service.UpsertProducts(ctx, productList)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.CreateProductsResponse{
+	return &pb.UpsertProductsResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
+}
+
+func validateProduct(products []*pb.Product) error {
+	for _, p := range products {
+		if p.StoreId == "" {
+			return status.Errorf(codes.InvalidArgument, "Store id is required")
+		}
+		if p.Name == "" {
+			return status.Errorf(codes.InvalidArgument, "Name is required")
+		}
+		if p.Price <= 0 {
+			return status.Errorf(codes.InvalidArgument, "Price is required")
+		}
+		if p.UomId == "" {
+			return status.Errorf(codes.InvalidArgument, "unit of measure is required")
+		}
+		if p.ProductTypeId == "" {
+			return status.Errorf(codes.InvalidArgument, "product type id is required")
+		}
+	}
+	return nil
+}
+
+func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitOfMeasureRequest) (*pb.UpsertUnitOfMeasureResponse, error) {
+	if req.Uom.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	}
+	if req.Uom.Symbol == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "symbol is required")
+	}
+
+	if err := g.service.UpsertUnitOfMeasure(ctx, prodEntity.UnitOfMeasure{
+		Name:     req.Uom.Name,
+		Symbol:   req.Uom.Symbol,
+		IsActive: req.Uom.IsActive,
+	}); err != nil {
+		return nil, err
+	}
+
+	return &pb.UpsertUnitOfMeasureResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
+}
+
+func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
+	if req.ProductCategory.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	}
+
+	return &pb.UpsertProductCategoryResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
+}
+
+func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProductTypeRequest) (*pb.UpsertProductTypeResponse, error) {
+	if req.ProductType.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	}
+
+	if req.ProductType.ProductCategoryId == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "product category id is required")
+	}
+
+	return &pb.UpsertProductTypeResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
 	}, nil

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/sirupsen/logrus"
 
@@ -39,6 +40,10 @@ func Connection() *gorm.DB {
 		&entity.StoreImage{},
 		&entity.StoreTag{},
 		&entity.StoreHour{},
+		&prodEntity.ProductCategory{},
+		&prodEntity.ProductType{},
+		&prodEntity.UnitOfMeasure{},
+		&prodEntity.Product{},
 	)
 	if err != nil {
 		logrus.Fatalf("Failed to migrate table: %v", err)

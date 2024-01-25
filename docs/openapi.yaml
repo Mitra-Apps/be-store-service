@@ -7,11 +7,59 @@ info:
     description: Store service definition
     version: 0.0.1
 paths:
+    /api/v1/product-category:
+        post:
+            tags:
+                - StoreService
+            operationId: StoreService_UpsertProductCategory
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProductCategory'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpsertProductCategoryResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/product-type:
+        post:
+            tags:
+                - StoreService
+            operationId: StoreService_UpsertProductType
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProductType'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpsertProductTypeResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/products:
         post:
             tags:
                 - StoreService
-            operationId: StoreService_CreateProducts
+            operationId: StoreService_UpsertProducts
             requestBody:
                 content:
                     application/json:
@@ -24,7 +72,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/CreateProductsResponse'
+                                $ref: '#/components/schemas/UpsertProductsResponse'
                 default:
                     description: Default error response
                     content:
@@ -130,6 +178,30 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/uom:
+        post:
+            tags:
+                - StoreService
+            operationId: StoreService_UpsertUnitOfMeasure
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UnitOfMeasure'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpsertUnitOfMeasureResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /v1/stores/{storeId}:
         put:
             tags:
@@ -184,15 +256,6 @@ paths:
                                 $ref: '#/components/schemas/Status'
 components:
     schemas:
-        CreateProductsResponse:
-            type: object
-            properties:
-                code:
-                    type: integer
-                    format: int32
-                message:
-                    type: string
-            description: Response message for creating products
         CreateStoreResponse:
             type: object
             properties:
@@ -270,6 +333,26 @@ components:
                 uomId:
                     type: string
                 productTypeId:
+                    type: string
+        ProductCategory:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                isActive:
+                    type: boolean
+        ProductType:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                isActive:
+                    type: boolean
+                productCategoryId:
                     type: string
         Status:
             type: object
@@ -372,6 +455,17 @@ components:
                 tagName:
                     type: string
             description: Store tag message
+        UnitOfMeasure:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                symbol:
+                    type: string
+                isActive:
+                    type: boolean
         UpdateStoreResponse:
             type: object
             properties:
@@ -383,5 +477,37 @@ components:
                 data:
                     $ref: '#/components/schemas/Store'
             description: Response message for updating a store
+        UpsertProductCategoryResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        UpsertProductTypeResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        UpsertProductsResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+        UpsertUnitOfMeasureResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
 tags:
     - name: StoreService
