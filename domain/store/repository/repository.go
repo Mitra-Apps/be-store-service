@@ -16,7 +16,7 @@ type StoreServiceRepository interface {
 	GetStore(ctx context.Context, storeID string) (*entity.Store, error)
 
 	// UpdateStore updates an existing store.
-	UpdateStore(ctx context.Context, storeID string, update *entity.Store) error
+	UpdateStore(ctx context.Context, update *entity.Store) (*entity.Store, error)
 
 	// DeleteStore deletes a store by its ID.
 	DeleteStore(ctx context.Context, storeID string) error

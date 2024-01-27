@@ -72,7 +72,7 @@ func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	err := s.service.UpdateStore(ctx, req.StoreId, store)
+	data, err := s.service.UpdateStore(ctx, req.StoreId, store)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest)
 	return &pb.UpdateStoreResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
-		Data:    store.ToProto(),
+		Data:    data.ToProto(),
 	}, nil
 }
 

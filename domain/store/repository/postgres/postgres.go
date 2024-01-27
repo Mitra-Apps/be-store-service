@@ -54,14 +54,13 @@ func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store,
 	return &store, nil
 }
 
-func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *entity.Store) error {
-	exist, err := p.GetStore(ctx, storeID)
-	if err != nil {
-		return err
+func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*entity.Store, error) {
+	if update.ID == uuid.Nil {
+		return nil, errors.New("store ID cannot be nil")
 	}
 
-	return p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		err = tx.Model(exist).Updates(map[string]interface{}{
+	err := p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&entity.Store{}).Where("id = ?", update.ID.String()).Updates(map[string]interface{}{
 			"user_id":           update.UserID,
 			"store_name":        update.StoreName,
 			"store_description": update.StoreDescription,
@@ -81,17 +80,56 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 			return err
 		}
 
-		exist.Tags = nil
-		exist.Tags = append(exist.Tags, update.Tags...)
+		exist, err := p.GetStore(ctx, update.ID.String())
+		if err != nil {
+			return err
+		}
 
-		exist.Hours = nil
-		exist.Hours = append(exist.Hours, update.Hours...)
+		if err := tx.Model(exist).Association("Tags").Unscoped().Clear(); err != nil {
+			return err
+		}
 
-		exist.Images = nil
-		exist.Images = append(exist.Images, update.Images...)
+		for _, tag := range update.Tags {
+			if err := tx.Model(&entity.StoreTag{}).Where("tag_name = ?", tag.TagName).First(tag).Error; err != nil && err != gorm.ErrRecordNotFound {
+				return err
+			}
 
-		return tx.Save(exist).Error
+			if err := tx.Save(tag).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Model(exist).Association("Tags").Append(tag); err != nil {
+				return err
+			}
+		}
+
+		if err := tx.Unscoped().Delete(update.Hours, "store_id = ?", update.ID).Error; err != nil {
+			return err
+		}
+
+		if len(update.Hours) > 0 {
+			if err := tx.Create(update.Hours).Error; err != nil {
+				return err
+			}
+		}
+
+		if err := tx.Unscoped().Delete(update.Images, "store_id = ?", update.ID).Error; err != nil {
+			return err
+		}
+
+		if len(update.Images) > 0 {
+			if err := tx.Create(update.Images).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return p.GetStore(ctx, update.ID.String())
 }
 
 func (p *postgres) DeleteStore(ctx context.Context, storeID string) error {

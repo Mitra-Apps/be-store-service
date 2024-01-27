@@ -14,7 +14,7 @@ import (
 
 type Service interface {
 	CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error)
-	UpdateStore(ctx context.Context, storeID string, update *entity.Store) error
+	UpdateStore(ctx context.Context, storeID string, update *entity.Store) (*entity.Store, error)
 	GetStore(ctx context.Context, storeID string) (*entity.Store, error)
 	ListStores(ctx context.Context) ([]*entity.Store, error)
 	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
@@ -67,32 +67,51 @@ func (s *service) GetStore(ctx context.Context, storeID string) (*entity.Store, 
 	return s.storeRepository.GetStore(ctx, storeID)
 }
 
-func (s *service) UpdateStore(ctx context.Context, storeID string, update *entity.Store) error {
+func (s *service) UpdateStore(ctx context.Context, storeID string, update *entity.Store) (*entity.Store, error) {
 	claims, err := middleware.GetClaimsFromContext(ctx)
 	if err != nil {
-		return status.Errorf(codes.Unauthenticated, "Error when getting user id")
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting user id")
+	}
+
+	if strings.Compare(claims.UserID.String(), update.UserID.String()) != 0 {
+		for _, r := range claims.RoleNames {
+			if r != "admin" {
+				return nil, status.Errorf(codes.PermissionDenied, "You do not have permission to update this store")
+			}
+		}
 	}
 
 	update.UpdatedBy = claims.UserID
+	update.ID, err = uuid.Parse(storeID)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "store id should be uuid")
+	}
 
 	for _, img := range update.Images {
 		if img.ImageBase64 != "" {
 			if img.ImageURL, err = s.storage.UploadImage(ctx, img.ImageBase64, storeID); err != nil {
-				return err
+				return nil, err
 			}
-			img.UpdatedBy = claims.UserID
 		}
+
+		img.UpdatedBy = claims.UserID
+		img.ImageBase64 = ""
+		img.StoreID = update.ID
+		img.ID = uuid.Nil
 	}
 
 	for _, tag := range update.Tags {
 		tag.UpdatedBy = claims.UserID
+		tag.ID = uuid.Nil
 	}
 
 	for _, hour := range update.Hours {
 		hour.UpdatedBy = claims.UserID
+		hour.StoreID = update.ID
+		hour.ID = uuid.Nil
 	}
 
-	return s.storeRepository.UpdateStore(ctx, storeID, update)
+	return s.storeRepository.UpdateStore(ctx, update)
 }
 
 func (s *service) ListStores(ctx context.Context) ([]*entity.Store, error) {
