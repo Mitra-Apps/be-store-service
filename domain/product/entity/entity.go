@@ -18,7 +18,7 @@ type ProductCategory struct {
 
 type ProductType struct {
 	base_model.BaseModel
-	Name              string     `gorm:"type:varchar(255);not null;unique"`
+	Name              string     `gorm:"type:varchar(255);not null"`
 	IsActive          bool       `gorm:"type:bool;not null;default:TRUE"`
 	ProductCategoryID uuid.UUID  `gorm:"type:uuid;not null"`
 	Products          []*Product `gorm:"foreignKey:ProductTypeID"`
