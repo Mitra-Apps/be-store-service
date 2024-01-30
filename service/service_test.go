@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -249,8 +248,6 @@ func TestCreateStore(t *testing.T) {
 
 			tc.setupMocks(storeRepository, storage)
 			resultStore, err := service.CreateStore(ctx, tc.inputStore)
-			fmt.Printf("Actual argument received: %+v\n", resultStore)
-			fmt.Printf("Actual argument received: %+v\n", err)
 			assert.Equal(t, tc.expectedStore, resultStore)
 			assert.Equal(t, tc.expectedError, err)
 		})
@@ -410,6 +407,65 @@ func Test_service_UpsertProducts(t *testing.T) {
 			} else {
 				assert.Nil(t, err)
 			}
+		})
+	}
+}
+
+func TestUpdateStore(t *testing.T) {
+	ctx := context.Background()
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		md = metadata.New(nil)
+	}
+
+	sessionUserID := uuid.New()
+
+	md.Set("x-user-id", sessionUserID.String())
+	ctx = metadata.NewIncomingContext(ctx, md)
+
+	testCases := []struct {
+		name       string
+		setupMocks func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage)
+		inputStore struct {
+			storeID string
+			store   *entity.Store
+		}
+		expectedStore *entity.Store
+		expectedError error
+	}{
+		{
+			name: "Success",
+			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
+				storeRepository.EXPECT().UpdateStore(ctx, gomock.Any()).Return(nil)
+			},
+			inputStore: struct {
+				storeID string
+				store   *entity.Store
+			}{
+				storeID: "TestStore",
+				store: &entity.Store{
+					StoreName: "TestStore",
+				},
+			},
+			expectedStore: &entity.Store{
+				StoreName: "TestStore",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+			storage := storeRepoMock.NewMockStorage(ctrl)
+			service := New(storeRepository, nil, storage)
+
+			tc.setupMocks(storeRepository, storage)
+			result, err := service.UpdateStore(ctx, tc.inputStore.storeID, tc.inputStore.store)
+			assert.Equal(t, tc.expectedError, result)
+			assert.Equal(t, tc.expectedError, err)
 		})
 	}
 }

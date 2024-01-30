@@ -18,6 +18,8 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type storage struct {
@@ -55,7 +57,7 @@ func (s *storage) UploadImage(ctx context.Context, image, userID string) (string
 	}
 
 	fileType := http.DetectContentType(decodedImage)
-	validFileExtensions := []string{".png", ".jpg", ".jpeg", ".svg"}
+	validFileExtensions := []string{".png", ".jpg", ".jpeg"}
 	var fileExtension string
 
 	for _, ext := range validFileExtensions {
@@ -66,11 +68,11 @@ func (s *storage) UploadImage(ctx context.Context, image, userID string) (string
 	}
 
 	if fileExtension == "" {
-		return "", fmt.Errorf("file extension must be png, jpg, jpeg, or svg")
+		return "", status.Errorf(codes.InvalidArgument, "invalid file type")
 	}
 
-	if len(decodedImage) > 4*1024*1024 {
-		return "", fmt.Errorf("file size must be less than 4mb")
+	if len(decodedImage) > 2*1024*1024 {
+		return "", status.Errorf(codes.InvalidArgument, "image is too large (2MB max)")
 	}
 
 	filename := uuid.New().String() + fileExtension

@@ -96,6 +96,21 @@ func (mr *MockServiceMockRecorder) OpenCloseStore(ctx, userID, roleNames, storeI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenCloseStore", reflect.TypeOf((*MockService)(nil).OpenCloseStore), ctx, userID, roleNames, storeID, isActive)
 }
 
+// UpdateStore mocks base method.
+func (m *MockService) UpdateStore(ctx context.Context, storeID string, update *entity0.Store) (*entity0.Store, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateStore", ctx, storeID, update)
+	ret0, _ := ret[0].(*entity0.Store)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStore indicates an expected call of UpdateStore.
+func (mr *MockServiceMockRecorder) UpdateStore(ctx, storeID, update interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStore", reflect.TypeOf((*MockService)(nil).UpdateStore), ctx, storeID, update)
+}
+
 // UpsertProductCategory mocks base method.
 func (m *MockService) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
 	m.ctrl.T.Helper()

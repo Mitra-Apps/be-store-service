@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type GrpcRoute struct {
@@ -28,19 +27,6 @@ func New(service service.Service) pb.StoreServiceServer {
 
 func (s *GrpcRoute) CreateStore(ctx context.Context, req *pb.CreateStoreRequest) (*pb.CreateStoreResponse, error) {
 	if err := req.ValidateAll(); err != nil {
-		st := status.New(codes.InvalidArgument, "Invalid argument").Proto()
-		errsVal, ok := err.(pb.CreateStoreRequestMultiError)
-		if ok {
-			for _, err := range errsVal {
-				errVal, ok := err.(pb.CreateStoreRequestValidationError)
-				if ok {
-					st.Details = append(st.Details, &anypb.Any{
-						Value: []byte(errVal.Error()),
-					})
-				}
-			}
-		}
-
 		return nil, err
 	}
 
@@ -79,7 +65,25 @@ func (s *GrpcRoute) GetStore(ctx context.Context, req *pb.GetStoreRequest) (*pb.
 }
 
 func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest) (*pb.UpdateStoreResponse, error) {
-	return nil, nil
+	if err := req.ValidateAll(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	store := &entity.Store{}
+	if err := store.FromProto(req.Store); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	data, err := s.service.UpdateStore(ctx, req.StoreId, store)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateStoreResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    data.ToProto(),
+	}, nil
 }
 
 func (s *GrpcRoute) DeleteStore(ctx context.Context, req *pb.DeleteStoreRequest) (*empty.Empty, error) {

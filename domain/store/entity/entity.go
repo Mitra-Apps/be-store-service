@@ -188,7 +188,7 @@ func (s *StoreImage) FromProto(storeImage *pb.StoreImage) error {
 // StoreTag represents a tag associated with a store.
 type StoreTag struct {
 	base_model.BaseModel
-	TagName string `gorm:"not null;unique"`
+	TagName string
 }
 
 func (s *StoreTag) ToProto() *pb.StoreTag {

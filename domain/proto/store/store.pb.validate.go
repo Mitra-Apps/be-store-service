@@ -1910,7 +1910,16 @@ func (m *UpdateStoreRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for StoreId
+	if l := utf8.RuneCountInString(m.GetStoreId()); l < 1 || l > 255 {
+		err := UpdateStoreRequestValidationError{
+			field:  "StoreId",
+			reason: "value length must be between 1 and 255 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if all {
 		switch v := interface{}(m.GetStore()).(type) {
