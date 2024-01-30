@@ -247,7 +247,8 @@ message OpenCloseStoreResponse {
 }
 
 message UpsertProductsRequest {
-    repeated Product productList = 1;
+    string store_id = 1;
+    repeated Product productList = 2;
 }
 
 message UpsertProductsResponse {

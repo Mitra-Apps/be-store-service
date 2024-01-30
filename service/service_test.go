@@ -4,8 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/Mitra-Apps/be-store-service/domain/base_model"
+	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mocks"
 	"github.com/golang/mock/gomock"
@@ -130,7 +134,7 @@ func Test_service_OpenCloseStore(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository, nil)
+			s := New(tt.fields.storeRepository, nil, nil)
 			if err := s.OpenCloseStore(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isActive); tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)
@@ -166,7 +170,7 @@ func TestCreateStore(t *testing.T) {
 				storeRepository.EXPECT().GetStoreByUserID(ctx, gomock.Any()).Return(nil, nil)
 				storage.EXPECT().UploadImage(ctx, "SampleImageBase64", sessionUserID.String()).Return("http://example.com/image.jpg", nil)
 				storeRepository.EXPECT().CreateStore(ctx, gomock.Any()).Return(&entity.Store{
-					BaseModel: entity.BaseModel{CreatedBy: sessionUserID},
+					BaseModel: base_model.BaseModel{CreatedBy: sessionUserID},
 					UserID:    sessionUserID,
 					StoreName: "TestStore",
 					Images: []*entity.StoreImage{
@@ -187,7 +191,7 @@ func TestCreateStore(t *testing.T) {
 				},
 			},
 			expectedStore: &entity.Store{
-				BaseModel: entity.BaseModel{CreatedBy: sessionUserID},
+				BaseModel: base_model.BaseModel{CreatedBy: sessionUserID},
 				UserID:    sessionUserID,
 				StoreName: "TestStore",
 				Images: []*entity.StoreImage{
@@ -240,7 +244,7 @@ func TestCreateStore(t *testing.T) {
 
 			storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
 			storage := storeRepoMock.NewMockStorage(ctrl)
-			service := New(storeRepository, storage)
+			service := New(storeRepository, nil, storage)
 
 			tc.setupMocks(storeRepository, storage)
 			resultStore, err := service.CreateStore(ctx, tc.inputStore)
@@ -248,6 +252,138 @@ func TestCreateStore(t *testing.T) {
 			fmt.Printf("Actual argument received: %+v\n", err)
 			assert.Equal(t, tc.expectedStore, resultStore)
 			assert.Equal(t, tc.expectedError, err)
+		})
+	}
+}
+
+func Test_service_UpsertProducts(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	ctx := context.Background()
+	userIdUuid, _ := uuid.Parse(userID)
+	//otherUserIdUuid, _ := uuid.Parse(otherUserID)
+	storeIdUuid, _ := uuid.Parse(storeID)
+	products := []*prodEntity.Product{}
+	products = append(products, &prodEntity.Product{
+		StoreID: storeIdUuid,
+		Name:    "indomie",
+	})
+	products = append(products, &prodEntity.Product{
+		StoreID: storeIdUuid,
+		Name:    "beras",
+	})
+	existedProducts := []*prodEntity.Product{}
+	existedProducts = append(existedProducts, &prodEntity.Product{
+		StoreID: storeIdUuid,
+		Name:    "bakso aci",
+	})
+	existedProducts = append(existedProducts, &prodEntity.Product{
+		StoreID: storeIdUuid,
+		Name:    "keju",
+	})
+	roleNames := []string{"merchant"}
+	existedProdNames := []string{"bakso aci", "keju"}
+	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, existedProdNames).Return(existedProducts, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"indomie", "beras"}).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().UpsertProducts(ctx, products).Return(nil).AnyTimes()
+
+	type fields struct {
+		productRepository *prodRepoMock.MockProductRepository
+	}
+	type args struct {
+		ctx       context.Context
+		userID    uuid.UUID
+		roleNames []string
+		storeID   uuid.UUID
+		products  []*prodEntity.Product
+	}
+	tests := []struct {
+		name          string
+		fields        fields
+		args          args
+		wantErr       bool
+		expectedError error
+	}{
+		{
+			name: "UpsertProduct_NoProductProvided_ReturnValidationError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  nil,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "No product inserted"),
+		},
+		{
+			name: "UpsertProduct_ProductAlreadyExisted_ReturnValidationError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  existedProducts,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Product are already exist : "+strings.Join(existedProdNames, ",")),
+		},
+		{
+			name: "UpsertProduct_DifferentUserIDNotAdmin_DontHavePermission",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  existedProducts,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.PermissionDenied, "You do not have permission to open / close this store"),
+		},
+		{
+			name: "UpsertProduct_DifferentUserIDAdmin_DontHavePermission",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  existedProducts,
+			},
+			wantErr: false,
+		},
+		{
+			name: "UpsertProduct_NoError_Success",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  products,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(nil, tt.fields.productRepository, nil)
+			if err := s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.products); tt.wantErr {
+				assert.NotNil(t, err)
+				assert.Equal(t, tt.expectedError, err)
+			} else {
+				assert.Nil(t, err)
+			}
 		})
 	}
 }

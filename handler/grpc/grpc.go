@@ -9,6 +9,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -132,16 +133,26 @@ func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRe
 		return nil, err
 	}
 
-	productList := []prodEntity.Product{}
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+
+	productList := []*prodEntity.Product{}
 	for _, p := range req.ProductList {
 		pr := prodEntity.Product{}
 		if err := pr.FromProto(p); err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, err.Error())
 		}
-		productList = append(productList, pr)
+		productList = append(productList, &pr)
 	}
 
-	err := s.service.UpsertProducts(ctx, productList)
+	storeIdUuid, err := uuid.Parse(req.StoreId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
+	err = s.service.UpsertProducts(ctx, claims.UserID, claims.RoleNames, storeIdUuid, productList)
 	if err != nil {
 		return nil, err
 	}
@@ -181,11 +192,18 @@ func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitO
 		return nil, status.Errorf(codes.InvalidArgument, "symbol is required")
 	}
 
-	if err := g.service.UpsertUnitOfMeasure(ctx, prodEntity.UnitOfMeasure{
-		Name:     req.Uom.Name,
-		Symbol:   req.Uom.Symbol,
-		IsActive: req.Uom.IsActive,
-	}); err != nil {
+	uom := prodEntity.UnitOfMeasure{}
+	if err := uom.FromProto(req.Uom); err != nil {
+		return nil, err
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+	uom.CreatedBy = claims.UserID
+
+	if err := g.service.UpsertUnitOfMeasure(ctx, &uom); err != nil {
 		return nil, err
 	}
 
@@ -198,6 +216,21 @@ func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitO
 func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
 	if req.ProductCategory.Name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	}
+
+	prodCat := prodEntity.ProductCategory{}
+	if err := prodCat.FromProto(req.ProductCategory); err != nil {
+		return nil, err
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+	prodCat.CreatedBy = claims.UserID
+
+	if err := g.service.UpsertProductCategory(ctx, &prodCat); err != nil {
+		return nil, err
 	}
 
 	return &pb.UpsertProductCategoryResponse{
@@ -213,6 +246,21 @@ func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProduct
 
 	if req.ProductType.ProductCategoryId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "product category id is required")
+	}
+
+	prodType := prodEntity.ProductType{}
+	if err := prodType.FromProto(req.ProductType); err != nil {
+		return nil, err
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+	prodType.CreatedBy = claims.UserID
+
+	if err := g.service.UpsertProductType(ctx, &prodType); err != nil {
+		return nil, err
 	}
 
 	return &pb.UpsertProductTypeResponse{

@@ -8,7 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entity "github.com/Mitra-Apps/be-store-service/domain/store/entity"
+	entity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	entity0 "github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
 )
@@ -37,10 +38,10 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // CreateStore mocks base method.
-func (m *MockService) CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error) {
+func (m *MockService) CreateStore(ctx context.Context, store *entity0.Store) (*entity0.Store, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateStore", ctx, store)
-	ret0, _ := ret[0].(*entity.Store)
+	ret0, _ := ret[0].(*entity0.Store)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -52,10 +53,10 @@ func (mr *MockServiceMockRecorder) CreateStore(ctx, store interface{}) *gomock.C
 }
 
 // GetStore mocks base method.
-func (m *MockService) GetStore(ctx context.Context, storeID string) (*entity.Store, error) {
+func (m *MockService) GetStore(ctx context.Context, storeID string) (*entity0.Store, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStore", ctx, storeID)
-	ret0, _ := ret[0].(*entity.Store)
+	ret0, _ := ret[0].(*entity0.Store)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -67,10 +68,10 @@ func (mr *MockServiceMockRecorder) GetStore(ctx, storeID interface{}) *gomock.Ca
 }
 
 // ListStores mocks base method.
-func (m *MockService) ListStores(ctx context.Context) ([]*entity.Store, error) {
+func (m *MockService) ListStores(ctx context.Context) ([]*entity0.Store, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListStores", ctx)
-	ret0, _ := ret[0].([]*entity.Store)
+	ret0, _ := ret[0].([]*entity0.Store)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -93,4 +94,60 @@ func (m *MockService) OpenCloseStore(ctx context.Context, userID uuid.UUID, role
 func (mr *MockServiceMockRecorder) OpenCloseStore(ctx, userID, roleNames, storeID, isActive interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenCloseStore", reflect.TypeOf((*MockService)(nil).OpenCloseStore), ctx, userID, roleNames, storeID, isActive)
+}
+
+// UpsertProductCategory mocks base method.
+func (m *MockService) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertProductCategory", ctx, prodCategory)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertProductCategory indicates an expected call of UpsertProductCategory.
+func (mr *MockServiceMockRecorder) UpsertProductCategory(ctx, prodCategory interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductCategory", reflect.TypeOf((*MockService)(nil).UpsertProductCategory), ctx, prodCategory)
+}
+
+// UpsertProductType mocks base method.
+func (m *MockService) UpsertProductType(ctx context.Context, prodType *entity.ProductType) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertProductType", ctx, prodType)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertProductType indicates an expected call of UpsertProductType.
+func (mr *MockServiceMockRecorder) UpsertProductType(ctx, prodType interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductType", reflect.TypeOf((*MockService)(nil).UpsertProductType), ctx, prodType)
+}
+
+// UpsertProducts mocks base method.
+func (m *MockService) UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, products []*entity.Product) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertProducts", ctx, userID, roleNames, storeID, products)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertProducts indicates an expected call of UpsertProducts.
+func (mr *MockServiceMockRecorder) UpsertProducts(ctx, userID, roleNames, storeID, products interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProducts", reflect.TypeOf((*MockService)(nil).UpsertProducts), ctx, userID, roleNames, storeID, products)
+}
+
+// UpsertUnitOfMeasure mocks base method.
+func (m *MockService) UpsertUnitOfMeasure(ctx context.Context, uom *entity.UnitOfMeasure) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertUnitOfMeasure", ctx, uom)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertUnitOfMeasure indicates an expected call of UpsertUnitOfMeasure.
+func (mr *MockServiceMockRecorder) UpsertUnitOfMeasure(ctx, uom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertUnitOfMeasure", reflect.TypeOf((*MockService)(nil).UpsertUnitOfMeasure), ctx, uom)
 }

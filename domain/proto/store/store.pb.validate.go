@@ -2736,6 +2736,8 @@ func (m *UpsertProductsRequest) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for StoreId
+
 	for idx, item := range m.GetProductList() {
 		_, _ = idx, item
 

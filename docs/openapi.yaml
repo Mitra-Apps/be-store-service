@@ -60,6 +60,11 @@ paths:
             tags:
                 - StoreService
             operationId: StoreService_UpsertProducts
+            parameters:
+                - name: storeId
+                  in: query
+                  schema:
+                    type: string
             requestBody:
                 content:
                     application/json:
