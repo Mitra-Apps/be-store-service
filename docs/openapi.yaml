@@ -60,16 +60,11 @@ paths:
             tags:
                 - StoreService
             operationId: StoreService_UpsertProducts
-            parameters:
-                - name: storeId
-                  in: query
-                  schema:
-                    type: string
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/Product'
+                            $ref: '#/components/schemas/UpsertProductsRequest'
                 required: true
             responses:
                 "200":
@@ -498,6 +493,15 @@ components:
                     format: int32
                 message:
                     type: string
+        UpsertProductsRequest:
+            type: object
+            properties:
+                storeId:
+                    type: string
+                productList:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Product'
         UpsertProductsResponse:
             type: object
             properties:

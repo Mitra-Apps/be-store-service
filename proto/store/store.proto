@@ -156,7 +156,7 @@ service StoreService {
     rpc UpsertProducts(UpsertProductsRequest) returns (UpsertProductsResponse) {
         option (google.api.http) = {
             post: "/api/v1/products"
-            body: "productList"
+            body: "*"
         };
     }
 
