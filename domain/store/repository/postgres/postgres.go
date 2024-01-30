@@ -9,7 +9,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/internal/status"
+	"google.golang.org/grpc/status"
 
 	"gorm.io/gorm"
 )
