@@ -43,7 +43,7 @@ type Product struct {
 	ProductTypeID uuid.UUID `gorm:"type:uuid;not null"`
 }
 
-func (p *Product) FromProto(product *pb.Product) error {
+func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
 	if product.Id != "" {
 		id, err := uuid.Parse(product.Id)
 		if err != nil {
@@ -52,8 +52,13 @@ func (p *Product) FromProto(product *pb.Product) error {
 		p.ID = id
 	}
 
+	storeId := product.StoreId
+	if storeIdPrm != nil {
+		storeId = *storeIdPrm
+	}
+
 	if product.StoreId != "" {
-		storeId, err := uuid.Parse(product.StoreId)
+		storeId, err := uuid.Parse(storeId)
 		if err != nil {
 			return status.Errorf(codes.InvalidArgument, "Invalid uuid for store id")
 		}

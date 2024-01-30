@@ -141,7 +141,7 @@ func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRe
 	productList := []*prodEntity.Product{}
 	for _, p := range req.ProductList {
 		pr := prodEntity.Product{}
-		if err := pr.FromProto(p); err != nil {
+		if err := pr.FromProto(p, &req.StoreId); err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, err.Error())
 		}
 		productList = append(productList, &pr)

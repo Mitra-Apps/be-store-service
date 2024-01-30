@@ -19,7 +19,7 @@ func NewPostgres(db *gorm.DB) *Postgres {
 
 func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID) ([]*entity.Product, error) {
 	prods := []*entity.Product{}
-	tx := p.db.WithContext(ctx).Where("StoreID = ?", storeID).Find(&prods)
+	tx := p.db.WithContext(ctx).Where("store_id = ?", storeID).Find(&prods)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -31,7 +31,7 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID) 
 
 func (p *Postgres) GetProductsByStoreIdAndNames(ctx context.Context, storeID uuid.UUID, names []string) ([]*entity.Product, error) {
 	prods := []*entity.Product{}
-	tx := p.db.WithContext(ctx).Where("StoreID = ? AND Name IN ?", storeID, names).Find(&prods)
+	tx := p.db.WithContext(ctx).Where("store_id = ? AND name IN ?", storeID, names).Find(&prods)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil

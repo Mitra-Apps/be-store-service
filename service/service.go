@@ -116,18 +116,18 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	if len(products) == 0 {
 		return status.Errorf(codes.InvalidArgument, "No product inserted")
 	}
-	existingStore, err := s.storeRepository.GetStoreByUserID(ctx, userID)
+	existingStoreByStoreId, err := s.storeRepository.GetStore(ctx, storeID.String())
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	isAdmin := false
+	var isAdmin bool
 	for _, r := range roleNames {
 		if r == "admin" {
 			isAdmin = true
 		}
 	}
-	if existingStore.ID != storeID && !isAdmin {
-		return status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product")
+	if existingStoreByStoreId.UserID != userID && !isAdmin {
+		return status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store")
 	}
 	names := []string{}
 	for _, p := range products {
