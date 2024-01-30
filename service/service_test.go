@@ -277,7 +277,7 @@ func TestUpdateStore(t *testing.T) {
 		{
 			name: "Success",
 			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
-				storeRepository.EXPECT().UpdateStore(ctx, gomock.Any(), gomock.Any()).Return(nil)
+				storeRepository.EXPECT().UpdateStore(ctx, gomock.Any()).Return(nil)
 			},
 			inputStore: struct {
 				storeID string
@@ -304,7 +304,7 @@ func TestUpdateStore(t *testing.T) {
 			service := New(storeRepository, storage)
 
 			tc.setupMocks(storeRepository, storage)
-			err := service.UpdateStore(ctx, tc.inputStore.storeID, tc.inputStore.store)
+			_, err := service.UpdateStore(ctx, tc.inputStore.storeID, tc.inputStore.store)
 			assert.Equal(t, tc.expectedError, err)
 
 		})

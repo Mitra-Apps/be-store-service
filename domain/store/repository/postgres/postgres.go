@@ -54,14 +54,13 @@ func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store,
 	return &store, nil
 }
 
-func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *entity.Store) error {
-	exist, err := p.GetStore(ctx, storeID)
-	if err != nil {
-		return err
+func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*entity.Store, error) {
+	if update.ID == uuid.Nil {
+		return nil, errors.New("store ID cannot be nil")
 	}
 
-	return p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		err = tx.Model(exist).Updates(map[string]interface{}{
+	err := p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&entity.Store{}).Where("id = ?", update.ID.String()).Updates(map[string]interface{}{
 			"user_id":           update.UserID,
 			"store_name":        update.StoreName,
 			"store_description": update.StoreDescription,
@@ -81,17 +80,81 @@ func (p *postgres) UpdateStore(ctx context.Context, storeID string, update *enti
 			return err
 		}
 
-		exist.Tags = nil
-		exist.Tags = append(exist.Tags, update.Tags...)
+		if err := p.updateStoreTags(ctx, tx, update.ID, update.Tags); err != nil {
+			return err
+		}
 
-		exist.Hours = nil
-		exist.Hours = append(exist.Hours, update.Hours...)
+		if err := p.updateStoreHours(ctx, tx, update.ID, update.Hours); err != nil {
+			return err
+		}
 
-		exist.Images = nil
-		exist.Images = append(exist.Images, update.Images...)
+		if err := p.updateStoreImages(ctx, tx, update.ID, update.Images); err != nil {
+			return err
+		}
 
-		return tx.Save(exist).Error
+		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return p.GetStore(ctx, update.ID.String())
+}
+
+// updateStoreTags is a helper function to update the store tags.
+func (p *postgres) updateStoreTags(ctx context.Context, tx *gorm.DB, storeID uuid.UUID, tags []*entity.StoreTag) error {
+	exist, err := p.GetStore(ctx, storeID.String())
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Model(exist).Association("Tags").Unscoped().Clear(); err != nil {
+		return err
+	}
+
+	for _, tag := range tags {
+		if err := tx.First(tag, "tag_name = ?", tag.TagName).Error; err != nil && err != gorm.ErrRecordNotFound {
+			return err
+		}
+
+		if tag.ID == uuid.Nil {
+			if err := tx.Create(tag).Error; err != nil {
+				return err
+			}
+		}
+
+		if err := tx.Model(exist).Association("Tags").Append(tag); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// updateStoreHours is a helper function to update the store hours.
+func (p *postgres) updateStoreHours(ctx context.Context, tx *gorm.DB, storeID uuid.UUID, hours []*entity.StoreHour) error {
+	if err := tx.Unscoped().Delete(hours, "store_id = ?", storeID.String()).Error; err != nil {
+		return err
+	}
+
+	if len(hours) > 0 {
+		return tx.Create(hours).Error
+	}
+
+	return nil
+}
+
+// updateStoreImages is a helper function to update the store images.
+func (p *postgres) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID uuid.UUID, images []*entity.StoreImage) error {
+	if err := tx.Unscoped().Delete(images, "store_id = ?", storeID.String()).Error; err != nil {
+		return err
+	}
+
+	if len(images) > 0 {
+		return tx.Create(images).Error
+	}
+
+	return nil
 }
 
 func (p *postgres) DeleteStore(ctx context.Context, storeID string) error {
