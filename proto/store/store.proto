@@ -65,7 +65,7 @@ message Store {
     string zip_code = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string phone = 9 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string email = 10 [(validate.rules).string.email = true];
-    string website = 11;
+    string website = 11 ;
     string status = 12;
     bool is_active = 13;
     double location_lat = 14;
@@ -73,6 +73,37 @@ message Store {
     repeated StoreTag tags = 16;
     repeated StoreHour hours = 17;
     repeated StoreImage images = 18;
+}
+
+message ProductCategory {
+    string id = 1;
+    string name = 2;
+    bool is_active = 3;
+}
+
+message ProductType {
+    string id = 1;
+    string name = 2;
+	bool is_active = 3;
+	string product_category_id = 4;
+}
+
+message UnitOfMeasure {
+	string id = 1;
+    string name = 2;
+    string symbol = 3;
+	bool is_active = 4;
+}
+
+message Product {
+	string id = 1;
+	string store_id = 2;
+	string name = 3;
+	bool sale_status = 4;
+    double price = 5;
+    int64 stock = 6;
+	string uom_id = 7;
+	string product_type_id = 8;
 }
 
 // Store service definition
@@ -119,6 +150,34 @@ service StoreService {
         option (google.api.http) = {
             put: "/api/v1/stores/active-toggle/{is_active}"
             body: "*"
+        };
+    }
+
+    rpc UpsertProducts(UpsertProductsRequest) returns (UpsertProductsResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/products"
+            body: "*"
+        };
+    }
+
+    rpc UpsertUnitOfMeasure(UpsertUnitOfMeasureRequest) returns (UpsertUnitOfMeasureResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/uom"
+            body: "uom"
+        };
+    }
+
+    rpc UpsertProductCategory(UpsertProductCategoryRequest) returns (UpsertProductCategoryResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/product-category"
+            body: "productCategory"
+        };
+    }
+
+    rpc UpsertProductType(UpsertProductTypeRequest) returns (UpsertProductTypeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/product-type"
+            body: "productType"
         };
     }
 }
@@ -183,6 +242,43 @@ message OpenCloseStoreRequest {
 }
 
 message OpenCloseStoreResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UpsertProductsRequest {
+    string store_id = 1;
+    repeated Product productList = 2;
+}
+
+message UpsertProductsResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UpsertUnitOfMeasureRequest {
+    UnitOfMeasure uom = 1;
+}
+
+message UpsertUnitOfMeasureResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UpsertProductCategoryRequest {
+    ProductCategory productCategory = 1;
+}
+
+message UpsertProductCategoryResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UpsertProductTypeRequest {
+    ProductType productType = 1;
+}
+
+message UpsertProductTypeResponse {
     int32 code = 1;
     string message = 2;
 }
