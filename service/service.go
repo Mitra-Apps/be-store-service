@@ -74,10 +74,15 @@ func (s *service) UpdateStore(ctx context.Context, storeID string, update *entit
 	}
 
 	if strings.Compare(claims.UserID.String(), update.UserID.String()) != 0 {
+		isAdmin := false
 		for _, r := range claims.RoleNames {
-			if r != "admin" {
-				return nil, status.Errorf(codes.PermissionDenied, "You do not have permission to update this store")
+			if r == "admin" {
+				isAdmin = true
 			}
+		}
+
+		if !isAdmin {
+			return nil, status.Errorf(codes.PermissionDenied, "Only admin can update store")
 		}
 	}
 
