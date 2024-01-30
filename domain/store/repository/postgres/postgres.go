@@ -8,6 +8,8 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/internal/status"
 
 	"gorm.io/gorm"
 )
@@ -56,7 +58,7 @@ func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store,
 
 func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*entity.Store, error) {
 	if update.ID == uuid.Nil {
-		return nil, errors.New("store ID cannot be nil")
+		return nil, status.Errorf(codes.InvalidArgument, "store id is required")
 	}
 
 	err := p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -77,7 +79,11 @@ func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*enti
 			"is_active":         update.IsActive,
 		}).Error
 		if err != nil {
-			return err
+			if err == gorm.ErrRecordNotFound {
+				return status.Errorf(codes.NotFound, "store with ID %s not found", update.ID.String())
+			}
+
+			return status.Errorf(codes.Internal, "failed to update store: %v", err)
 		}
 
 		if err := p.updateStoreTags(ctx, tx, update.ID, update.Tags); err != nil {
