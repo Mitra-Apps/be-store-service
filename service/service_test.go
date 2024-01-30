@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
@@ -244,8 +243,6 @@ func TestCreateStore(t *testing.T) {
 
 			tc.setupMocks(storeRepository, storage)
 			resultStore, err := service.CreateStore(ctx, tc.inputStore)
-			fmt.Printf("Actual argument received: %+v\n", resultStore)
-			fmt.Printf("Actual argument received: %+v\n", err)
 			assert.Equal(t, tc.expectedStore, resultStore)
 			assert.Equal(t, tc.expectedError, err)
 		})
@@ -304,9 +301,9 @@ func TestUpdateStore(t *testing.T) {
 			service := New(storeRepository, storage)
 
 			tc.setupMocks(storeRepository, storage)
-			_, err := service.UpdateStore(ctx, tc.inputStore.storeID, tc.inputStore.store)
+			result, err := service.UpdateStore(ctx, tc.inputStore.storeID, tc.inputStore.store)
+			assert.Equal(t, tc.expectedError, result)
 			assert.Equal(t, tc.expectedError, err)
-
 		})
 	}
 }
