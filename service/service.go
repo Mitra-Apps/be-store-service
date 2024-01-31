@@ -102,6 +102,12 @@ func (s *service) UpdateStore(ctx context.Context, storeID string, update *entit
 		return nil, status.Errorf(codes.InvalidArgument, "store id should be uuid")
 	}
 
+	if exist, err := s.GetStore(ctx, storeID); err != nil {
+		return nil, err
+	} else if exist.UserID != claims.UserID {
+		return nil, status.Errorf(codes.PermissionDenied, "You don't have permission to update this store")
+	}
+
 	for _, img := range update.Images {
 		if img.ImageBase64 != "" {
 			if img.ImageURL, err = s.storage.UploadImage(ctx, img.ImageBase64, storeID); err != nil {

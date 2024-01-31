@@ -71,7 +71,7 @@ func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest)
 
 	store := &entity.Store{}
 	if err := store.FromProto(req.Store); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, err
 	}
 
 	data, err := s.service.UpdateStore(ctx, req.StoreId, store)
