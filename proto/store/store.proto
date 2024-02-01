@@ -155,7 +155,7 @@ service StoreService {
 
     rpc GetProductById(GetProductByIdRequest) returns (GetProductByIdResponse) {
         option (google.api.http) = {
-            get: "/api/v1/product/{product_id}"
+            get: "/api/v1/products/{product_id}"
         };
     }
 
