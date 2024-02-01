@@ -31,6 +31,54 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/product-category/{isIncludeDeactivated}:
+        get:
+            tags:
+                - StoreService
+            operationId: StoreService_GetProductCategories
+            parameters:
+                - name: isIncludeDeactivated
+                  in: path
+                  required: true
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetProductCategoriesResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/product-list:
+        post:
+            tags:
+                - StoreService
+            operationId: StoreService_GetProductList
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/GetProductListRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetProductListResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/product-type:
         post:
             tags:
@@ -49,6 +97,59 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/UpsertProductTypeResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/product-type/{productCategoryId}/{isIncludeDeactivated}:
+        get:
+            tags:
+                - StoreService
+            operationId: StoreService_GetProductTypes
+            parameters:
+                - name: productCategoryId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: isIncludeDeactivated
+                  in: path
+                  required: true
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetProductTypesResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/product/{productId}:
+        get:
+            tags:
+                - StoreService
+            operationId: StoreService_GetProductById
+            parameters:
+                - name: productId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetProductByIdResponse'
                 default:
                     description: Default error response
                     content:
@@ -232,6 +333,30 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/uom/{isIncludeDeactivated}:
+        get:
+            tags:
+                - StoreService
+            operationId: StoreService_GetUnitOfMeasures
+            parameters:
+                - name: isIncludeDeactivated
+                  in: path
+                  required: true
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetUnitOfMeasuresResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /v1/stores/{storeId}:
         delete:
             tags:
@@ -267,6 +392,61 @@ components:
                 data:
                     $ref: '#/components/schemas/Store'
             description: Response message for creating a store
+        GetProductByIdResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/Product'
+        GetProductCategoriesResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ProductCategory'
+        GetProductListRequest:
+            type: object
+            properties:
+                storeId:
+                    type: string
+                productTypeId:
+                    type: string
+                isIncludeDeactivated:
+                    type: boolean
+        GetProductListResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Product'
+        GetProductTypesResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ProductType'
         GetStoreResponse:
             type: object
             properties:
@@ -278,6 +458,18 @@ components:
                 data:
                     $ref: '#/components/schemas/Store'
             description: Response message for getting a store
+        GetUnitOfMeasuresResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/UnitOfMeasure'
         GoogleProtobufAny:
             type: object
             properties:

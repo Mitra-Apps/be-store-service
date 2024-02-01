@@ -153,10 +153,29 @@ service StoreService {
         };
     }
 
+    rpc GetProductById(GetProductByIdRequest) returns (GetProductByIdResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/product/{product_id}"
+        };
+    }
+
+    rpc GetProductList(GetProductListRequest) returns (GetProductListResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/product-list"
+            body: "*"
+        };
+    }
+
     rpc UpsertProducts(UpsertProductsRequest) returns (UpsertProductsResponse) {
         option (google.api.http) = {
             post: "/api/v1/products"
             body: "*"
+        };
+    }
+    
+    rpc GetUnitOfMeasures(GetUnitOfMeasuresRequest) returns (GetUnitOfMeasuresResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/uom/{is_include_deactivated}"
         };
     }
 
@@ -167,10 +186,22 @@ service StoreService {
         };
     }
 
+    rpc GetProductCategories(GetProductCategoriesRequest) returns (GetProductCategoriesResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/product-category/{is_include_deactivated}"
+        };
+    }
+
     rpc UpsertProductCategory(UpsertProductCategoryRequest) returns (UpsertProductCategoryResponse) {
         option (google.api.http) = {
             post: "/api/v1/product-category"
             body: "productCategory"
+        };
+    }
+
+    rpc GetProductTypes(GetProductTypesRequest) returns (GetProductTypesResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/product-type/{product_category_id}/{is_include_deactivated}"
         };
     }
 
@@ -281,4 +312,57 @@ message UpsertProductTypeRequest {
 message UpsertProductTypeResponse {
     int32 code = 1;
     string message = 2;
+}
+
+message GetProductListRequest {
+    string store_id = 1;
+    string product_type_id = 2;
+    bool is_include_deactivated = 3;
+}
+
+message GetProductListResponse {
+    int32 code = 1;
+    string message = 2;
+    repeated Product data = 3;
+}
+
+message GetProductByIdRequest {
+    string product_id = 1;
+}
+
+message GetProductByIdResponse {
+    int32 code = 1;
+    string message = 2;
+    Product data = 3;
+}
+
+message GetUnitOfMeasuresRequest {
+    bool is_include_deactivated = 1;
+}
+
+message GetUnitOfMeasuresResponse {
+    int32 code = 1;
+    string message = 2;
+    repeated UnitOfMeasure data = 3;
+}
+
+message GetProductCategoriesRequest {
+    bool is_include_deactivated = 1;
+}
+
+message GetProductCategoriesResponse {
+    int32 code = 1;
+    string message = 2;
+    repeated ProductCategory data = 3;
+}
+
+message GetProductTypesRequest {
+    string product_category_id = 1;
+    bool is_include_deactivated = 2;
+}
+
+message GetProductTypesResponse {
+    int32 code = 1;
+    string message = 2;
+    repeated ProductType data = 3;
 }

@@ -2,6 +2,8 @@ package grpc
 
 import (
 	"context"
+	"log"
+	"strings"
 
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
@@ -270,5 +272,105 @@ func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProduct
 	return &pb.UpsertProductTypeResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
+	}, nil
+}
+
+func (g *GrpcRoute) GetUnitOfMeasures(ctx context.Context, req *pb.GetUnitOfMeasuresRequest) (*pb.GetUnitOfMeasuresResponse, error) {
+	uom, err := g.service.GetUnitOfMeasures(ctx, req.IsIncludeDeactivated)
+	if err != nil {
+		return nil, err
+	}
+	uoms := []*pb.UnitOfMeasure{}
+	for _, u := range uom {
+		uoms = append(uoms, u.ToProto())
+	}
+	return &pb.GetUnitOfMeasuresResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    uoms,
+	}, nil
+}
+
+func (g *GrpcRoute) GetProductById(ctx context.Context, req *pb.GetProductByIdRequest) (*pb.GetProductByIdResponse, error) {
+	prodId, err := uuid.Parse(req.ProductId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing product id to uuid")
+	}
+	prod, err := g.service.GetProductById(ctx, prodId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetProductByIdResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    prod.ToProto(),
+	}, nil
+}
+
+func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRequest) (*pb.GetProductListResponse, error) {
+	if strings.Trim(req.StoreId, " ") == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Store id is required")
+	}
+	storeId, err := uuid.Parse(req.StoreId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
+	}
+	var productTypeId *uuid.UUID = nil
+	if req.ProductTypeId != "" {
+		pt, err := uuid.Parse(req.ProductTypeId)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "Error when parsing product type id to uuid")
+		}
+		productTypeId = &pt
+	}
+	products, err := g.service.GetProductsByStoreId(ctx, storeId, productTypeId, req.IsIncludeDeactivated)
+	if err != nil {
+		return nil, err
+	}
+	data := []*pb.Product{}
+	for _, p := range products {
+		data = append(data, p.ToProto())
+	}
+	return &pb.GetProductListResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    data,
+	}, nil
+}
+
+func (g *GrpcRoute) GetProductCategories(ctx context.Context, req *pb.GetProductCategoriesRequest) (*pb.GetProductCategoriesResponse, error) {
+	cat, err := g.service.GetProductCategories(ctx, req.IsIncludeDeactivated)
+	if err != nil {
+		return nil, err
+	}
+	cats := []*pb.ProductCategory{}
+	for _, u := range cat {
+		cats = append(cats, u.ToProto())
+	}
+	return &pb.GetProductCategoriesResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    cats,
+	}, nil
+}
+
+func (g *GrpcRoute) GetProductTypes(ctx context.Context, req *pb.GetProductTypesRequest) (*pb.GetProductTypesResponse, error) {
+	prodCatId, err := uuid.Parse(req.ProductCategoryId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing product category id to uuid")
+	}
+	log.Println(111)
+	prodType, err := g.service.GetProductTypes(ctx, prodCatId, req.IsIncludeDeactivated)
+	if err != nil {
+		return nil, err
+	}
+	prodTypes := []*pb.ProductType{}
+	for _, u := range prodType {
+		prodTypes = append(prodTypes, u.ToProto())
+	}
+	return &pb.GetProductTypesResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    prodTypes,
 	}, nil
 }
