@@ -885,7 +885,7 @@ func RegisterStoreServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.StoreService/GetProductById", runtime.WithHTTPPathPattern("/api/v1/product/{product_id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.StoreService/GetProductById", runtime.WithHTTPPathPattern("/api/v1/products/{product_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1281,7 +1281,7 @@ func RegisterStoreServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.StoreService/GetProductById", runtime.WithHTTPPathPattern("/api/v1/product/{product_id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.StoreService/GetProductById", runtime.WithHTTPPathPattern("/api/v1/products/{product_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1489,7 +1489,7 @@ var (
 
 	pattern_StoreService_OpenCloseStore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "stores", "active-toggle", "is_active"}, ""))
 
-	pattern_StoreService_GetProductById_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "product", "product_id"}, ""))
+	pattern_StoreService_GetProductById_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "products", "product_id"}, ""))
 
 	pattern_StoreService_GetProductList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "product-list"}, ""))
 
