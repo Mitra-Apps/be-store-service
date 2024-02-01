@@ -1,10 +1,14 @@
 package entity
 
 import (
+	"regexp"
+
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // DayOfWeekEnum represents the days of the week.
@@ -85,7 +89,7 @@ func (s *Store) FromProto(store *pb.Store) error {
 	if store.Id != "" {
 		id, err := uuid.Parse(store.Id)
 		if err != nil {
-			return err
+			return status.Errorf(codes.InvalidArgument, "invalid store id")
 		}
 		s.ID = id
 	}
@@ -95,9 +99,16 @@ func (s *Store) FromProto(store *pb.Store) error {
 	if store.UserId != "" {
 		id, err := uuid.Parse(store.UserId)
 		if err != nil {
-			return err
+			return status.Errorf(codes.InvalidArgument, "invalid user id")
 		}
 		userID = id
+	}
+
+	// check user email is valid email address
+	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	re := regexp.MustCompile(emailRegex)
+	if !re.MatchString(store.Email) {
+		return status.Errorf(codes.InvalidArgument, "invalid email address")
 	}
 
 	s.UserID = userID
