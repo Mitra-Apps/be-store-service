@@ -36,7 +36,7 @@ type Product struct {
 	base_model.BaseModel
 	StoreID       uuid.UUID `gorm:"type:uuid;not null"`
 	Name          string    `gorm:"type:varchar(255);not null"`
-	SaleStatus    bool      `gorm:"type:bool;not null;default:FALSE"`
+	SaleStatus    bool      `gorm:"type:bool;not null;default:TRUE"`
 	Price         float64   `gorm:"decimal(17,2); not null; default:0"`
 	Stock         int64     `gorm:"type:int;"`
 	UomID         uuid.UUID `gorm:"type:uuid;not null"`
@@ -141,4 +141,55 @@ func (u *UnitOfMeasure) FromProto(uom *pb.UnitOfMeasure) error {
 	u.IsActive = uom.IsActive
 
 	return nil
+}
+
+func (p *Product) ToProto() *pb.Product {
+	if p == nil {
+		return nil
+	}
+	return &pb.Product{
+		Id:            p.ID.String(),
+		StoreId:       p.StoreID.String(),
+		Name:          p.Name,
+		SaleStatus:    p.SaleStatus,
+		Price:         p.Price,
+		Stock:         p.Stock,
+		UomId:         p.UomID.String(),
+		ProductTypeId: p.ProductTypeID.String(),
+	}
+}
+
+func (u *UnitOfMeasure) ToProto() *pb.UnitOfMeasure {
+	if u == nil {
+		return nil
+	}
+	return &pb.UnitOfMeasure{
+		Id:       u.ID.String(),
+		Name:     u.Name,
+		Symbol:   u.Symbol,
+		IsActive: u.IsActive,
+	}
+}
+
+func (c *ProductCategory) ToProto() *pb.ProductCategory {
+	if c == nil {
+		return nil
+	}
+	return &pb.ProductCategory{
+		Id:       c.ID.String(),
+		Name:     c.Name,
+		IsActive: c.IsActive,
+	}
+}
+
+func (t *ProductType) ToProto() *pb.ProductType {
+	if t == nil {
+		return nil
+	}
+	return &pb.ProductType{
+		Id:                t.ID.String(),
+		Name:              t.Name,
+		IsActive:          t.IsActive,
+		ProductCategoryId: t.ProductCategoryID.String(),
+	}
 }

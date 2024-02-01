@@ -26,9 +26,14 @@ const (
 	StoreService_DeleteStore_FullMethodName           = "/StoreService/DeleteStore"
 	StoreService_ListStores_FullMethodName            = "/StoreService/ListStores"
 	StoreService_OpenCloseStore_FullMethodName        = "/StoreService/OpenCloseStore"
+	StoreService_GetProductById_FullMethodName        = "/StoreService/GetProductById"
+	StoreService_GetProductList_FullMethodName        = "/StoreService/GetProductList"
 	StoreService_UpsertProducts_FullMethodName        = "/StoreService/UpsertProducts"
+	StoreService_GetUnitOfMeasures_FullMethodName     = "/StoreService/GetUnitOfMeasures"
 	StoreService_UpsertUnitOfMeasure_FullMethodName   = "/StoreService/UpsertUnitOfMeasure"
+	StoreService_GetProductCategories_FullMethodName  = "/StoreService/GetProductCategories"
 	StoreService_UpsertProductCategory_FullMethodName = "/StoreService/UpsertProductCategory"
+	StoreService_GetProductTypes_FullMethodName       = "/StoreService/GetProductTypes"
 	StoreService_UpsertProductType_FullMethodName     = "/StoreService/UpsertProductType"
 )
 
@@ -48,9 +53,14 @@ type StoreServiceClient interface {
 	ListStores(ctx context.Context, in *ListStoresRequest, opts ...grpc.CallOption) (*ListStoresResponse, error)
 	// Open close store
 	OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*OpenCloseStoreResponse, error)
+	GetProductById(ctx context.Context, in *GetProductByIdRequest, opts ...grpc.CallOption) (*GetProductByIdResponse, error)
+	GetProductList(ctx context.Context, in *GetProductListRequest, opts ...grpc.CallOption) (*GetProductListResponse, error)
 	UpsertProducts(ctx context.Context, in *UpsertProductsRequest, opts ...grpc.CallOption) (*UpsertProductsResponse, error)
+	GetUnitOfMeasures(ctx context.Context, in *GetUnitOfMeasuresRequest, opts ...grpc.CallOption) (*GetUnitOfMeasuresResponse, error)
 	UpsertUnitOfMeasure(ctx context.Context, in *UpsertUnitOfMeasureRequest, opts ...grpc.CallOption) (*UpsertUnitOfMeasureResponse, error)
+	GetProductCategories(ctx context.Context, in *GetProductCategoriesRequest, opts ...grpc.CallOption) (*GetProductCategoriesResponse, error)
 	UpsertProductCategory(ctx context.Context, in *UpsertProductCategoryRequest, opts ...grpc.CallOption) (*UpsertProductCategoryResponse, error)
+	GetProductTypes(ctx context.Context, in *GetProductTypesRequest, opts ...grpc.CallOption) (*GetProductTypesResponse, error)
 	UpsertProductType(ctx context.Context, in *UpsertProductTypeRequest, opts ...grpc.CallOption) (*UpsertProductTypeResponse, error)
 }
 
@@ -116,9 +126,36 @@ func (c *storeServiceClient) OpenCloseStore(ctx context.Context, in *OpenCloseSt
 	return out, nil
 }
 
+func (c *storeServiceClient) GetProductById(ctx context.Context, in *GetProductByIdRequest, opts ...grpc.CallOption) (*GetProductByIdResponse, error) {
+	out := new(GetProductByIdResponse)
+	err := c.cc.Invoke(ctx, StoreService_GetProductById_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storeServiceClient) GetProductList(ctx context.Context, in *GetProductListRequest, opts ...grpc.CallOption) (*GetProductListResponse, error) {
+	out := new(GetProductListResponse)
+	err := c.cc.Invoke(ctx, StoreService_GetProductList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *storeServiceClient) UpsertProducts(ctx context.Context, in *UpsertProductsRequest, opts ...grpc.CallOption) (*UpsertProductsResponse, error) {
 	out := new(UpsertProductsResponse)
 	err := c.cc.Invoke(ctx, StoreService_UpsertProducts_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storeServiceClient) GetUnitOfMeasures(ctx context.Context, in *GetUnitOfMeasuresRequest, opts ...grpc.CallOption) (*GetUnitOfMeasuresResponse, error) {
+	out := new(GetUnitOfMeasuresResponse)
+	err := c.cc.Invoke(ctx, StoreService_GetUnitOfMeasures_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -134,9 +171,27 @@ func (c *storeServiceClient) UpsertUnitOfMeasure(ctx context.Context, in *Upsert
 	return out, nil
 }
 
+func (c *storeServiceClient) GetProductCategories(ctx context.Context, in *GetProductCategoriesRequest, opts ...grpc.CallOption) (*GetProductCategoriesResponse, error) {
+	out := new(GetProductCategoriesResponse)
+	err := c.cc.Invoke(ctx, StoreService_GetProductCategories_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *storeServiceClient) UpsertProductCategory(ctx context.Context, in *UpsertProductCategoryRequest, opts ...grpc.CallOption) (*UpsertProductCategoryResponse, error) {
 	out := new(UpsertProductCategoryResponse)
 	err := c.cc.Invoke(ctx, StoreService_UpsertProductCategory_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storeServiceClient) GetProductTypes(ctx context.Context, in *GetProductTypesRequest, opts ...grpc.CallOption) (*GetProductTypesResponse, error) {
+	out := new(GetProductTypesResponse)
+	err := c.cc.Invoke(ctx, StoreService_GetProductTypes_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -168,9 +223,14 @@ type StoreServiceServer interface {
 	ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error)
 	// Open close store
 	OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error)
+	GetProductById(context.Context, *GetProductByIdRequest) (*GetProductByIdResponse, error)
+	GetProductList(context.Context, *GetProductListRequest) (*GetProductListResponse, error)
 	UpsertProducts(context.Context, *UpsertProductsRequest) (*UpsertProductsResponse, error)
+	GetUnitOfMeasures(context.Context, *GetUnitOfMeasuresRequest) (*GetUnitOfMeasuresResponse, error)
 	UpsertUnitOfMeasure(context.Context, *UpsertUnitOfMeasureRequest) (*UpsertUnitOfMeasureResponse, error)
+	GetProductCategories(context.Context, *GetProductCategoriesRequest) (*GetProductCategoriesResponse, error)
 	UpsertProductCategory(context.Context, *UpsertProductCategoryRequest) (*UpsertProductCategoryResponse, error)
+	GetProductTypes(context.Context, *GetProductTypesRequest) (*GetProductTypesResponse, error)
 	UpsertProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error)
 	mustEmbedUnimplementedStoreServiceServer()
 }
@@ -197,14 +257,29 @@ func (UnimplementedStoreServiceServer) ListStores(context.Context, *ListStoresRe
 func (UnimplementedStoreServiceServer) OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenCloseStore not implemented")
 }
+func (UnimplementedStoreServiceServer) GetProductById(context.Context, *GetProductByIdRequest) (*GetProductByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductById not implemented")
+}
+func (UnimplementedStoreServiceServer) GetProductList(context.Context, *GetProductListRequest) (*GetProductListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductList not implemented")
+}
 func (UnimplementedStoreServiceServer) UpsertProducts(context.Context, *UpsertProductsRequest) (*UpsertProductsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertProducts not implemented")
+}
+func (UnimplementedStoreServiceServer) GetUnitOfMeasures(context.Context, *GetUnitOfMeasuresRequest) (*GetUnitOfMeasuresResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUnitOfMeasures not implemented")
 }
 func (UnimplementedStoreServiceServer) UpsertUnitOfMeasure(context.Context, *UpsertUnitOfMeasureRequest) (*UpsertUnitOfMeasureResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertUnitOfMeasure not implemented")
 }
+func (UnimplementedStoreServiceServer) GetProductCategories(context.Context, *GetProductCategoriesRequest) (*GetProductCategoriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductCategories not implemented")
+}
 func (UnimplementedStoreServiceServer) UpsertProductCategory(context.Context, *UpsertProductCategoryRequest) (*UpsertProductCategoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertProductCategory not implemented")
+}
+func (UnimplementedStoreServiceServer) GetProductTypes(context.Context, *GetProductTypesRequest) (*GetProductTypesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductTypes not implemented")
 }
 func (UnimplementedStoreServiceServer) UpsertProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertProductType not implemented")
@@ -330,6 +405,42 @@ func _StoreService_OpenCloseStore_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_GetProductById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).GetProductById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_GetProductById_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).GetProductById(ctx, req.(*GetProductByIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StoreService_GetProductList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).GetProductList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_GetProductList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).GetProductList(ctx, req.(*GetProductListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StoreService_UpsertProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpsertProductsRequest)
 	if err := dec(in); err != nil {
@@ -344,6 +455,24 @@ func _StoreService_UpsertProducts_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StoreServiceServer).UpsertProducts(ctx, req.(*UpsertProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StoreService_GetUnitOfMeasures_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUnitOfMeasuresRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).GetUnitOfMeasures(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_GetUnitOfMeasures_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).GetUnitOfMeasures(ctx, req.(*GetUnitOfMeasuresRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -366,6 +495,24 @@ func _StoreService_UpsertUnitOfMeasure_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_GetProductCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductCategoriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).GetProductCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_GetProductCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).GetProductCategories(ctx, req.(*GetProductCategoriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StoreService_UpsertProductCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpsertProductCategoryRequest)
 	if err := dec(in); err != nil {
@@ -380,6 +527,24 @@ func _StoreService_UpsertProductCategory_Handler(srv interface{}, ctx context.Co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StoreServiceServer).UpsertProductCategory(ctx, req.(*UpsertProductCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StoreService_GetProductTypes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductTypesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).GetProductTypes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_GetProductTypes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).GetProductTypes(ctx, req.(*GetProductTypesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -434,16 +599,36 @@ var StoreService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _StoreService_OpenCloseStore_Handler,
 		},
 		{
+			MethodName: "GetProductById",
+			Handler:    _StoreService_GetProductById_Handler,
+		},
+		{
+			MethodName: "GetProductList",
+			Handler:    _StoreService_GetProductList_Handler,
+		},
+		{
 			MethodName: "UpsertProducts",
 			Handler:    _StoreService_UpsertProducts_Handler,
+		},
+		{
+			MethodName: "GetUnitOfMeasures",
+			Handler:    _StoreService_GetUnitOfMeasures_Handler,
 		},
 		{
 			MethodName: "UpsertUnitOfMeasure",
 			Handler:    _StoreService_UpsertUnitOfMeasure_Handler,
 		},
 		{
+			MethodName: "GetProductCategories",
+			Handler:    _StoreService_GetProductCategories_Handler,
+		},
+		{
 			MethodName: "UpsertProductCategory",
 			Handler:    _StoreService_UpsertProductCategory_Handler,
+		},
+		{
+			MethodName: "GetProductTypes",
+			Handler:    _StoreService_GetProductTypes_Handler,
 		},
 		{
 			MethodName: "UpsertProductType",

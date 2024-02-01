@@ -25,6 +25,11 @@ type Service interface {
 	UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitOfMeasure) error
 	UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
 	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
+	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
+	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) (products []*prodEntity.Product, err error)
+	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error)
+	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error)
+	GetProductTypes(ctx context.Context, productCategoryID uuid.UUID, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
 }
 type service struct {
 	storeRepository   repository.StoreServiceRepository
@@ -231,4 +236,37 @@ func (s *service) UpsertProductType(ctx context.Context, prodType *prodEntity.Pr
 		return status.Errorf(codes.Internal, "Error when inserting / updating product type :"+err.Error())
 	}
 	return nil
+}
+
+func (s *service) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error) {
+	if uom, err = s.productRepository.GetUnitOfMeasures(ctx, isIncludeDeactivated); err != nil {
+		return nil, status.Errorf(codes.Internal, "Error when getting unit of measures :"+err.Error())
+	}
+	return uom, nil
+}
+
+func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) (products []*prodEntity.Product, err error) {
+	if products, err = s.productRepository.GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated); err != nil {
+		return nil, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
+	}
+	return products, nil
+}
+func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error) {
+	if cat, err = s.productRepository.GetProductCategories(ctx, isIncludeDeactivated); err != nil {
+		return nil, status.Errorf(codes.Internal, "Error when getting product categories :"+err.Error())
+	}
+	return cat, nil
+}
+func (s *service) GetProductTypes(ctx context.Context, productCategoryID uuid.UUID, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error) {
+	if types, err = s.productRepository.GetProductTypes(ctx, productCategoryID, isIncludeDeactivated); err != nil {
+		return nil, status.Errorf(codes.Internal, "Error when getting product types :"+err.Error())
+	}
+	return types, nil
+}
+
+func (s *service) GetProductById(ctx context.Context, id uuid.UUID) (p *prodEntity.Product, err error) {
+	if p, err = s.productRepository.GetProductById(ctx, id); err != nil {
+		return nil, status.Errorf(codes.Internal, "Error when getting product by id :"+err.Error())
+	}
+	return p, nil
 }
