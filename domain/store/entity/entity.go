@@ -11,19 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// DayOfWeekEnum represents the days of the week.
-type DayOfWeekEnum string
-
-const (
-	Monday    DayOfWeekEnum = "Monday"
-	Tuesday   DayOfWeekEnum = "Tuesday"
-	Wednesday DayOfWeekEnum = "Wednesday"
-	Thursday  DayOfWeekEnum = "Thursday"
-	Friday    DayOfWeekEnum = "Friday"
-	Saturday  DayOfWeekEnum = "Saturday"
-	Sunday    DayOfWeekEnum = "Sunday"
-)
-
 // Store represents a store model.
 type Store struct {
 	base_model.BaseModel
@@ -226,26 +213,60 @@ func (s *StoreTag) FromProto(storeTag *pb.StoreTag) error {
 // StoreHour represents the operating hours of a store.
 type StoreHour struct {
 	base_model.BaseModel
-	StoreID   uuid.UUID     `gorm:"type:uuid;index;not null"`
-	DayOfWeek DayOfWeekEnum `gorm:"not null"`
+	StoreID   uuid.UUID `gorm:"type:uuid;index;not null"`
+	DayOfWeek string    `gorm:"not null"`
 	Open      string
 	Close     string
+	Is24Hr    bool
 }
 
 func (s *StoreHour) ToProto() *pb.StoreHour {
-	dayOfWeekEnum := pb.DayOfWeekEnum(pb.DayOfWeekEnum_value[string(s.DayOfWeek)])
+	var dayOfWeek int32
+
+	switch s.DayOfWeek {
+	case "MONDAY":
+		dayOfWeek = 0
+	case "TUESDAY":
+		dayOfWeek = 1
+	case "WEDNESDAY":
+		dayOfWeek = 2
+	case "THURSDAY":
+		dayOfWeek = 3
+	case "FRIDAY":
+		dayOfWeek = 4
+	case "SATURDAY":
+		dayOfWeek = 5
+	case "SUNDAY":
+		dayOfWeek = 6
+	}
 
 	return &pb.StoreHour{
 		Id:        s.ID.String(),
 		StoreId:   s.StoreID.String(),
-		DayOfWeek: dayOfWeekEnum,
+		DayOfWeek: dayOfWeek,
 		Open:      s.Open,
 		Close:     s.Close,
+		Is24Hours: s.Is24Hr,
 	}
 }
 
 func (s *StoreHour) FromProto(storeHour *pb.StoreHour) error {
-	dayOfWeekEnum := DayOfWeekEnum(pb.DayOfWeekEnum_name[int32(storeHour.DayOfWeek)])
+	switch storeHour.DayOfWeek {
+	case 0:
+		s.DayOfWeek = "MONDAY"
+	case 1:
+		s.DayOfWeek = "TUESDAY"
+	case 2:
+		s.DayOfWeek = "WEDNESDAY"
+	case 3:
+		s.DayOfWeek = "THURSDAY"
+	case 4:
+		s.DayOfWeek = "FRIDAY"
+	case 5:
+		s.DayOfWeek = "SATURDAY"
+	case 6:
+		s.DayOfWeek = "SUNDAY"
+	}
 
 	if storeHour.Id != "" {
 		id, err := uuid.Parse(storeHour.Id)
@@ -263,9 +284,9 @@ func (s *StoreHour) FromProto(storeHour *pb.StoreHour) error {
 		s.StoreID = storeID
 	}
 
-	s.DayOfWeek = dayOfWeekEnum
 	s.Open = storeHour.Open
 	s.Close = storeHour.Close
+	s.Is24Hr = storeHour.Is24Hours
 
 	return nil
 }

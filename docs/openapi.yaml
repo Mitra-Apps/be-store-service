@@ -427,11 +427,13 @@ components:
                     type: string
                 dayOfWeek:
                     type: integer
-                    format: enum
+                    format: int32
                 open:
                     type: string
                 close:
                     type: string
+                is24hours:
+                    type: boolean
             description: Store hour message
         StoreImage:
             type: object
