@@ -65,20 +65,6 @@ func getTokenValue(headers metadata.MD) string {
 }
 
 func verifyToken(tokenString string) (string, []string, error) {
-	// token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-	// 	if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-	// 		return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-	// 	}
-	// 	return []byte("secret"), nil
-	// })
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// if !token.Valid {
-	// 	return "", fmt.Errorf("invalid token")
-	// }
-
 	token, err := auth.VerifyToken(tokenString)
 	if err != nil {
 		return "", nil, err
