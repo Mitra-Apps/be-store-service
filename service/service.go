@@ -75,6 +75,13 @@ func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity
 		img.ImageURL = imageURL
 	}
 
+	for _, hour := range store.Hours {
+		if hour.Is24Hr {
+			hour.Open = "00:00"
+			hour.Close = "23:59"
+		}
+	}
+
 	return s.storeRepository.CreateStore(ctx, store)
 }
 
@@ -135,6 +142,11 @@ func (s *service) UpdateStore(ctx context.Context, storeID string, update *entit
 		hour.UpdatedBy = claims.UserID
 		hour.StoreID = update.ID
 		hour.ID = uuid.Nil
+
+		if hour.Is24Hr {
+			hour.Open = "00:00"
+			hour.Close = "23:59"
+		}
 	}
 
 	return s.storeRepository.UpdateStore(ctx, update)
