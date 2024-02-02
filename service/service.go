@@ -19,7 +19,7 @@ type Service interface {
 	CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error)
 	UpdateStore(ctx context.Context, storeID string, update *entity.Store) (*entity.Store, error)
 	GetStore(ctx context.Context, storeID string) (*entity.Store, error)
-	ListStores(ctx context.Context) ([]*entity.Store, error)
+	ListStores(ctx context.Context, page int32, limit int32) ([]*entity.Store, error)
 	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
 	UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, products []*prodEntity.Product) error
 	UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitOfMeasure) error
@@ -152,8 +152,8 @@ func (s *service) UpdateStore(ctx context.Context, storeID string, update *entit
 	return s.storeRepository.UpdateStore(ctx, update)
 }
 
-func (s *service) ListStores(ctx context.Context) ([]*entity.Store, error) {
-	return s.storeRepository.ListStores(ctx)
+func (s *service) ListStores(ctx context.Context, page int32, limit int32) ([]*entity.Store, error) {
+	return s.storeRepository.ListStores(ctx, int(page), int(limit))
 }
 
 func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error {
