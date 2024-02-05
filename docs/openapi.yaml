@@ -55,17 +55,26 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
-    /api/v1/product-list:
-        post:
+    /api/v1/product-list/{storeId}/{isIncludeDeactivated}:
+        get:
             tags:
                 - StoreService
             operationId: StoreService_GetProductList
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/GetProductListRequest'
-                required: true
+            parameters:
+                - name: storeId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: isIncludeDeactivated
+                  in: path
+                  required: true
+                  schema:
+                    type: boolean
+                - name: productTypeId
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -414,15 +423,6 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/ProductCategory'
-        GetProductListRequest:
-            type: object
-            properties:
-                storeId:
-                    type: string
-                productTypeId:
-                    type: string
-                isIncludeDeactivated:
-                    type: boolean
         GetProductListResponse:
             type: object
             properties:

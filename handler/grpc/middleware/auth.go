@@ -90,7 +90,7 @@ func verifyToken(tokenString string) (string, []string, error) {
 	}
 
 	userId, userIdOk := claims["sub"].(string)
-	rolesRaw, rolesOK := claims["RoleNames"]
+	rolesRaw, rolesOK := claims["roles"]
 	// expirationTime, expOk := claims["exp"].(float64)
 
 	if !userIdOk {
