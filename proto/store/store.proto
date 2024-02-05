@@ -151,8 +151,7 @@ service StoreService {
 
     rpc GetProductList(GetProductListRequest) returns (GetProductListResponse) {
         option (google.api.http) = {
-            post: "/api/v1/product-list"
-            body: "*"
+            get: "/api/v1/product-list/{store_id}/{is_include_deactivated}"
         };
     }
 

@@ -83,6 +83,7 @@ func (p *Postgres) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated b
 	if !isIncludeDeactivated {
 		tx = tx.Where("is_active = ?", true)
 	}
+	tx = tx.Order("name ASC")
 	err = tx.Find(&uom).Error
 
 	if err != nil {
@@ -116,6 +117,7 @@ func (p *Postgres) GetProductCategories(ctx context.Context, isIncludeDeactivate
 	if !isIncludeDeactivated {
 		tx = tx.Where("is_active = ?", true)
 	}
+	tx = tx.Order("name ASC")
 	err = tx.Find(&cat).Error
 
 	if err != nil {
@@ -149,6 +151,7 @@ func (p *Postgres) GetProductTypes(ctx context.Context, productCategoryID uuid.U
 	if !isIncludeDeactivated {
 		tx = tx.Where("is_active = ?", true)
 	}
+	tx = tx.Order("name ASC")
 	err = tx.Find(&types).Error
 
 	if err != nil {
