@@ -76,6 +76,30 @@ func (p *Postgres) UpsertProducts(ctx context.Context, products []*entity.Produc
 	return nil
 }
 
+func (p *Postgres) GetUnitOfMeasureByName(ctx context.Context, name string) (*entity.UnitOfMeasure, error) {
+	uom := entity.UnitOfMeasure{}
+	err := p.db.WithContext(ctx).Where("name = ?", name).First(&uom).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &uom, nil
+}
+
+func (p *Postgres) GetUnitOfMeasureBySymbol(ctx context.Context, symbol string) (*entity.UnitOfMeasure, error) {
+	uom := entity.UnitOfMeasure{}
+	err := p.db.WithContext(ctx).Where("symbol = ?", symbol).First(&uom).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &uom, nil
+}
+
 func (p *Postgres) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) ([]*entity.UnitOfMeasure, error) {
 	uom := []*entity.UnitOfMeasure{}
 	var err error

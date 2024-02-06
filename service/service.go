@@ -230,6 +230,20 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 }
 
 func (s *service) UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitOfMeasure) error {
+	existingUom, err := s.productRepository.GetUnitOfMeasureByName(ctx, uom.Name)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting uom by name : "+err.Error())
+	}
+	if existingUom != nil {
+		return status.Errorf(codes.AlreadyExists, "Uom name is already exist in database")
+	}
+	existingUom, err = s.productRepository.GetUnitOfMeasureBySymbol(ctx, uom.Symbol)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting uom by symbol : "+err.Error())
+	}
+	if existingUom != nil {
+		return status.Errorf(codes.AlreadyExists, "Uom symbol is already exist in database")
+	}
 	if err := s.productRepository.UpsertUnitOfMeasure(ctx, uom); err != nil {
 		return status.Errorf(codes.Internal, "Error when inserting / updating unit of measure :"+err.Error())
 	}
