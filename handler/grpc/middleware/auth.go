@@ -22,6 +22,7 @@ var excludedMethods = []string{
 type JwtClaims struct {
 	UserID    uuid.UUID
 	RoleNames []string
+	IsAdmin   bool
 }
 
 func Auth(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -103,25 +104,32 @@ func verifyToken(tokenString string) (string, []string, error) {
 	return userId, roleNames, nil
 }
 
-// GetClaimsFromContext returns the userId from the context
 func GetClaimsFromContext(ctx context.Context) (*JwtClaims, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, fmt.Errorf("no headers provided")
+		return nil, fmt.Errorf("no metadata provided")
 	}
-	userIDVal := md["x-user-id"]
-	if len(userIDVal) == 0 {
-		return nil, fmt.Errorf("no user id provided")
+	userIDStr := md["x-user-id"]
+	if len(userIDStr) == 0 {
+		return nil, fmt.Errorf("no user ID provided")
 	}
 
-	userID, err := uuid.Parse(userIDVal[0])
+	userID, err := uuid.Parse(userIDStr[0])
 	if err != nil {
 		return nil, err
 	}
+
 	var jwtClaims JwtClaims
 	jwtClaims.UserID = userID
-
 	jwtClaims.RoleNames = md["x-role-names"]
+
+	isAdmin := false
+	for _, role := range jwtClaims.RoleNames {
+		if role == "admin" {
+			isAdmin = true
+		}
+	}
+	jwtClaims.IsAdmin = isAdmin
 
 	return &jwtClaims, nil
 }
