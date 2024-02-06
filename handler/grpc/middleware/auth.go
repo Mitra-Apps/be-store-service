@@ -76,8 +76,8 @@ func verifyToken(tokenString string) (string, []string, error) {
 		return "", nil, fmt.Errorf("token claims are not of type jwt.MapClaims")
 	}
 
-	userId, userIdOk := claims["userId"].(string)
-	rolesRaw, rolesOK := claims["RoleNames"]
+	userId, userIdOk := claims["sub"].(string)
+	rolesRaw, rolesOK := claims["roles"]
 	// expirationTime, expOk := claims["exp"].(float64)
 
 	if !userIdOk {
