@@ -12,6 +12,8 @@ type ProductRepository interface {
 	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) ([]*entity.Product, error)
 	GetProductsByStoreIdAndNames(ctx context.Context, storeID uuid.UUID, names []string) ([]*entity.Product, error)
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) ([]*entity.UnitOfMeasure, error)
+	GetUnitOfMeasureByName(ctx context.Context, name string) (*entity.UnitOfMeasure, error)
+	GetUnitOfMeasureBySymbol(ctx context.Context, symbol string) (*entity.UnitOfMeasure, error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) ([]*entity.ProductCategory, error)
 	GetProductTypes(ctx context.Context, productCategoryID uuid.UUID, isIncludeDeactivated bool) ([]*entity.ProductType, error)
 	GetProductById(ctx context.Context, id uuid.UUID) (*entity.Product, error)

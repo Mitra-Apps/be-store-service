@@ -477,14 +477,31 @@ func Test_service_UpsertUnitOfMeasure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	ctx := context.Background()
+	pcs := &prodEntity.UnitOfMeasure{
+		Name:   "pieces",
+		Symbol: "pcs",
+	}
+	gram := &prodEntity.UnitOfMeasure{
+		Name:   "gram",
+		Symbol: "g",
+	}
 	kg := &prodEntity.UnitOfMeasure{
-		Name: "Kg",
+		Name:   "kilogram",
+		Symbol: "kg",
 	}
 	ton := &prodEntity.UnitOfMeasure{
-		Name: "ton",
+		Name:   "ton",
+		Symbol: "ton",
 	}
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, pcs.Name).Return(pcs, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, gram.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, kg.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, ton.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, gram.Symbol).Return(gram, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, kg.Symbol).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, ton.Symbol).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, kg).Return(err).AnyTimes()
 	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, ton).Return(nil).AnyTimes()
 
@@ -502,6 +519,30 @@ func Test_service_UpsertUnitOfMeasure(t *testing.T) {
 		wantErr       bool
 		expectedError error
 	}{
+		{
+			name: "UpsertUnitOfMeasure_NameIsExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx: ctx,
+				uom: pcs,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Uom name is already exist in database"),
+		},
+		{
+			name: "UpsertUnitOfMeasure_SymbolIsExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx: ctx,
+				uom: gram,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Uom symbol is already exist in database"),
+		},
 		{
 			name: "UpsertUnitOfMeasure_Error_ReturnTheError",
 			fields: fields{
