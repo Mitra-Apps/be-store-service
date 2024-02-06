@@ -584,6 +584,9 @@ func Test_service_UpsertProductCategory(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	ctx := context.Background()
+	pakaian := &prodEntity.ProductCategory{
+		Name: "Pakaian",
+	}
 	komputer := &prodEntity.ProductCategory{
 		Name: "Komputer",
 	}
@@ -592,6 +595,9 @@ func Test_service_UpsertProductCategory(t *testing.T) {
 	}
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
+	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, pakaian.Name).Return(pakaian, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, komputer.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, makanan.Name).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductCategory(ctx, komputer).Return(err).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductCategory(ctx, makanan).Return(nil).AnyTimes()
 
@@ -609,6 +615,18 @@ func Test_service_UpsertProductCategory(t *testing.T) {
 		wantErr       bool
 		expectedError error
 	}{
+		{
+			name: "UpsertProductCategory_NameAlreadyExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:             ctx,
+				productCategory: pakaian,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Category name is already exist in database"),
+		},
 		{
 			name: "UpsertProductCategory_Error_ReturnTheError",
 			fields: fields{

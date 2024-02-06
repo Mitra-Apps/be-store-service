@@ -207,6 +207,7 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	}
 	names := []string{}
 	for _, p := range products {
+		p.StoreID = storeID
 		names = append(names, p.Name)
 	}
 	existingProds, err := s.productRepository.GetProductsByStoreIdAndNames(ctx, storeID, names)
@@ -251,6 +252,14 @@ func (s *service) UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitO
 }
 
 func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error {
+	existingCat, err := s.productRepository.GetProductCategoryByName(ctx, prodCategory.Name)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting product category by name : "+err.Error())
+	}
+	if existingCat != nil {
+		return status.Errorf(codes.AlreadyExists, "Category name is already exist in database")
+	}
+
 	if err := s.productRepository.UpsertProductCategory(ctx, prodCategory); err != nil {
 		return status.Errorf(codes.Internal, "Error when inserting / updating product category :"+err.Error())
 	}

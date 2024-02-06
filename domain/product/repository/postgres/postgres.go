@@ -153,6 +153,18 @@ func (p *Postgres) GetProductCategories(ctx context.Context, isIncludeDeactivate
 	return cat, nil
 }
 
+func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
+	cat := entity.ProductCategory{}
+	err := p.db.WithContext(ctx).Where("name = ?", name).First(&cat).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &cat, nil
+}
+
 func (p *Postgres) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
 	tx := p.db.WithContext(ctx).Begin()
 
