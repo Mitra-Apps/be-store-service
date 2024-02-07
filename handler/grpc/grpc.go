@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type GrpcRoute struct {
@@ -89,7 +90,14 @@ func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest)
 }
 
 func (s *GrpcRoute) DeleteStore(ctx context.Context, req *pb.DeleteStoreRequest) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+	for _, id := range req.GetIds() {
+		_, err := uuid.Parse(id)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
+		}
+	}
+
+	return &emptypb.Empty{}, s.service.DeleteStores(ctx, req.GetIds())
 }
 
 func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (*pb.ListStoresResponse, error) {

@@ -162,8 +162,8 @@ func (p *postgres) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID u
 	return nil
 }
 
-func (p *postgres) DeleteStore(ctx context.Context, storeID string) error {
-	if err := p.db.WithContext(ctx).Where("id = ?", storeID).Unscoped().Delete(&entity.Store{}).Error; err != nil {
+func (p *postgres) DeleteStores(ctx context.Context, storeIds []string) error {
+	if err := p.db.WithContext(ctx).Where("id IN ?", storeIds).Unscoped().Delete(&entity.Store{}).Error; err != nil {
 		return err
 	}
 	return nil
