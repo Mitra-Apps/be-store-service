@@ -267,6 +267,13 @@ func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodE
 }
 
 func (s *service) UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error {
+	existingProdType, err := s.productRepository.GetProductTypeByName(ctx, prodType.ProductCategoryID, prodType.Name)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting product type by name : "+err.Error())
+	}
+	if existingProdType != nil {
+		return status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category")
+	}
 	if err := s.productRepository.UpsertProductType(ctx, prodType); err != nil {
 		return status.Errorf(codes.Internal, "Error when inserting / updating product type :"+err.Error())
 	}

@@ -180,6 +180,18 @@ func (p *Postgres) UpsertProductCategory(ctx context.Context, prodCategory *enti
 	return nil
 }
 
+func (p *Postgres) GetProductTypeByName(ctx context.Context, productCategoryID uuid.UUID, name string) (*entity.ProductType, error) {
+	prodType := entity.ProductType{}
+	err := p.db.WithContext(ctx).Where("product_category_id = ? AND name = ?", productCategoryID, name).First(&prodType).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &prodType, nil
+}
+
 func (p *Postgres) GetProductTypes(ctx context.Context, productCategoryID uuid.UUID, isIncludeDeactivated bool) ([]*entity.ProductType, error) {
 	types := []*entity.ProductType{}
 	var err error

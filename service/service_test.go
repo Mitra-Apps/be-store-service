@@ -674,8 +674,14 @@ func Test_service_UpsertProductType(t *testing.T) {
 	indomie := &prodEntity.ProductType{
 		Name: "indomie",
 	}
+	pizza := &prodEntity.ProductType{
+		Name: "pizza",
+	}
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
+	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), pizza.Name).Return(pizza, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), mouse.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), indomie.Name).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductType(ctx, mouse).Return(err).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductType(ctx, indomie).Return(nil).AnyTimes()
 
@@ -693,6 +699,18 @@ func Test_service_UpsertProductType(t *testing.T) {
 		wantErr       bool
 		expectedError error
 	}{
+		{
+			name: "UpsertProductType_NameIsAlreadyExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:         ctx,
+				productType: mouse,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category"),
+		},
 		{
 			name: "UpsertProductType_Error_ReturnTheError",
 			fields: fields{
