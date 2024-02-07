@@ -97,7 +97,7 @@ func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (
 		return nil, err
 	}
 
-	stores, err := s.service.ListStores(ctx)
+	stores, err := s.service.ListStores(ctx, 1, 20)
 	if err != nil {
 		return nil, err
 	}

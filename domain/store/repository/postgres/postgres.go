@@ -163,15 +163,16 @@ func (p *postgres) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID u
 }
 
 func (p *postgres) DeleteStore(ctx context.Context, storeID string) error {
-	if err := p.db.WithContext(ctx).Where("id = ?", storeID).Delete(&entity.Store{}).Error; err != nil {
+	if err := p.db.WithContext(ctx).Where("id = ?", storeID).Unscoped().Delete(&entity.Store{}).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *postgres) ListStores(ctx context.Context) ([]*entity.Store, error) {
+func (p *postgres) ListStores(ctx context.Context, page, pageSize int) ([]*entity.Store, error) {
 	var stores []*entity.Store
-	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Preload("Tags").Find(&stores).Error; err != nil {
+	offset := (page - 1) * pageSize
+	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Preload("Tags").Offset(offset).Limit(pageSize).Find(&stores).Error; err != nil {
 		return nil, err
 	}
 	return stores, nil

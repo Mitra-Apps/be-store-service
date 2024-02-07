@@ -22,7 +22,7 @@ type StoreServiceRepository interface {
 	DeleteStore(ctx context.Context, storeID string) error
 
 	// ListStores lists all stores.
-	ListStores(ctx context.Context) ([]*entity.Store, error)
+	ListStores(ctx context.Context, page, pageSize int) ([]*entity.Store, error)
 
 	// Activate / Deactivate store
 	OpenCloseStore(ctx context.Context, storeID uuid.UUID, isActive bool) error
