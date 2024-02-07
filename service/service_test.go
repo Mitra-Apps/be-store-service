@@ -20,13 +20,13 @@ import (
 )
 
 const (
-	userID         = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
-	otherUserID    = "2f27d467-9f83-4170-96ab-36e0994f37ca"
-	storeID        = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
-	otherStoreID   = "52d11042-8c45-453e-86af-fe1e4d7facf6"
-	prodCategoryID = "7d56be32-70a2-4f49-b66b-63e6f8e719d6"
-	productID      = "7d56be32-70a2-4f49-b66b-63e6f8e719d7"
-	otherProductID = "7d56be32-70a2-4f49-b66b-63e6f8e719d8"
+	userID               = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
+	otherUserID          = "2f27d467-9f83-4170-96ab-36e0994f37ca"
+	storeID              = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
+	otherStoreID         = "52d11042-8c45-453e-86af-fe1e4d7facf6"
+	prodCategoryID int64 = 1
+	productID            = "7d56be32-70a2-4f49-b66b-63e6f8e719d7"
+	otherProductID       = "7d56be32-70a2-4f49-b66b-63e6f8e719d8"
 )
 
 func Test_service_OpenCloseStore(t *testing.T) {
@@ -674,8 +674,14 @@ func Test_service_UpsertProductType(t *testing.T) {
 	indomie := &prodEntity.ProductType{
 		Name: "indomie",
 	}
+	pizza := &prodEntity.ProductType{
+		Name: "pizza",
+	}
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
+	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), pizza.Name).Return(pizza, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), mouse.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), indomie.Name).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductType(ctx, mouse).Return(err).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductType(ctx, indomie).Return(nil).AnyTimes()
 
@@ -693,6 +699,18 @@ func Test_service_UpsertProductType(t *testing.T) {
 		wantErr       bool
 		expectedError error
 	}{
+		{
+			name: "UpsertProductType_NameIsAlreadyExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:         ctx,
+				productType: mouse,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category"),
+		},
 		{
 			name: "UpsertProductType_Error_ReturnTheError",
 			fields: fields{
@@ -938,7 +956,6 @@ func Test_service_GetProductTypes(t *testing.T) {
 	prodTypes = append(prodTypes, &prodEntity.ProductType{
 		Name: "makanan",
 	})
-	prodCatIdUuid := uuid.MustParse(prodCategoryID)
 	mockProdRepo.EXPECT().GetProductTypes(ctx, gomock.Any(), false).Return(nil, err).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypes(ctx, gomock.Any(), true).Return(prodTypes, nil).AnyTimes()
 	type fields struct {
@@ -982,7 +999,7 @@ func Test_service_GetProductTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(nil, tt.fields.productRepository, nil)
-			if uom, err := s.GetProductTypes(tt.args.ctx, prodCatIdUuid, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
+			if uom, err := s.GetProductTypes(tt.args.ctx, prodCategoryID, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Nil(t, uom)
 			} else {

@@ -687,7 +687,7 @@ func request_StoreService_GetProductTypes_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "product_category_id")
 	}
 
-	protoReq.ProductCategoryId, err = runtime.String(val)
+	protoReq.ProductCategoryId, err = runtime.Int64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "product_category_id", err)
 	}
@@ -723,7 +723,7 @@ func local_request_StoreService_GetProductTypes_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "product_category_id")
 	}
 
-	protoReq.ProductCategoryId, err = runtime.String(val)
+	protoReq.ProductCategoryId, err = runtime.Int64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "product_category_id", err)
 	}
