@@ -9,12 +9,13 @@ import (
 
 type ProductRepository interface {
 	UpsertProducts(ctx context.Context, product []*entity.Product) error
-	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) ([]*entity.Product, error)
+	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error)
 	GetProductsByStoreIdAndNames(ctx context.Context, storeID uuid.UUID, names []string) ([]*entity.Product, error)
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) ([]*entity.UnitOfMeasure, error)
 	GetUnitOfMeasureByName(ctx context.Context, name string) (*entity.UnitOfMeasure, error)
 	GetUnitOfMeasureBySymbol(ctx context.Context, symbol string) (*entity.UnitOfMeasure, error)
 	GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error)
+	GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) ([]*entity.ProductCategory, error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) ([]*entity.ProductType, error)
 	GetProductTypeByName(ctx context.Context, productCategoryID int64, name string) (*entity.ProductType, error)

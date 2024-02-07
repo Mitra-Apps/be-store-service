@@ -668,20 +668,49 @@ func Test_service_UpsertProductType(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	ctx := context.Background()
+	makanan := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 1,
+		},
+		Name: "makanan",
+	}
+	komputer := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 3,
+		},
+		Name: "komputer",
+	}
+	kendaraan := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 2,
+		},
+		Name: "kendaraan",
+	}
 	mouse := &prodEntity.ProductType{
-		Name: "mouse",
+		Name:              "mouse",
+		ProductCategoryID: komputer.BaseMasterDataModel.ID,
 	}
 	indomie := &prodEntity.ProductType{
-		Name: "indomie",
+		Name:              "indomie",
+		ProductCategoryID: makanan.BaseMasterDataModel.ID,
 	}
 	pizza := &prodEntity.ProductType{
-		Name: "pizza",
+		Name:              "pizza",
+		ProductCategoryID: makanan.BaseMasterDataModel.ID,
+	}
+	sedan := &prodEntity.ProductType{
+		Name:              "sedan",
+		ProductCategoryID: kendaraan.BaseMasterDataModel.ID,
 	}
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
+	mockProdRepo.EXPECT().GetProductCategoryById(ctx, makanan.BaseMasterDataModel.ID).Return(makanan, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductCategoryById(ctx, komputer.BaseMasterDataModel.ID).Return(komputer, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductCategoryById(ctx, kendaraan.BaseMasterDataModel.ID).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), pizza.Name).Return(pizza, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), mouse.Name).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), indomie.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), kendaraan.Name).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductType(ctx, mouse).Return(err).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductType(ctx, indomie).Return(nil).AnyTimes()
 
@@ -706,10 +735,22 @@ func Test_service_UpsertProductType(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				productType: mouse,
+				productType: sedan,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category"),
+		},
+		{
+			name: "UpsertProductType_ProductCategoryNotFound_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:         ctx,
+				productType: sedan,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.NotFound, "Related product category data is not found"),
 		},
 		{
 			name: "UpsertProductType_Error_ReturnTheError",
@@ -833,7 +874,7 @@ func Test_service_GetProductsByStoreId(t *testing.T) {
 	type args struct {
 		ctx                  context.Context
 		storeID              uuid.UUID
-		productTypeId        *uuid.UUID
+		productTypeId        *int64
 		isIncludeDeactivated bool
 	}
 	tests := []struct {

@@ -314,13 +314,9 @@ func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRe
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
 	}
-	var productTypeId *uuid.UUID = nil
-	if req.ProductTypeId != "" {
-		pt, err := uuid.Parse(req.ProductTypeId)
-		if err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "Error when parsing product type id to uuid")
-		}
-		productTypeId = &pt
+	var productTypeId *int64
+	if req.ProductTypeId != 0 {
+		productTypeId = &req.ProductTypeId
 	}
 	products, err := g.service.GetProductsByStoreId(ctx, storeId, productTypeId, req.IsIncludeDeactivated)
 	if err != nil {
