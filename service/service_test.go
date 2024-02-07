@@ -477,14 +477,31 @@ func Test_service_UpsertUnitOfMeasure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	ctx := context.Background()
+	pcs := &prodEntity.UnitOfMeasure{
+		Name:   "pieces",
+		Symbol: "pcs",
+	}
+	gram := &prodEntity.UnitOfMeasure{
+		Name:   "gram",
+		Symbol: "g",
+	}
 	kg := &prodEntity.UnitOfMeasure{
-		Name: "Kg",
+		Name:   "kilogram",
+		Symbol: "kg",
 	}
 	ton := &prodEntity.UnitOfMeasure{
-		Name: "ton",
+		Name:   "ton",
+		Symbol: "ton",
 	}
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, pcs.Name).Return(pcs, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, gram.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, kg.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, ton.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, gram.Symbol).Return(gram, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, kg.Symbol).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, ton.Symbol).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, kg).Return(err).AnyTimes()
 	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, ton).Return(nil).AnyTimes()
 
@@ -502,6 +519,30 @@ func Test_service_UpsertUnitOfMeasure(t *testing.T) {
 		wantErr       bool
 		expectedError error
 	}{
+		{
+			name: "UpsertUnitOfMeasure_NameIsExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx: ctx,
+				uom: pcs,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Uom name is already exist in database"),
+		},
+		{
+			name: "UpsertUnitOfMeasure_SymbolIsExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx: ctx,
+				uom: gram,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Uom symbol is already exist in database"),
+		},
 		{
 			name: "UpsertUnitOfMeasure_Error_ReturnTheError",
 			fields: fields{
@@ -543,6 +584,9 @@ func Test_service_UpsertProductCategory(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	ctx := context.Background()
+	pakaian := &prodEntity.ProductCategory{
+		Name: "Pakaian",
+	}
 	komputer := &prodEntity.ProductCategory{
 		Name: "Komputer",
 	}
@@ -551,6 +595,9 @@ func Test_service_UpsertProductCategory(t *testing.T) {
 	}
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
+	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, pakaian.Name).Return(pakaian, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, komputer.Name).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, makanan.Name).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductCategory(ctx, komputer).Return(err).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProductCategory(ctx, makanan).Return(nil).AnyTimes()
 
@@ -568,6 +615,18 @@ func Test_service_UpsertProductCategory(t *testing.T) {
 		wantErr       bool
 		expectedError error
 	}{
+		{
+			name: "UpsertProductCategory_NameAlreadyExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:             ctx,
+				productCategory: pakaian,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Category name is already exist in database"),
+		},
 		{
 			name: "UpsertProductCategory_Error_ReturnTheError",
 			fields: fields{

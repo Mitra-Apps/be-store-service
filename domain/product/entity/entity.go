@@ -12,7 +12,7 @@ import (
 type ProductCategory struct {
 	base_model.BaseModel
 	Name         string         `gorm:"type:varchar(255);not null;unique"`
-	IsActive     bool           `gorm:"type:bool;not null;default:TRUE"`
+	IsActive     bool           `gorm:"type:bool;not null"`
 	ProductTypes []*ProductType `gorm:"foreignKey:ProductCategoryID"`
 }
 
@@ -28,7 +28,7 @@ type UnitOfMeasure struct {
 	base_model.BaseModel
 	Name     string     `gorm:"type:varchar(255);not null;unique"`
 	Symbol   string     `gorm:"type:varchar(50);not null;unique"`
-	IsActive bool       `gorm:"type:bool;not null;default:TRUE"`
+	IsActive bool       `gorm:"type:bool;not null"`
 	Products []*Product `gorm:"foreignKey:UomID"`
 }
 
