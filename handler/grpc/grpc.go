@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
@@ -188,10 +187,10 @@ func validateProduct(products []*pb.Product) error {
 		if p.Price <= 0 {
 			return status.Errorf(codes.InvalidArgument, "Price is required")
 		}
-		if p.UomId == "" {
+		if p.UomId == 0 {
 			return status.Errorf(codes.InvalidArgument, "unit of measure is required")
 		}
-		if p.ProductTypeId == "" {
+		if p.ProductTypeId == 0 {
 			return status.Errorf(codes.InvalidArgument, "product type id is required")
 		}
 	}
@@ -258,7 +257,7 @@ func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProduct
 		return nil, status.Errorf(codes.InvalidArgument, "name is required")
 	}
 
-	if req.ProductType.ProductCategoryId == "" {
+	if req.ProductType.ProductCategoryId == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "product category id is required")
 	}
 
@@ -363,12 +362,7 @@ func (g *GrpcRoute) GetProductCategories(ctx context.Context, req *pb.GetProduct
 }
 
 func (g *GrpcRoute) GetProductTypes(ctx context.Context, req *pb.GetProductTypesRequest) (*pb.GetProductTypesResponse, error) {
-	prodCatId, err := uuid.Parse(req.ProductCategoryId)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing product category id to uuid")
-	}
-	log.Println(111)
-	prodType, err := g.service.GetProductTypes(ctx, prodCatId, req.IsIncludeDeactivated)
+	prodType, err := g.service.GetProductTypes(ctx, req.ProductCategoryId, req.IsIncludeDeactivated)
 	if err != nil {
 		return nil, err
 	}
