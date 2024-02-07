@@ -26,7 +26,7 @@ type Service interface {
 	UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
 	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
 	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
-	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) (products []*prodEntity.Product, err error)
+	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error)
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
@@ -258,6 +258,11 @@ func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodE
 }
 
 func (s *service) UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error {
+	if prodCat, err := s.productRepository.GetProductCategoryById(ctx, prodType.ProductCategoryID); err != nil {
+		return status.Errorf(codes.AlreadyExists, "Error getting product category by id data")
+	} else if prodCat == nil {
+		return status.Errorf(codes.NotFound, "Related product category data is not found")
+	}
 	existingProdType, err := s.productRepository.GetProductTypeByName(ctx, prodType.ProductCategoryID, prodType.Name)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error when getting product type by name : "+err.Error())
@@ -278,7 +283,7 @@ func (s *service) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bo
 	return uom, nil
 }
 
-func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) (products []*prodEntity.Product, err error) {
+func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error) {
 	if products, err = s.productRepository.GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
 	}

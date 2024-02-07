@@ -305,7 +305,7 @@ message UpsertProductTypeResponse {
 
 message GetProductListRequest {
     string store_id = 1;
-    string product_type_id = 2;
+    int64 product_type_id = 2;
     bool is_include_deactivated = 3;
 }
 

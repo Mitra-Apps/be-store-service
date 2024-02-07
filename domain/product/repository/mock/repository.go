@@ -66,6 +66,21 @@ func (mr *MockProductRepositoryMockRecorder) GetProductCategories(ctx, isInclude
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategories", reflect.TypeOf((*MockProductRepository)(nil).GetProductCategories), ctx, isIncludeDeactivated)
 }
 
+// GetProductCategoryById mocks base method.
+func (m *MockProductRepository) GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductCategoryById", ctx, id)
+	ret0, _ := ret[0].(*entity.ProductCategory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductCategoryById indicates an expected call of GetProductCategoryById.
+func (mr *MockProductRepositoryMockRecorder) GetProductCategoryById(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategoryById", reflect.TypeOf((*MockProductRepository)(nil).GetProductCategoryById), ctx, id)
+}
+
 // GetProductCategoryByName mocks base method.
 func (m *MockProductRepository) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
 	m.ctrl.T.Helper()
@@ -112,7 +127,7 @@ func (mr *MockProductRepositoryMockRecorder) GetProductTypes(ctx, productCategor
 }
 
 // GetProductsByStoreId mocks base method.
-func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) ([]*entity.Product, error) {
+func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, storeID, productTypeId, isIncludeDeactivated)
 	ret0, _ := ret[0].([]*entity.Product)
