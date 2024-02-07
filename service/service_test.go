@@ -20,13 +20,13 @@ import (
 )
 
 const (
-	userID         = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
-	otherUserID    = "2f27d467-9f83-4170-96ab-36e0994f37ca"
-	storeID        = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
-	otherStoreID   = "52d11042-8c45-453e-86af-fe1e4d7facf6"
-	prodCategoryID = "7d56be32-70a2-4f49-b66b-63e6f8e719d6"
-	productID      = "7d56be32-70a2-4f49-b66b-63e6f8e719d7"
-	otherProductID = "7d56be32-70a2-4f49-b66b-63e6f8e719d8"
+	userID               = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
+	otherUserID          = "2f27d467-9f83-4170-96ab-36e0994f37ca"
+	storeID              = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
+	otherStoreID         = "52d11042-8c45-453e-86af-fe1e4d7facf6"
+	prodCategoryID int64 = 1
+	productID            = "7d56be32-70a2-4f49-b66b-63e6f8e719d7"
+	otherProductID       = "7d56be32-70a2-4f49-b66b-63e6f8e719d8"
 )
 
 func Test_service_OpenCloseStore(t *testing.T) {
@@ -956,7 +956,6 @@ func Test_service_GetProductTypes(t *testing.T) {
 	prodTypes = append(prodTypes, &prodEntity.ProductType{
 		Name: "makanan",
 	})
-	prodCatIdUuid := uuid.MustParse(prodCategoryID)
 	mockProdRepo.EXPECT().GetProductTypes(ctx, gomock.Any(), false).Return(nil, err).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypes(ctx, gomock.Any(), true).Return(prodTypes, nil).AnyTimes()
 	type fields struct {
@@ -1000,7 +999,7 @@ func Test_service_GetProductTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(nil, tt.fields.productRepository, nil)
-			if uom, err := s.GetProductTypes(tt.args.ctx, prodCatIdUuid, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
+			if uom, err := s.GetProductTypes(tt.args.ctx, prodCategoryID, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Nil(t, uom)
 			} else {

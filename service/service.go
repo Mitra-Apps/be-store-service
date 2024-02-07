@@ -29,7 +29,7 @@ type Service interface {
 	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) (products []*prodEntity.Product, err error)
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error)
-	GetProductTypes(ctx context.Context, productCategoryID uuid.UUID, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
+	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
 }
 type service struct {
 	storeRepository   repository.StoreServiceRepository
@@ -290,7 +290,7 @@ func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated
 	}
 	return cat, nil
 }
-func (s *service) GetProductTypes(ctx context.Context, productCategoryID uuid.UUID, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error) {
+func (s *service) GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error) {
 	if types, err = s.productRepository.GetProductTypes(ctx, productCategoryID, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product types :"+err.Error())
 	}

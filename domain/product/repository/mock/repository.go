@@ -82,7 +82,7 @@ func (mr *MockProductRepositoryMockRecorder) GetProductCategoryByName(ctx, name 
 }
 
 // GetProductTypeByName mocks base method.
-func (m *MockProductRepository) GetProductTypeByName(ctx context.Context, productCategoryID uuid.UUID, name string) (*entity.ProductType, error) {
+func (m *MockProductRepository) GetProductTypeByName(ctx context.Context, productCategoryID int64, name string) (*entity.ProductType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductTypeByName", ctx, productCategoryID, name)
 	ret0, _ := ret[0].(*entity.ProductType)
@@ -97,7 +97,7 @@ func (mr *MockProductRepositoryMockRecorder) GetProductTypeByName(ctx, productCa
 }
 
 // GetProductTypes mocks base method.
-func (m *MockProductRepository) GetProductTypes(ctx context.Context, productCategoryID uuid.UUID, isIncludeDeactivated bool) ([]*entity.ProductType, error) {
+func (m *MockProductRepository) GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) ([]*entity.ProductType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductTypes", ctx, productCategoryID, isIncludeDeactivated)
 	ret0, _ := ret[0].([]*entity.ProductType)
