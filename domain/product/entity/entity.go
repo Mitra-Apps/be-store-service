@@ -36,7 +36,7 @@ type Product struct {
 	base_model.BaseModel
 	StoreID       uuid.UUID `gorm:"type:uuid;not null"`
 	Name          string    `gorm:"type:varchar(255);not null"`
-	SaleStatus    bool      `gorm:"type:bool;not null;default:TRUE"`
+	SaleStatus    bool      `gorm:"type:bool;not null"`
 	Price         float64   `gorm:"decimal(17,2); not null; default:0"`
 	Stock         int64     `gorm:"type:int;"`
 	UomID         int64     `gorm:"type:uuid;not null"`

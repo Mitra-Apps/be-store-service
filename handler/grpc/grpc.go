@@ -152,6 +152,10 @@ func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRe
 		return nil, err
 	}
 
+	if strings.Trim(req.StoreId, " ") == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Store id is required")
+	}
+
 	storeIdUuid, err := uuid.Parse(req.StoreId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
