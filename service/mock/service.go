@@ -112,7 +112,7 @@ func (mr *MockServiceMockRecorder) GetProductTypes(ctx, productCategoryID, isInc
 }
 
 // GetProductsByStoreId mocks base method.
-func (m *MockService) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) ([]*entity.Product, error) {
+func (m *MockService) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, storeID, productTypeId, isIncludeDeactivated)
 	ret0, _ := ret[0].([]*entity.Product)

@@ -17,7 +17,7 @@ func NewPostgres(db *gorm.DB) *Postgres {
 	return &Postgres{db}
 }
 
-func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *uuid.UUID, isIncludeDeactivated bool) ([]*entity.Product, error) {
+func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
 	prods := []*entity.Product{}
 	tx := p.db.WithContext(ctx).Where("store_id = ?", storeID)
 	if !isIncludeDeactivated {
@@ -156,6 +156,18 @@ func (p *Postgres) GetProductCategories(ctx context.Context, isIncludeDeactivate
 func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
 	cat := entity.ProductCategory{}
 	err := p.db.WithContext(ctx).Where("name = ?", name).First(&cat).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &cat, nil
+}
+
+func (p *Postgres) GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error) {
+	cat := entity.ProductCategory{}
+	err := p.db.WithContext(ctx).Where("id = ?", id).First(&cat).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
