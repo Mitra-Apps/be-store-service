@@ -142,10 +142,6 @@ func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRe
 }
 
 func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRequest) (*pb.UpsertProductsResponse, error) {
-	if err := validateProduct(req.ProductList); err != nil {
-		return nil, err
-	}
-
 	claims, err := middleware.GetClaimsFromContext(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
@@ -158,6 +154,10 @@ func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRe
 			return nil, status.Errorf(codes.InvalidArgument, err.Error())
 		}
 		productList = append(productList, &pr)
+	}
+
+	if err := validateProduct(productList); err != nil {
+		return nil, err
 	}
 
 	storeIdUuid, err := uuid.Parse(req.StoreId)
@@ -176,21 +176,18 @@ func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRe
 	}, nil
 }
 
-func validateProduct(products []*pb.Product) error {
+func validateProduct(products []*prodEntity.Product) error {
 	for _, p := range products {
-		if p.StoreId == "" {
-			return status.Errorf(codes.InvalidArgument, "Store id is required")
-		}
 		if p.Name == "" {
 			return status.Errorf(codes.InvalidArgument, "Name is required")
 		}
 		if p.Price <= 0 {
 			return status.Errorf(codes.InvalidArgument, "Price is required")
 		}
-		if p.UomId == 0 {
+		if p.UomID == 0 {
 			return status.Errorf(codes.InvalidArgument, "unit of measure is required")
 		}
-		if p.ProductTypeId == 0 {
+		if p.ProductTypeID == 0 {
 			return status.Errorf(codes.InvalidArgument, "product type id is required")
 		}
 	}

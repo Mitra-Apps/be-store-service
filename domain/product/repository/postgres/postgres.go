@@ -119,6 +119,18 @@ func (p *Postgres) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated b
 	return uom, nil
 }
 
+func (p *Postgres) GetUnitOfMeasuresByIds(ctx context.Context, uomIds []int64) ([]*entity.UnitOfMeasure, error) {
+	uoms := []*entity.UnitOfMeasure{}
+	err := p.db.WithContext(ctx).Where("id IN ?", uomIds).Find(&uoms).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return uoms, nil
+}
+
 func (p *Postgres) UpsertUnitOfMeasure(ctx context.Context, uom *entity.UnitOfMeasure) error {
 	tx := p.db.WithContext(ctx).Begin()
 
@@ -221,6 +233,18 @@ func (p *Postgres) GetProductTypes(ctx context.Context, productCategoryID int64,
 		return nil, err
 	}
 	return types, nil
+}
+
+func (p *Postgres) GetProductTypesByIds(ctx context.Context, typeIds []int64) ([]*entity.ProductType, error) {
+	prodTypes := []*entity.ProductType{}
+	err := p.db.WithContext(ctx).Where("id IN ?", typeIds).Find(&prodTypes).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return prodTypes, nil
 }
 
 func (p *Postgres) UpsertProductType(ctx context.Context, prodType *entity.ProductType) error {
