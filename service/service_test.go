@@ -267,27 +267,94 @@ func Test_service_UpsertProducts(t *testing.T) {
 	storeIdUuid, _ := uuid.Parse(storeID)
 	otherStoreIdUuid, _ := uuid.Parse(otherStoreID)
 	products := []*prodEntity.Product{}
-	products = append(products, &prodEntity.Product{
-		StoreID: storeIdUuid,
-		Name:    "indomie",
-	})
-	products = append(products, &prodEntity.Product{
-		StoreID: storeIdUuid,
-		Name:    "beras",
-	})
+	indomie := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "indomie",
+		UomID:         1,
+		ProductTypeID: 1,
+	}
+	beras := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "beras",
+		UomID:         1,
+		ProductTypeID: 1,
+	}
+	baksoAci := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "bakso aci",
+		UomID:         1,
+		ProductTypeID: 1,
+	}
+	keju := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "keju",
+		UomID:         1,
+		ProductTypeID: 1,
+	}
+	tas := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "tas",
+		UomID:         2,
+		ProductTypeID: 2,
+	}
+	sepatu := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "sepatu",
+		UomID:         1,
+		ProductTypeID: 2,
+	}
+	products = append(products, indomie)
+	products = append(products, beras)
 	existedProducts := []*prodEntity.Product{}
-	existedProducts = append(existedProducts, &prodEntity.Product{
-		StoreID: storeIdUuid,
-		Name:    "bakso aci",
-	})
-	existedProducts = append(existedProducts, &prodEntity.Product{
-		StoreID: storeIdUuid,
-		Name:    "keju",
-	})
+	existedProducts = append(existedProducts, baksoAci)
+	existedProducts = append(existedProducts, keju)
+	invalidUomProduct := []*prodEntity.Product{
+		keju,
+		tas,
+	}
+	invalidProdTypeProduct := []*prodEntity.Product{
+		keju,
+		sepatu,
+	}
+	noUOM := []*prodEntity.Product{
+		&prodEntity.Product{
+			StoreID: storeIdUuid,
+			Name:    "keju",
+		},
+	}
+	noProdType := []*prodEntity.Product{
+		&prodEntity.Product{
+			StoreID: storeIdUuid,
+			Name:    "keju",
+			UomID:   1,
+		},
+	}
 	roleNames := []string{"merchant"}
 	adminRoleNames := []string{"merchant", "admin"}
 	existedProdNames := []string{"bakso aci", "keju"}
+	uoms := []*prodEntity.UnitOfMeasure{
+		&prodEntity.UnitOfMeasure{
+			BaseMasterDataModel: base_model.BaseMasterDataModel{
+				ID: 1,
+			},
+			Name: "kilogram",
+		},
+	}
+	prodTypes := []*prodEntity.ProductType{
+		&prodEntity.ProductType{
+			BaseMasterDataModel: base_model.BaseMasterDataModel{
+				ID: 1,
+			},
+			Name: "Snack",
+		},
+	}
+	mockProdRepo.EXPECT().GetUnitOfMeasuresByIds(gomock.Any(), []int64{1}).Return(uoms, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetUnitOfMeasuresByIds(gomock.Any(), []int64{1, 2}).Return(uoms, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1}).Return(prodTypes, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1, 2}).Return(prodTypes, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, existedProdNames).Return(existedProducts, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"keju", "tas"}).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"keju", "sepatu"}).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"indomie", "beras"}).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, []string{"indomie", "beras"}).Return(nil, nil).AnyTimes()
 
@@ -355,6 +422,38 @@ func Test_service_UpsertProducts(t *testing.T) {
 			expectedError: status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store"),
 		},
 		{
+			name: "UpsertProduct_UomNotProvided_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  noUOM,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Uom id is required"),
+		},
+		{
+			name: "UpsertProduct_ProdTypeNotProvided_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  noProdType,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
+		},
+		{
 			name: "UpsertProduct_ProductAlreadyExisted_ReturnValidationError",
 			fields: fields{
 				productRepository: mockProdRepo,
@@ -369,6 +468,38 @@ func Test_service_UpsertProducts(t *testing.T) {
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.AlreadyExists, "Product are already exist : "+strings.Join(existedProdNames, ",")),
+		},
+		{
+			name: "UpsertProduct_InvalidUOM_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  invalidUomProduct,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Invalid unit of measure id"),
+		},
+		{
+			name: "UpsertProduct_InvalidProductType_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  invalidProdTypeProduct,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Invalid product type id"),
 		},
 		{
 			name: "UpsertProduct_DifferenStoreIDButAdmin_Success",
