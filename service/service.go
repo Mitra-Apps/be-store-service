@@ -160,6 +160,9 @@ func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleName
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, err.Error())
 	}
+	if store == nil {
+		return status.Errorf(codes.InvalidArgument, "Invalid store id")
+	}
 
 	var isAdmin bool
 	for _, r := range roleNames {
@@ -196,10 +199,29 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	if existingStoreByStoreId.UserID != userID && !isAdmin {
 		return status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store")
 	}
+
 	names := []string{}
+	uomIds := []int64{}
+	uomIdsMap := make(map[int64]bool)
+	productTypeIds := []int64{}
+	prodTypeIdsMap := make(map[int64]bool)
 	for _, p := range products {
 		p.StoreID = storeID
 		names = append(names, p.Name)
+		if p.UomID == 0 {
+			return status.Errorf(codes.InvalidArgument, "Uom id is required")
+		}
+		if p.ProductTypeID == 0 {
+			return status.Errorf(codes.InvalidArgument, "Product type id is required")
+		}
+		if !uomIdsMap[p.UomID] {
+			uomIds = append(uomIds, p.UomID)
+			uomIdsMap[p.UomID] = true
+		}
+		if !prodTypeIdsMap[p.ProductTypeID] {
+			productTypeIds = append(productTypeIds, p.ProductTypeID)
+			prodTypeIdsMap[p.ProductTypeID] = true
+		}
 	}
 	existingProds, err := s.productRepository.GetProductsByStoreIdAndNames(ctx, storeID, names)
 	if err != nil {
@@ -212,6 +234,21 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 		}
 		return status.Errorf(codes.AlreadyExists,
 			fmt.Sprintf("Product are already exist : %s", strings.Join(existingProdNames, ",")))
+	}
+
+	existingUoms, err := s.productRepository.GetUnitOfMeasuresByIds(ctx, uomIds)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting related uom")
+	}
+	if len(uomIds) > len(existingUoms) {
+		return status.Errorf(codes.InvalidArgument, "Invalid unit of measure id")
+	}
+	existingProdTypes, err := s.productRepository.GetProductTypesByIds(ctx, productTypeIds)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting related product type")
+	}
+	if len(productTypeIds) > len(existingProdTypes) {
+		return status.Errorf(codes.InvalidArgument, "Invalid product type id")
 	}
 
 	err = s.productRepository.UpsertProducts(ctx, products)

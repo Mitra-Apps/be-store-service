@@ -126,6 +126,21 @@ func (mr *MockProductRepositoryMockRecorder) GetProductTypes(ctx, productCategor
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductTypes", reflect.TypeOf((*MockProductRepository)(nil).GetProductTypes), ctx, productCategoryID, isIncludeDeactivated)
 }
 
+// GetProductTypesByIds mocks base method.
+func (m *MockProductRepository) GetProductTypesByIds(ctx context.Context, typeIds []int64) ([]*entity.ProductType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductTypesByIds", ctx, typeIds)
+	ret0, _ := ret[0].([]*entity.ProductType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductTypesByIds indicates an expected call of GetProductTypesByIds.
+func (mr *MockProductRepositoryMockRecorder) GetProductTypesByIds(ctx, typeIds interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductTypesByIds", reflect.TypeOf((*MockProductRepository)(nil).GetProductTypesByIds), ctx, typeIds)
+}
+
 // GetProductsByStoreId mocks base method.
 func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
 	m.ctrl.T.Helper()
@@ -199,6 +214,21 @@ func (m *MockProductRepository) GetUnitOfMeasures(ctx context.Context, isInclude
 func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasures(ctx, isIncludeDeactivated interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasures", reflect.TypeOf((*MockProductRepository)(nil).GetUnitOfMeasures), ctx, isIncludeDeactivated)
+}
+
+// GetUnitOfMeasuresByIds mocks base method.
+func (m *MockProductRepository) GetUnitOfMeasuresByIds(ctx context.Context, uomIds []int64) ([]*entity.UnitOfMeasure, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUnitOfMeasuresByIds", ctx, uomIds)
+	ret0, _ := ret[0].([]*entity.UnitOfMeasure)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUnitOfMeasuresByIds indicates an expected call of GetUnitOfMeasuresByIds.
+func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasuresByIds(ctx, uomIds interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasuresByIds", reflect.TypeOf((*MockProductRepository)(nil).GetUnitOfMeasuresByIds), ctx, uomIds)
 }
 
 // UpsertProductCategory mocks base method.
