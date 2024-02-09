@@ -14,11 +14,13 @@ type ProductRepository interface {
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) ([]*entity.UnitOfMeasure, error)
 	GetUnitOfMeasureByName(ctx context.Context, name string) (*entity.UnitOfMeasure, error)
 	GetUnitOfMeasureBySymbol(ctx context.Context, symbol string) (*entity.UnitOfMeasure, error)
+	GetUnitOfMeasuresByIds(ctx context.Context, uomIds []int64) ([]*entity.UnitOfMeasure, error)
 	GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error)
 	GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) ([]*entity.ProductCategory, error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) ([]*entity.ProductType, error)
 	GetProductTypeByName(ctx context.Context, productCategoryID int64, name string) (*entity.ProductType, error)
+	GetProductTypesByIds(ctx context.Context, typeIds []int64) ([]*entity.ProductType, error)
 	GetProductById(ctx context.Context, id uuid.UUID) (*entity.Product, error)
 	UpsertUnitOfMeasure(ctx context.Context, uom *entity.UnitOfMeasure) error
 	UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error
