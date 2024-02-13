@@ -20,15 +20,14 @@ import (
 )
 
 const (
-	userID                = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
-	otherUserID           = "2f27d467-9f83-4170-96ab-36e0994f37ca"
-	storeID               = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
-	otherStoreID          = "52d11042-8c45-453e-86af-fe1e4d7facf6"
-	otherStoreID2         = "52d11042-8c45-453e-86af-fe1e4d7facf7"
-	prodCategoryID  int64 = 1
-	productID             = "7d56be32-70a2-4f49-b66b-63e6f8e719d7"
-	otherProductID        = "7d56be32-70a2-4f49-b66b-63e6f8e719d8"
-	otherProductID2       = "7d56be32-70a2-4f49-b66b-63e6f8e719d9"
+	userID          = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
+	otherUserID     = "2f27d467-9f83-4170-96ab-36e0994f37ca"
+	storeID         = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
+	otherStoreID    = "52d11042-8c45-453e-86af-fe1e4d7facf6"
+	otherStoreID2   = "52d11042-8c45-453e-86af-fe1e4d7facf7"
+	productID       = "7d56be32-70a2-4f49-b66b-63e6f8e719d7"
+	otherProductID  = "7d56be32-70a2-4f49-b66b-63e6f8e719d8"
+	otherProductID2 = "7d56be32-70a2-4f49-b66b-63e6f8e719d9"
 )
 
 func Test_service_OpenCloseStore(t *testing.T) {
@@ -1160,13 +1159,27 @@ func Test_service_GetProductTypes(t *testing.T) {
 	prodTypes = append(prodTypes, &prodEntity.ProductType{
 		Name: "makanan",
 	})
-	mockProdRepo.EXPECT().GetProductTypes(ctx, gomock.Any(), false).Return(nil, err).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypes(ctx, gomock.Any(), true).Return(prodTypes, nil).AnyTimes()
+	prodCat1 := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 1,
+		},
+	}
+	prodCat2 := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 2,
+		},
+	}
+
+	mockProdRepo.EXPECT().GetProductCategoryById(ctx, prodCat2.ID).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductCategoryById(ctx, prodCat1.ID).Return(prodCat1, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypes(ctx, prodCat1.ID, false).Return(nil, err).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypes(ctx, prodCat1.ID, true).Return(prodTypes, nil).AnyTimes()
 	type fields struct {
 		productRepository *prodRepoMock.MockProductRepository
 	}
 	type args struct {
 		ctx                  context.Context
+		productCategoryId    int64
 		isIncludeDeactivated bool
 	}
 	tests := []struct {
@@ -1177,12 +1190,26 @@ func Test_service_GetProductTypes(t *testing.T) {
 		expectedError error
 	}{
 		{
+			name: "GetProductTypes_ProdCategoryNotExist_ReturnTheError",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:                  ctx,
+				productCategoryId:    prodCat2.ID,
+				isIncludeDeactivated: false,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.NotFound, "Product category id is not found"),
+		},
+		{
 			name: "GetProductTypes_Error_ReturnTheError",
 			fields: fields{
 				productRepository: mockProdRepo,
 			},
 			args: args{
 				ctx:                  ctx,
+				productCategoryId:    prodCat1.ID,
 				isIncludeDeactivated: false,
 			},
 			wantErr:       true,
@@ -1195,6 +1222,7 @@ func Test_service_GetProductTypes(t *testing.T) {
 			},
 			args: args{
 				ctx:                  ctx,
+				productCategoryId:    prodCat1.ID,
 				isIncludeDeactivated: true,
 			},
 			wantErr: false,
@@ -1203,12 +1231,12 @@ func Test_service_GetProductTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(nil, tt.fields.productRepository, nil)
-			if uom, err := s.GetProductTypes(tt.args.ctx, prodCategoryID, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
+			if prodType, err := s.GetProductTypes(tt.args.ctx, tt.args.productCategoryId, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
-				assert.Nil(t, uom)
+				assert.Nil(t, prodType)
 			} else {
 				assert.Nil(t, err)
-				assert.NotNil(t, uom)
+				assert.NotNil(t, prodType)
 			}
 		})
 	}
