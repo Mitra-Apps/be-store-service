@@ -339,6 +339,12 @@ func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated
 	return cat, nil
 }
 func (s *service) GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error) {
+	if prodCat, err := s.productRepository.GetProductCategoryById(ctx, productCategoryID); err != nil {
+		return nil, status.Errorf(codes.AlreadyExists, "Error getting product category by id data")
+	} else if prodCat == nil {
+		return nil, status.Errorf(codes.NotFound, "Product category id is not found")
+	}
+
 	if types, err = s.productRepository.GetProductTypes(ctx, productCategoryID, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product types :"+err.Error())
 	}
