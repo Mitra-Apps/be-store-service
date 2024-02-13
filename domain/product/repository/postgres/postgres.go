@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	"github.com/google/uuid"
@@ -50,8 +51,12 @@ func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Pr
 }
 
 func (p *Postgres) GetProductsByStoreIdAndNames(ctx context.Context, storeID uuid.UUID, names []string) ([]*entity.Product, error) {
+	lowerCaseNames := []string{}
+	for _, s := range names {
+		lowerCaseNames = append(lowerCaseNames, strings.ToLower(s))
+	}
 	prods := []*entity.Product{}
-	tx := p.db.WithContext(ctx).Where("store_id = ? AND name IN ?", storeID, names).Find(&prods)
+	tx := p.db.WithContext(ctx).Where("store_id = ? AND LOWER(name) IN ?", storeID, lowerCaseNames).Find(&prods)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -78,7 +83,7 @@ func (p *Postgres) UpsertProducts(ctx context.Context, products []*entity.Produc
 
 func (p *Postgres) GetUnitOfMeasureByName(ctx context.Context, name string) (*entity.UnitOfMeasure, error) {
 	uom := entity.UnitOfMeasure{}
-	err := p.db.WithContext(ctx).Where("name = ?", name).First(&uom).Error
+	err := p.db.WithContext(ctx).Where("LOWER(name) = ?", strings.ToLower(name)).First(&uom).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -167,7 +172,7 @@ func (p *Postgres) GetProductCategories(ctx context.Context, isIncludeDeactivate
 
 func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
 	cat := entity.ProductCategory{}
-	err := p.db.WithContext(ctx).Where("name = ?", name).First(&cat).Error
+	err := p.db.WithContext(ctx).Where("LOWER(name) = ?", strings.ToLower(name)).First(&cat).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -206,7 +211,7 @@ func (p *Postgres) UpsertProductCategory(ctx context.Context, prodCategory *enti
 
 func (p *Postgres) GetProductTypeByName(ctx context.Context, productCategoryID int64, name string) (*entity.ProductType, error) {
 	prodType := entity.ProductType{}
-	err := p.db.WithContext(ctx).Where("product_category_id = ? AND name = ?", productCategoryID, name).First(&prodType).Error
+	err := p.db.WithContext(ctx).Where("product_category_id = ? AND LOWER(name) = ?", productCategoryID, strings.ToLower(name)).First(&prodType).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
