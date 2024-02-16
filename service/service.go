@@ -30,6 +30,7 @@ type Service interface {
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
+	GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error)
 }
 type service struct {
 	storeRepository   repository.StoreServiceRepository
@@ -358,4 +359,14 @@ func (s *service) GetProductById(ctx context.Context, id uuid.UUID) (p *prodEnti
 		return nil, status.Errorf(codes.NotFound, "Product id not found")
 	}
 	return p, nil
+}
+
+func (s *service) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error) {
+	store, err = s.storeRepository.GetStoreByUserID(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Error when getting store by user id :"+err.Error())
+	} else if store == nil {
+		return nil, status.Errorf(codes.NotFound, "Store id not found")
+	}
+	return store, nil
 }
