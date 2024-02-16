@@ -113,6 +113,25 @@ func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (
 	return result, nil
 }
 
+func (s *GrpcRoute) GetStoreByUserID(ctx context.Context, req *pb.GetStoreByUserIDRequest) (*pb.GetStoreByUserIDResponse, error) {
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+	store, err := s.service.GetStoreByUserID(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &pb.GetStoreByUserIDResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    store.ToProto(),
+	}
+
+	return result, nil
+}
+
 func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRequest) (*pb.OpenCloseStoreResponse, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err

@@ -25,6 +25,7 @@ const (
 	StoreService_UpdateStore_FullMethodName           = "/StoreService/UpdateStore"
 	StoreService_DeleteStore_FullMethodName           = "/StoreService/DeleteStore"
 	StoreService_ListStores_FullMethodName            = "/StoreService/ListStores"
+	StoreService_GetStoreByUserID_FullMethodName      = "/StoreService/GetStoreByUserID"
 	StoreService_OpenCloseStore_FullMethodName        = "/StoreService/OpenCloseStore"
 	StoreService_GetProductById_FullMethodName        = "/StoreService/GetProductById"
 	StoreService_GetProductList_FullMethodName        = "/StoreService/GetProductList"
@@ -51,6 +52,8 @@ type StoreServiceClient interface {
 	DeleteStore(ctx context.Context, in *DeleteStoreRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// List all stores
 	ListStores(ctx context.Context, in *ListStoresRequest, opts ...grpc.CallOption) (*ListStoresResponse, error)
+	// Get Store By User ID
+	GetStoreByUserID(ctx context.Context, in *GetStoreByUserIDRequest, opts ...grpc.CallOption) (*GetStoreByUserIDResponse, error)
 	// Open close store
 	OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*OpenCloseStoreResponse, error)
 	GetProductById(ctx context.Context, in *GetProductByIdRequest, opts ...grpc.CallOption) (*GetProductByIdResponse, error)
@@ -111,6 +114,15 @@ func (c *storeServiceClient) DeleteStore(ctx context.Context, in *DeleteStoreReq
 func (c *storeServiceClient) ListStores(ctx context.Context, in *ListStoresRequest, opts ...grpc.CallOption) (*ListStoresResponse, error) {
 	out := new(ListStoresResponse)
 	err := c.cc.Invoke(ctx, StoreService_ListStores_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storeServiceClient) GetStoreByUserID(ctx context.Context, in *GetStoreByUserIDRequest, opts ...grpc.CallOption) (*GetStoreByUserIDResponse, error) {
+	out := new(GetStoreByUserIDResponse)
+	err := c.cc.Invoke(ctx, StoreService_GetStoreByUserID_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +233,8 @@ type StoreServiceServer interface {
 	DeleteStore(context.Context, *DeleteStoreRequest) (*emptypb.Empty, error)
 	// List all stores
 	ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error)
+	// Get Store By User ID
+	GetStoreByUserID(context.Context, *GetStoreByUserIDRequest) (*GetStoreByUserIDResponse, error)
 	// Open close store
 	OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error)
 	GetProductById(context.Context, *GetProductByIdRequest) (*GetProductByIdResponse, error)
@@ -253,6 +267,9 @@ func (UnimplementedStoreServiceServer) DeleteStore(context.Context, *DeleteStore
 }
 func (UnimplementedStoreServiceServer) ListStores(context.Context, *ListStoresRequest) (*ListStoresResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStores not implemented")
+}
+func (UnimplementedStoreServiceServer) GetStoreByUserID(context.Context, *GetStoreByUserIDRequest) (*GetStoreByUserIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStoreByUserID not implemented")
 }
 func (UnimplementedStoreServiceServer) OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenCloseStore not implemented")
@@ -383,6 +400,24 @@ func _StoreService_ListStores_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StoreServiceServer).ListStores(ctx, req.(*ListStoresRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StoreService_GetStoreByUserID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStoreByUserIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).GetStoreByUserID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_GetStoreByUserID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).GetStoreByUserID(ctx, req.(*GetStoreByUserIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -593,6 +628,10 @@ var StoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListStores",
 			Handler:    _StoreService_ListStores_Handler,
+		},
+		{
+			MethodName: "GetStoreByUserID",
+			Handler:    _StoreService_GetStoreByUserID_Handler,
 		},
 		{
 			MethodName: "OpenCloseStore",

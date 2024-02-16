@@ -135,6 +135,13 @@ service StoreService {
         };
     }
 
+    // Get Store By User ID
+    rpc GetStoreByUserID(GetStoreByUserIDRequest) returns (GetStoreByUserIDResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/stores/my-store"
+        };
+    }
+
     // Open close store
     rpc OpenCloseStore(OpenCloseStoreRequest) returns (OpenCloseStoreResponse) {
         option (google.api.http) = {
@@ -246,7 +253,6 @@ message DeleteStoreRequest {
 
 // Request message to list all stores
 message ListStoresRequest {
-    // You can add parameters for pagination, filtering, etc. if needed
 }
 
 // Response message for listing stores
@@ -254,6 +260,16 @@ message ListStoresResponse {
     int32 code = 1;
     string message = 2;
     repeated Store data = 3;
+    Store UserStore = 4;
+}
+
+message GetStoreByUserIDRequest {
+}
+
+message GetStoreByUserIDResponse {
+    int32 code = 1;
+    string message = 2;
+    Store data = 3;
 }
 
 message OpenCloseStoreRequest {

@@ -47,6 +47,9 @@ const (
 	StoreServiceDeleteStoreProcedure = "/StoreService/DeleteStore"
 	// StoreServiceListStoresProcedure is the fully-qualified name of the StoreService's ListStores RPC.
 	StoreServiceListStoresProcedure = "/StoreService/ListStores"
+	// StoreServiceGetStoreByUserIDProcedure is the fully-qualified name of the StoreService's
+	// GetStoreByUserID RPC.
+	StoreServiceGetStoreByUserIDProcedure = "/StoreService/GetStoreByUserID"
 	// StoreServiceOpenCloseStoreProcedure is the fully-qualified name of the StoreService's
 	// OpenCloseStore RPC.
 	StoreServiceOpenCloseStoreProcedure = "/StoreService/OpenCloseStore"
@@ -87,6 +90,7 @@ var (
 	storeServiceUpdateStoreMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("UpdateStore")
 	storeServiceDeleteStoreMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("DeleteStore")
 	storeServiceListStoresMethodDescriptor            = storeServiceServiceDescriptor.Methods().ByName("ListStores")
+	storeServiceGetStoreByUserIDMethodDescriptor      = storeServiceServiceDescriptor.Methods().ByName("GetStoreByUserID")
 	storeServiceOpenCloseStoreMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("OpenCloseStore")
 	storeServiceGetProductByIdMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("GetProductById")
 	storeServiceGetProductListMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("GetProductList")
@@ -111,6 +115,8 @@ type StoreServiceClient interface {
 	DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error)
 	// List all stores
 	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
+	// Get Store By User ID
+	GetStoreByUserID(context.Context, *connect.Request[store.GetStoreByUserIDRequest]) (*connect.Response[store.GetStoreByUserIDResponse], error)
 	// Open close store
 	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error)
 	GetProductById(context.Context, *connect.Request[store.GetProductByIdRequest]) (*connect.Response[store.GetProductByIdResponse], error)
@@ -162,6 +168,12 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+StoreServiceListStoresProcedure,
 			connect.WithSchema(storeServiceListStoresMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		getStoreByUserID: connect.NewClient[store.GetStoreByUserIDRequest, store.GetStoreByUserIDResponse](
+			httpClient,
+			baseURL+StoreServiceGetStoreByUserIDProcedure,
+			connect.WithSchema(storeServiceGetStoreByUserIDMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 		openCloseStore: connect.NewClient[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse](
@@ -234,6 +246,7 @@ type storeServiceClient struct {
 	updateStore           *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
 	deleteStore           *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
 	listStores            *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
+	getStoreByUserID      *connect.Client[store.GetStoreByUserIDRequest, store.GetStoreByUserIDResponse]
 	openCloseStore        *connect.Client[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse]
 	getProductById        *connect.Client[store.GetProductByIdRequest, store.GetProductByIdResponse]
 	getProductList        *connect.Client[store.GetProductListRequest, store.GetProductListResponse]
@@ -269,6 +282,11 @@ func (c *storeServiceClient) DeleteStore(ctx context.Context, req *connect.Reque
 // ListStores calls StoreService.ListStores.
 func (c *storeServiceClient) ListStores(ctx context.Context, req *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error) {
 	return c.listStores.CallUnary(ctx, req)
+}
+
+// GetStoreByUserID calls StoreService.GetStoreByUserID.
+func (c *storeServiceClient) GetStoreByUserID(ctx context.Context, req *connect.Request[store.GetStoreByUserIDRequest]) (*connect.Response[store.GetStoreByUserIDResponse], error) {
+	return c.getStoreByUserID.CallUnary(ctx, req)
 }
 
 // OpenCloseStore calls StoreService.OpenCloseStore.
@@ -333,6 +351,8 @@ type StoreServiceHandler interface {
 	DeleteStore(context.Context, *connect.Request[store.DeleteStoreRequest]) (*connect.Response[emptypb.Empty], error)
 	// List all stores
 	ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error)
+	// Get Store By User ID
+	GetStoreByUserID(context.Context, *connect.Request[store.GetStoreByUserIDRequest]) (*connect.Response[store.GetStoreByUserIDResponse], error)
 	// Open close store
 	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error)
 	GetProductById(context.Context, *connect.Request[store.GetProductByIdRequest]) (*connect.Response[store.GetProductByIdResponse], error)
@@ -380,6 +400,12 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 		StoreServiceListStoresProcedure,
 		svc.ListStores,
 		connect.WithSchema(storeServiceListStoresMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	storeServiceGetStoreByUserIDHandler := connect.NewUnaryHandler(
+		StoreServiceGetStoreByUserIDProcedure,
+		svc.GetStoreByUserID,
+		connect.WithSchema(storeServiceGetStoreByUserIDMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	storeServiceOpenCloseStoreHandler := connect.NewUnaryHandler(
@@ -454,6 +480,8 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 			storeServiceDeleteStoreHandler.ServeHTTP(w, r)
 		case StoreServiceListStoresProcedure:
 			storeServiceListStoresHandler.ServeHTTP(w, r)
+		case StoreServiceGetStoreByUserIDProcedure:
+			storeServiceGetStoreByUserIDHandler.ServeHTTP(w, r)
 		case StoreServiceOpenCloseStoreProcedure:
 			storeServiceOpenCloseStoreHandler.ServeHTTP(w, r)
 		case StoreServiceGetProductByIdProcedure:
@@ -501,6 +529,10 @@ func (UnimplementedStoreServiceHandler) DeleteStore(context.Context, *connect.Re
 
 func (UnimplementedStoreServiceHandler) ListStores(context.Context, *connect.Request[store.ListStoresRequest]) (*connect.Response[store.ListStoresResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.ListStores is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) GetStoreByUserID(context.Context, *connect.Request[store.GetStoreByUserIDRequest]) (*connect.Response[store.GetStoreByUserIDResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.GetStoreByUserID is not implemented"))
 }
 
 func (UnimplementedStoreServiceHandler) OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error) {

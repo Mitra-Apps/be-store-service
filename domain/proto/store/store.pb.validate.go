@@ -2433,6 +2433,35 @@ func (m *ListStoresResponse) validate(all bool) error {
 
 	}
 
+	if all {
+		switch v := interface{}(m.GetUserStore()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListStoresResponseValidationError{
+					field:  "UserStore",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListStoresResponseValidationError{
+					field:  "UserStore",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUserStore()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListStoresResponseValidationError{
+				field:  "UserStore",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ListStoresResponseMultiError(errors)
 	}
@@ -2512,6 +2541,243 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListStoresResponseValidationError{}
+
+// Validate checks the field values on GetStoreByUserIDRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetStoreByUserIDRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetStoreByUserIDRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetStoreByUserIDRequestMultiError, or nil if none found.
+func (m *GetStoreByUserIDRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetStoreByUserIDRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return GetStoreByUserIDRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetStoreByUserIDRequestMultiError is an error wrapping multiple validation
+// errors returned by GetStoreByUserIDRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetStoreByUserIDRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetStoreByUserIDRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetStoreByUserIDRequestMultiError) AllErrors() []error { return m }
+
+// GetStoreByUserIDRequestValidationError is the validation error returned by
+// GetStoreByUserIDRequest.Validate if the designated constraints aren't met.
+type GetStoreByUserIDRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetStoreByUserIDRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetStoreByUserIDRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetStoreByUserIDRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetStoreByUserIDRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetStoreByUserIDRequestValidationError) ErrorName() string {
+	return "GetStoreByUserIDRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetStoreByUserIDRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetStoreByUserIDRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetStoreByUserIDRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetStoreByUserIDRequestValidationError{}
+
+// Validate checks the field values on GetStoreByUserIDResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetStoreByUserIDResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetStoreByUserIDResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetStoreByUserIDResponseMultiError, or nil if none found.
+func (m *GetStoreByUserIDResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetStoreByUserIDResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetStoreByUserIDResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetStoreByUserIDResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetStoreByUserIDResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetStoreByUserIDResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetStoreByUserIDResponseMultiError is an error wrapping multiple validation
+// errors returned by GetStoreByUserIDResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetStoreByUserIDResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetStoreByUserIDResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetStoreByUserIDResponseMultiError) AllErrors() []error { return m }
+
+// GetStoreByUserIDResponseValidationError is the validation error returned by
+// GetStoreByUserIDResponse.Validate if the designated constraints aren't met.
+type GetStoreByUserIDResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetStoreByUserIDResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetStoreByUserIDResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetStoreByUserIDResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetStoreByUserIDResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetStoreByUserIDResponseValidationError) ErrorName() string {
+	return "GetStoreByUserIDResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetStoreByUserIDResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetStoreByUserIDResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetStoreByUserIDResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetStoreByUserIDResponseValidationError{}
 
 // Validate checks the field values on OpenCloseStoreRequest with the rules
 // defined in the proto definition for this message. If any rules are

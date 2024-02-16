@@ -263,6 +263,25 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/stores/my-store:
+        get:
+            tags:
+                - StoreService
+            description: Get Store By User ID
+            operationId: StoreService_GetStoreByUserID
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetStoreByUserIDResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/stores/{storeId}:
         get:
             tags:
@@ -447,6 +466,16 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/ProductType'
+        GetStoreByUserIDResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/Store'
         GetStoreResponse:
             type: object
             properties:
@@ -490,6 +519,8 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/Store'
+                UserStore:
+                    $ref: '#/components/schemas/Store'
             description: Response message for listing stores
         OpenCloseStoreRequest:
             type: object
