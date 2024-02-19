@@ -657,6 +657,8 @@ components:
                     type: string
                 is24hours:
                     type: boolean
+                isOpen:
+                    type: boolean
             description: Store hour message
         StoreImage:
             type: object

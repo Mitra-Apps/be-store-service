@@ -41,6 +41,7 @@ message StoreHour {
     string open = 4 [(validate.rules).string = {pattern: "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"}];
     string close = 5 [(validate.rules).string = {pattern: "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"}];
     bool is24hours = 6;
+    bool isOpen = 7;
 }
 
 // Store message

@@ -218,6 +218,7 @@ type StoreHour struct {
 	Open      string
 	Close     string
 	Is24Hr    bool
+	IsOpen    bool `gorm:"type:bool;not null;default:true"`
 }
 
 func (s *StoreHour) ToProto() *pb.StoreHour {
@@ -247,6 +248,7 @@ func (s *StoreHour) ToProto() *pb.StoreHour {
 		Open:      s.Open,
 		Close:     s.Close,
 		Is24Hours: s.Is24Hr,
+		IsOpen:    s.IsOpen,
 	}
 }
 
@@ -287,6 +289,7 @@ func (s *StoreHour) FromProto(storeHour *pb.StoreHour) error {
 	s.Open = storeHour.Open
 	s.Close = storeHour.Close
 	s.Is24Hr = storeHour.Is24Hours
+	s.IsOpen = storeHour.IsOpen
 
 	return nil
 }

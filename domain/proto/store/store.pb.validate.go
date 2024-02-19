@@ -520,6 +520,8 @@ func (m *StoreHour) validate(all bool) error {
 
 	// no validation rules for Is24Hours
 
+	// no validation rules for IsOpen
+
 	if len(errors) > 0 {
 		return StoreHourMultiError(errors)
 	}
