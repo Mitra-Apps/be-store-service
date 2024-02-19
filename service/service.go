@@ -365,8 +365,6 @@ func (s *service) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store
 	store, err = s.storeRepository.GetStoreByUserID(ctx, userID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting store by user id :"+err.Error())
-	} else if store == nil {
-		return nil, status.Errorf(codes.NotFound, "Store id not found")
 	}
 	return store, nil
 }

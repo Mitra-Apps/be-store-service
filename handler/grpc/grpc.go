@@ -123,13 +123,18 @@ func (s *GrpcRoute) GetStoreByUserID(ctx context.Context, req *pb.GetStoreByUser
 		return nil, err
 	}
 
-	result := &pb.GetStoreByUserIDResponse{
+	if store == nil {
+		return &pb.GetStoreByUserIDResponse{
+			Code:    int32(codes.OK),
+			Message: "Store not found",
+		}, nil
+	}
+
+	return &pb.GetStoreByUserIDResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
 		Data:    store.ToProto(),
-	}
-
-	return result, nil
+	}, nil
 }
 
 func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRequest) (*pb.OpenCloseStoreResponse, error) {
