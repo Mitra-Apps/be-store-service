@@ -2,6 +2,7 @@ package entity
 
 import (
 	"regexp"
+	"sort"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
@@ -44,6 +45,11 @@ func (s *Store) ToProto() *pb.Store {
 	for _, hour := range s.Hours {
 		hours = append(hours, hour.ToProto())
 	}
+
+	// sort hours day of week ascending
+	sort.Slice(hours, func(i, j int) bool {
+		return hours[i].DayOfWeek < hours[j].DayOfWeek
+	})
 
 	images := []*pb.StoreImage{}
 	for _, image := range s.Images {
