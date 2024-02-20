@@ -59,6 +59,14 @@ func (s *GrpcRoute) GetStore(ctx context.Context, req *pb.GetStoreRequest) (*pb.
 		return nil, err
 	}
 
+	if store == nil {
+		return &pb.GetStoreResponse{
+			Code:    int32(codes.NotFound),
+			Message: "Store not found",
+			Data:    nil,
+		}, nil
+	}
+
 	return &pb.GetStoreResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
