@@ -127,6 +127,21 @@ func (mr *MockServiceMockRecorder) GetStore(ctx, storeID interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStore", reflect.TypeOf((*MockService)(nil).GetStore), ctx, storeID)
 }
 
+// GetStoreByUserID mocks base method.
+func (m *MockService) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (*entity0.Store, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStoreByUserID", ctx, userID)
+	ret0, _ := ret[0].(*entity0.Store)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStoreByUserID indicates an expected call of GetStoreByUserID.
+func (mr *MockServiceMockRecorder) GetStoreByUserID(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStoreByUserID", reflect.TypeOf((*MockService)(nil).GetStoreByUserID), ctx, userID)
+}
+
 // GetUnitOfMeasures mocks base method.
 func (m *MockService) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) ([]*entity.UnitOfMeasure, error) {
 	m.ctrl.T.Helper()
