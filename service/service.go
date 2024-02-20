@@ -31,6 +31,7 @@ type Service interface {
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
+	GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error)
 }
 type service struct {
 	storeRepository   repository.StoreServiceRepository
@@ -193,12 +194,14 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	}
 	existingStoreByStoreId, err := s.storeRepository.GetStore(ctx, storeID.String())
 	if err != nil {
-		return status.Errorf(codes.InvalidArgument, err.Error())
+		return err
 	}
+
 	var isAdmin bool
 	for _, r := range roleNames {
 		if r == "admin" {
 			isAdmin = true
+			break
 		}
 	}
 	if existingStoreByStoreId.UserID != userID && !isAdmin {
@@ -246,14 +249,14 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 		return status.Errorf(codes.Internal, "Error when getting related uom")
 	}
 	if len(uomIds) > len(existingUoms) {
-		return status.Errorf(codes.InvalidArgument, "Invalid unit of measure id")
+		return status.Errorf(codes.NotFound, "Unit of measure id is not found")
 	}
 	existingProdTypes, err := s.productRepository.GetProductTypesByIds(ctx, productTypeIds)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error when getting related product type")
 	}
 	if len(productTypeIds) > len(existingProdTypes) {
-		return status.Errorf(codes.InvalidArgument, "Invalid product type id")
+		return status.Errorf(codes.NotFound, "Product type id is not found")
 	}
 
 	err = s.productRepository.UpsertProducts(ctx, products)
@@ -326,6 +329,10 @@ func (s *service) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bo
 }
 
 func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error) {
+	if _, err := s.storeRepository.GetStore(ctx, storeID.String()); err != nil {
+		return nil, err
+	}
+
 	if products, err = s.productRepository.GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
 	}
@@ -338,6 +345,12 @@ func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated
 	return cat, nil
 }
 func (s *service) GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error) {
+	if prodCat, err := s.productRepository.GetProductCategoryById(ctx, productCategoryID); err != nil {
+		return nil, status.Errorf(codes.AlreadyExists, "Error getting product category by id data")
+	} else if prodCat == nil {
+		return nil, status.Errorf(codes.NotFound, "Product category id is not found")
+	}
+
 	if types, err = s.productRepository.GetProductTypes(ctx, productCategoryID, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product types :"+err.Error())
 	}
@@ -347,6 +360,16 @@ func (s *service) GetProductTypes(ctx context.Context, productCategoryID int64, 
 func (s *service) GetProductById(ctx context.Context, id uuid.UUID) (p *prodEntity.Product, err error) {
 	if p, err = s.productRepository.GetProductById(ctx, id); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product by id :"+err.Error())
+	} else if p == nil && err == nil {
+		return nil, status.Errorf(codes.NotFound, "Product id not found")
 	}
 	return p, nil
+}
+
+func (s *service) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error) {
+	store, err = s.storeRepository.GetStoreByUserID(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Error when getting store by user id :"+err.Error())
+	}
+	return store, nil
 }

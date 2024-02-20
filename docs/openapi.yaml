@@ -263,24 +263,19 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
-    /api/v1/stores/{ids}:
-        delete:
+    /api/v1/stores/my-store:
+        get:
             tags:
                 - StoreService
-            description: Delete a store by ID
-            operationId: StoreService_DeleteStore
-            parameters:
-                - name: ids
-                  in: path
-                  required: true
-                  schema:
-                    type: array
-                    items:
-                        type: string
+            description: Get Store By User ID
+            operationId: StoreService_GetStoreByUserID
             responses:
                 "200":
                     description: OK
-                    content: {}
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetStoreByUserIDResponse'
                 default:
                     description: Default error response
                     content:
@@ -449,6 +444,16 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/ProductType'
+        GetStoreByUserIDResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/Store'
         GetStoreResponse:
             type: object
             properties:
@@ -492,6 +497,8 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/Store'
+                UserStore:
+                    $ref: '#/components/schemas/Store'
             description: Response message for listing stores
         OpenCloseStoreRequest:
             type: object
@@ -627,6 +634,8 @@ components:
                 close:
                     type: string
                 is24hours:
+                    type: boolean
+                isOpen:
                     type: boolean
             description: Store hour message
         StoreImage:

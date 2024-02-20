@@ -121,6 +121,30 @@ func (s *GrpcRoute) ListStores(ctx context.Context, req *pb.ListStoresRequest) (
 	return result, nil
 }
 
+func (s *GrpcRoute) GetStoreByUserID(ctx context.Context, req *pb.GetStoreByUserIDRequest) (*pb.GetStoreByUserIDResponse, error) {
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+	store, err := s.service.GetStoreByUserID(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if store == nil {
+		return &pb.GetStoreByUserIDResponse{
+			Code:    int32(codes.OK),
+			Message: "Store not found",
+		}, nil
+	}
+
+	return &pb.GetStoreByUserIDResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data:    store.ToProto(),
+	}, nil
+}
+
 func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRequest) (*pb.OpenCloseStoreResponse, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err
@@ -158,6 +182,10 @@ func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRe
 
 	if err := validateProduct(productList); err != nil {
 		return nil, err
+	}
+
+	if strings.Trim(req.StoreId, " ") == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Store id is required")
 	}
 
 	storeIdUuid, err := uuid.Parse(req.StoreId)

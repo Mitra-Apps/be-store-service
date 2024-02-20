@@ -2,6 +2,7 @@ package entity
 
 import (
 	"regexp"
+	"sort"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
@@ -44,6 +45,11 @@ func (s *Store) ToProto() *pb.Store {
 	for _, hour := range s.Hours {
 		hours = append(hours, hour.ToProto())
 	}
+
+	// sort hours day of week ascending
+	sort.Slice(hours, func(i, j int) bool {
+		return hours[i].DayOfWeek < hours[j].DayOfWeek
+	})
 
 	images := []*pb.StoreImage{}
 	for _, image := range s.Images {
@@ -218,6 +224,7 @@ type StoreHour struct {
 	Open      string
 	Close     string
 	Is24Hr    bool
+	IsOpen    bool `gorm:"type:bool;not null;default:true"`
 }
 
 func (s *StoreHour) ToProto() *pb.StoreHour {
@@ -247,6 +254,7 @@ func (s *StoreHour) ToProto() *pb.StoreHour {
 		Open:      s.Open,
 		Close:     s.Close,
 		Is24Hours: s.Is24Hr,
+		IsOpen:    s.IsOpen,
 	}
 }
 
@@ -287,6 +295,7 @@ func (s *StoreHour) FromProto(storeHour *pb.StoreHour) error {
 	s.Open = storeHour.Open
 	s.Close = storeHour.Close
 	s.Is24Hr = storeHour.Is24Hours
+	s.IsOpen = storeHour.IsOpen
 
 	return nil
 }

@@ -41,6 +41,7 @@ message StoreHour {
     string open = 4 [(validate.rules).string = {pattern: "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"}];
     string close = 5 [(validate.rules).string = {pattern: "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"}];
     bool is24hours = 6;
+    bool isOpen = 7;
 }
 
 // Store message
@@ -132,6 +133,13 @@ service StoreService {
     rpc ListStores(ListStoresRequest) returns (ListStoresResponse) {
         option (google.api.http) = {
             get: "/api/v1/stores"
+        };
+    }
+
+    // Get Store By User ID
+    rpc GetStoreByUserID(GetStoreByUserIDRequest) returns (GetStoreByUserIDResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/stores/my-store"
         };
     }
 
@@ -246,7 +254,6 @@ message DeleteStoreRequest {
 
 // Request message to list all stores
 message ListStoresRequest {
-    // You can add parameters for pagination, filtering, etc. if needed
 }
 
 // Response message for listing stores
@@ -254,6 +261,16 @@ message ListStoresResponse {
     int32 code = 1;
     string message = 2;
     repeated Store data = 3;
+    Store UserStore = 4;
+}
+
+message GetStoreByUserIDRequest {
+}
+
+message GetStoreByUserIDResponse {
+    int32 code = 1;
+    string message = 2;
+    Store data = 3;
 }
 
 message OpenCloseStoreRequest {
