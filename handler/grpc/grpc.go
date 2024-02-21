@@ -264,18 +264,16 @@ func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertPro
 		return nil, err
 	}
 
-	prodCat := prodEntity.ProductCategory{}
-	if err := prodCat.FromProto(req.ProductCategory); err != nil {
-		return nil, err
-	}
-
 	claims, err := middleware.GetClaimsFromContext(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
 	}
+
+	prodCat := new(prodEntity.ProductCategory)
+	prodCat.FromProto(req.ProductCategory)
 	prodCat.CreatedBy = claims.UserID
 
-	if err := g.service.UpsertProductCategory(ctx, &prodCat); err != nil {
+	if err := g.service.UpsertProductCategory(ctx, prodCat); err != nil {
 		return nil, err
 	}
 
