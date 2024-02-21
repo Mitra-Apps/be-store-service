@@ -164,7 +164,19 @@ func (p *postgres) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID u
 
 func (p *postgres) DeleteStores(ctx context.Context, storeIds []string) error {
 	return p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return tx.Unscoped().Delete(&entity.Store{}, "id IN (?)", storeIds).Error
+		if err := tx.Exec("DELETE FROM store_store_tags WHERE store_id IN (?)", storeIds).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Exec("DELETE FROM store_hours WHERE store_id IN (?)", storeIds).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Exec("DELETE FROM store_images WHERE store_id IN (?)", storeIds).Error; err != nil {
+			return err
+		}
+
+		return tx.Exec("DELETE FROM stores WHERE id IN (?)", storeIds).Error
 	})
 }
 
