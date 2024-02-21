@@ -68,7 +68,7 @@ message Store {
 
 message ProductCategory {
     int64 id = 1;
-    string name = 2;
+    string name = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
     bool is_active = 3;
 }
 

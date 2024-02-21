@@ -195,18 +195,7 @@ func (p *Postgres) GetProductCategoryById(ctx context.Context, id int64) (*entit
 }
 
 func (p *Postgres) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
-	tx := p.db.WithContext(ctx).Begin()
-
-	if err := tx.Save(prodCategory).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return err
-	}
-
-	return nil
+	return p.db.WithContext(ctx).Save(prodCategory).Error
 }
 
 func (p *Postgres) GetProductTypeByName(ctx context.Context, productCategoryID int64, name string) (*entity.ProductType, error) {

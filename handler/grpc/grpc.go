@@ -260,8 +260,8 @@ func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitO
 }
 
 func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
-	if req.ProductCategory.Name == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	if err := req.Validate(); err != nil {
+		return nil, err
 	}
 
 	prodCat := prodEntity.ProductCategory{}
