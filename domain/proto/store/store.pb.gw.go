@@ -196,14 +196,14 @@ func request_StoreService_DeleteStore_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["store_id"]
+	val, ok = pathParams["ids"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "store_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ids")
 	}
 
-	protoReq.StoreId, err = runtime.String(val)
+	protoReq.Ids, err = runtime.StringSlice(val, ",")
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "store_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ids", err)
 	}
 
 	msg, err := client.DeleteStore(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -222,14 +222,14 @@ func local_request_StoreService_DeleteStore_0(ctx context.Context, marshaler run
 		_   = err
 	)
 
-	val, ok = pathParams["store_id"]
+	val, ok = pathParams["ids"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "store_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ids")
 	}
 
-	protoReq.StoreId, err = runtime.String(val)
+	protoReq.Ids, err = runtime.StringSlice(val, ",")
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "store_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ids", err)
 	}
 
 	msg, err := server.DeleteStore(ctx, &protoReq)
@@ -884,7 +884,7 @@ func RegisterStoreServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.StoreService/DeleteStore", runtime.WithHTTPPathPattern("/v1/stores/{store_id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.StoreService/DeleteStore", runtime.WithHTTPPathPattern("/api/v1/stores/{ids}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1314,7 +1314,7 @@ func RegisterStoreServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.StoreService/DeleteStore", runtime.WithHTTPPathPattern("/v1/stores/{store_id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/.StoreService/DeleteStore", runtime.WithHTTPPathPattern("/api/v1/stores/{ids}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1604,7 +1604,7 @@ var (
 
 	pattern_StoreService_UpdateStore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "stores", "store_id"}, ""))
 
-	pattern_StoreService_DeleteStore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "stores", "store_id"}, ""))
+	pattern_StoreService_DeleteStore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "stores", "ids"}, ""))
 
 	pattern_StoreService_ListStores_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "stores"}, ""))
 

@@ -48,7 +48,7 @@ func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store,
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Errorf(codes.NotFound, "Store with id %s not found", storeID)
+			return nil, nil
 		}
 		return nil, status.Errorf(codes.Internal, "Error when getting store :"+err.Error())
 	}
@@ -162,11 +162,22 @@ func (p *postgres) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID u
 	return nil
 }
 
-func (p *postgres) DeleteStore(ctx context.Context, storeID string) error {
-	if err := p.db.WithContext(ctx).Where("id = ?", storeID).Unscoped().Delete(&entity.Store{}).Error; err != nil {
-		return err
-	}
-	return nil
+func (p *postgres) DeleteStores(ctx context.Context, storeIds []string) error {
+	return p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Exec("DELETE FROM store_store_tags WHERE store_id IN (?)", storeIds).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Exec("DELETE FROM store_hours WHERE store_id IN (?)", storeIds).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Exec("DELETE FROM store_images WHERE store_id IN (?)", storeIds).Error; err != nil {
+			return err
+		}
+
+		return tx.Exec("DELETE FROM stores WHERE id IN (?)", storeIds).Error
+	})
 }
 
 func (p *postgres) ListStores(ctx context.Context, page, pageSize int) ([]*entity.Store, error) {

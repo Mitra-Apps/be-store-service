@@ -282,6 +282,30 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/stores/{ids}:
+        delete:
+            tags:
+                - StoreService
+            description: Delete a store by ID
+            operationId: StoreService_DeleteStore
+            parameters:
+                - name: ids
+                  in: path
+                  required: true
+                  schema:
+                    type: array
+                    items:
+                        type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/stores/{storeId}:
         get:
             tags:
@@ -379,28 +403,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/GetUnitOfMeasuresResponse'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
-    /v1/stores/{storeId}:
-        delete:
-            tags:
-                - StoreService
-            description: Delete a store by ID
-            operationId: StoreService_DeleteStore
-            parameters:
-                - name: storeId
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content: {}
                 default:
                     description: Default error response
                     content:

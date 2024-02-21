@@ -2191,8 +2191,6 @@ func (m *DeleteStoreRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for StoreId
-
 	if len(errors) > 0 {
 		return DeleteStoreRequestMultiError(errors)
 	}

@@ -125,7 +125,7 @@ service StoreService {
     // Delete a store by ID
     rpc DeleteStore(DeleteStoreRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-            delete: "/v1/stores/{store_id}"
+            delete: "/api/v1/stores/{ids}"
         };
     }
 
@@ -169,7 +169,7 @@ service StoreService {
             body: "*"
         };
     }
-    
+
     rpc GetUnitOfMeasures(GetUnitOfMeasuresRequest) returns (GetUnitOfMeasuresResponse) {
         option (google.api.http) = {
             get: "/api/v1/uom/{is_include_deactivated}"
@@ -249,7 +249,7 @@ message UpdateStoreResponse {
 
 // Request message to delete a store by ID
 message DeleteStoreRequest {
-    string store_id = 1;
+    repeated string ids = 1;
 }
 
 // Request message to list all stores

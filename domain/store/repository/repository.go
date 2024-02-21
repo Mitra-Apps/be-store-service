@@ -19,7 +19,7 @@ type StoreServiceRepository interface {
 	UpdateStore(ctx context.Context, update *entity.Store) (*entity.Store, error)
 
 	// DeleteStore deletes a store by its ID.
-	DeleteStore(ctx context.Context, storeID string) error
+	DeleteStores(ctx context.Context, storeIDs []string) error
 
 	// ListStores lists all stores.
 	ListStores(ctx context.Context, page, pageSize int) ([]*entity.Store, error)
