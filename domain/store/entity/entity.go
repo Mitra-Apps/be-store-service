@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"regexp"
 	"sort"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
@@ -98,11 +97,11 @@ func (s *Store) FromProto(store *pb.Store) error {
 	}
 
 	// check user email is valid email address
-	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
-	re := regexp.MustCompile(emailRegex)
-	if !re.MatchString(store.Email) {
-		return status.Errorf(codes.InvalidArgument, "invalid email address")
-	}
+	// emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	// re := regexp.MustCompile(emailRegex)
+	// if !re.MatchString(store.Email) {
+	// 	return status.Errorf(codes.InvalidArgument, "invalid email address")
+	// }
 
 	s.UserID = userID
 	s.StoreName = store.StoreName
