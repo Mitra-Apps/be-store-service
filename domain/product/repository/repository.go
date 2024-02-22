@@ -25,4 +25,8 @@ type ProductRepository interface {
 	UpsertUnitOfMeasure(ctx context.Context, uom *entity.UnitOfMeasure) error
 	UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error
 	UpsertProductType(ctx context.Context, prodType *entity.ProductType) error
+	AddProductImages(ctx context.Context, productImages []*entity.ProductImage) error
+	InitiateTransaction(ctx context.Context) bool
+	TransactionCommit() error
+	TransactionRollback()
 }

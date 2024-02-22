@@ -2,17 +2,20 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 
+	imageGrpcRepo "github.com/Mitra-Apps/be-store-service/domain/image/repository/grpc"
 	prodPostgre "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	grpcRoute "github.com/Mitra-Apps/be-store-service/handler/grpc"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
+	utilityPb "github.com/Mitra-Apps/be-utility-service/domain/proto/utility"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -40,11 +43,23 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	utilityGrpcAddr := flag.String("utilityGrpcAddr", os.Getenv("GRPC_UTILITY_HOST"), "Utility service host")
+	utilityGrpcConn, err := grpc.Dial(*utilityGrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal("Cannot connect to utility grpc server ", err)
+	}
+	defer func() {
+		log.Println("Closing connection ...")
+		utilityGrpcConn.Close()
+	}()
+	imageServiceClient := utilityPb.NewImageServiceClient(utilityGrpcConn)
+	imageGrpcRepo := imageGrpcRepo.New(imageServiceClient)
+
 	db := configPostgres.Connection()
 	repoPostgres := repositoryPostgres.NewPostgres(db)
 	prodPostgreRepo := prodPostgre.NewPostgres(db)
 	repoStorage := storage.New()
-	svc := service.New(repoPostgres, prodPostgreRepo, repoStorage)
+	svc := service.New(repoPostgres, prodPostgreRepo, repoStorage, imageGrpcRepo)
 	grpcServer := GrpcNewServer(ctx, []grpc.ServerOption{})
 	route := grpcRoute.New(svc)
 	pb.RegisterStoreServiceServer(grpcServer, route)

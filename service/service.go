@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
+	imageRepository "github.com/Mitra-Apps/be-store-service/domain/image/repository"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	prodRepository "github.com/Mitra-Apps/be-store-service/domain/product/repository"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
@@ -37,17 +39,20 @@ type service struct {
 	storeRepository   repository.StoreServiceRepository
 	productRepository prodRepository.ProductRepository
 	storage           repository.Storage
+	imageRepository   imageRepository.ImageRepository
 }
 
 func New(
 	storeRepository repository.StoreServiceRepository,
 	prodRepository prodRepository.ProductRepository,
 	storage repository.Storage,
+	imageRepo imageRepository.ImageRepository,
 ) Service {
 	return &service{
 		storeRepository:   storeRepository,
 		productRepository: prodRepository,
 		storage:           storage,
+		imageRepository:   imageRepo,
 	}
 }
 
@@ -259,10 +264,38 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 		return status.Errorf(codes.NotFound, "Product type id is not found")
 	}
 
+	s.productRepository.InitiateTransaction(ctx)
 	err = s.productRepository.UpsertProducts(ctx, products)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error when inserting products : "+err.Error())
 	}
+	var productImages []*prodEntity.ProductImage
+	for _, p := range products {
+		for _, i := range p.Images {
+			if i != nil {
+				imageId, err := s.imageRepository.UploadImage(ctx, i.ImageBase64Str, "product", userID.String())
+				if err != nil {
+					s.productRepository.TransactionRollback()
+					return err
+				}
+				productImages = append(productImages, &prodEntity.ProductImage{
+					ProductId: p.ID,
+					ImageId:   *imageId,
+				})
+			}
+		}
+	}
+
+	if err := s.productRepository.AddProductImages(ctx, productImages); err != nil {
+		return err
+	}
+
+	if err := s.productRepository.TransactionCommit(); err != nil {
+		return err
+	}
+
+	log.Println("Product is successfully inserted")
+
 	return nil
 }
 
