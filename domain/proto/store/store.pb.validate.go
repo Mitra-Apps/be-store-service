@@ -661,38 +661,11 @@ func (m *Store) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetCity()); l < 1 || l > 255 {
-		err := StoreValidationError{
-			field:  "City",
-			reason: "value length must be between 1 and 255 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for City
 
-	if l := utf8.RuneCountInString(m.GetState()); l < 1 || l > 255 {
-		err := StoreValidationError{
-			field:  "State",
-			reason: "value length must be between 1 and 255 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for State
 
-	if l := utf8.RuneCountInString(m.GetZipCode()); l < 1 || l > 255 {
-		err := StoreValidationError{
-			field:  "ZipCode",
-			reason: "value length must be between 1 and 255 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ZipCode
 
 	if l := utf8.RuneCountInString(m.GetPhone()); l < 1 || l > 255 {
 		err := StoreValidationError{

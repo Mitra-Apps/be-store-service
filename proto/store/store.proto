@@ -51,9 +51,9 @@ message Store {
     string store_name = 3 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string store_description = 4 [(validate.rules).string = {min_len: 1, max_len: 512}];
     string address = 5 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string city = 6 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string state = 7 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string zip_code = 8 [(validate.rules).string = {min_len: 1, max_len: 255}];
+    string city = 6;
+    string state = 7;
+    string zip_code = 8;
     string phone = 9 [(validate.rules).string = {min_len: 1, max_len: 255}];
     string email = 10 [(validate.rules).string.email = true];
     string website = 11 ;

@@ -19,11 +19,11 @@ type Store struct {
 	StoreName        string    `gorm:"not null;unique"`
 	StoreDescription string    `gorm:"not null,type:text"`
 	Address          string    `gorm:"not null,type:text"`
-	City             string    `gorm:"not null"`
-	State            string    `gorm:"not null"`
-	ZipCode          string    `gorm:"not null"`
-	Phone            string    `gorm:"not null"`
-	Email            string    `gorm:"not null;unique"`
+	City             string
+	State            string
+	ZipCode          string
+	Phone            string
+	Email            string
 	Website          string
 	LocationLat      float64
 	LocationLng      float64
