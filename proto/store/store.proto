@@ -55,7 +55,7 @@ message Store {
     string state = 7;
     string zip_code = 8;
     string phone = 9 [(validate.rules).string = {min_len: 1, max_len: 255}];
-    string email = 10 [(validate.rules).string.email = true];
+    string email = 10;
     string website = 11 ;
     string status = 12;
     bool is_active = 13;
