@@ -83,12 +83,10 @@ func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
 	return nil
 }
 
-func (p *ProductCategory) FromProto(category *pb.ProductCategory) error {
+func (p *ProductCategory) FromProto(category *pb.ProductCategory) {
 	p.ID = category.Id
 	p.Name = category.Name
 	p.IsActive = category.IsActive
-
-	return nil
 }
 
 func (p *ProductType) FromProto(prodType *pb.ProductType) error {
