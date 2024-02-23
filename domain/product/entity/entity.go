@@ -73,6 +73,12 @@ func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
 		p.StoreID = storeId
 	}
 
+	for _, i := range product.Images {
+		p.Images = append(p.Images, &ProductImage{
+			ImageBase64Str: i.ImageBase64Str,
+		})
+	}
+
 	p.Name = product.Name
 	p.SaleStatus = product.SaleStatus
 	p.Price = product.Price

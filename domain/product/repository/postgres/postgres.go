@@ -112,7 +112,7 @@ func (p *Postgres) UpsertProducts(ctx context.Context, products []*entity.Produc
 	return nil
 }
 
-func (p *Postgres) AddProductImages(ctx context.Context, productImages []*entity.ProductImage) error {
+func (p *Postgres) UpsertProductImages(ctx context.Context, productImages []*entity.ProductImage) error {
 	funcScopeTrx := p.InitiateTransaction(ctx)
 
 	if err := p.trx.Save(productImages).Error; err != nil {

@@ -278,15 +278,13 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 					s.productRepository.TransactionRollback()
 					return err
 				}
-				productImages = append(productImages, &prodEntity.ProductImage{
-					ProductId: p.ID,
-					ImageId:   *imageId,
-				})
+				i.ImageId = *imageId
+				productImages = append(productImages, i)
 			}
 		}
 	}
 
-	if err := s.productRepository.AddProductImages(ctx, productImages); err != nil {
+	if err := s.productRepository.UpsertProductImages(ctx, productImages); err != nil {
 		return err
 	}
 

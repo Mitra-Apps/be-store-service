@@ -559,6 +559,10 @@ components:
                     type: string
                 productTypeId:
                     type: string
+                images:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ProductImage'
         ProductCategory:
             type: object
             properties:
@@ -568,6 +572,15 @@ components:
                     type: string
                 isActive:
                     type: boolean
+        ProductImage:
+            type: object
+            properties:
+                id:
+                    type: string
+                imageId:
+                    type: string
+                imageBase64Str:
+                    type: string
         ProductType:
             type: object
             properties:
