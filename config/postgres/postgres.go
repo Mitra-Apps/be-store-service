@@ -44,6 +44,7 @@ func Connection() *gorm.DB {
 		&prodEntity.ProductType{},
 		&prodEntity.UnitOfMeasure{},
 		&prodEntity.Product{},
+		&prodEntity.ProductImage{},
 	)
 	if err != nil {
 		logrus.Fatalf("Failed to migrate table: %v", err)

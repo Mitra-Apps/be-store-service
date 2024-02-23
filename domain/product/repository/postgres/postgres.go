@@ -7,15 +7,18 @@ import (
 
 	"github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
 type Postgres struct {
-	db *gorm.DB
+	db  *gorm.DB
+	trx *gorm.DB
 }
 
 func NewPostgres(db *gorm.DB) *Postgres {
-	return &Postgres{db}
+	return &Postgres{db, nil}
 }
 
 func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
@@ -66,16 +69,59 @@ func (p *Postgres) GetProductsByStoreIdAndNames(ctx context.Context, storeID uui
 	return prods, nil
 }
 
-func (p *Postgres) UpsertProducts(ctx context.Context, products []*entity.Product) error {
-	tx := p.db.WithContext(ctx).Begin()
+func (p *Postgres) InitiateTransaction(ctx context.Context) bool {
+	newTrx := p.trx == nil
+	if newTrx {
+		p.trx = p.db.WithContext(ctx).Begin()
+	}
+	return newTrx
+}
 
-	if err := tx.Save(products).Error; err != nil {
-		tx.Rollback()
+func (p *Postgres) TransactionRollback() {
+	p.trx.Rollback()
+	p.trx = nil
+}
+
+func (p *Postgres) TransactionCommit() error {
+	defer func() {
+		p.trx = nil
+	}()
+
+	if p.trx == nil {
+		return status.Errorf(codes.Internal, "No transaction committed")
+	}
+
+	if err := p.trx.Commit().Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Postgres) UpsertProducts(ctx context.Context, products []*entity.Product) error {
+	funcScopeTrx := p.InitiateTransaction(ctx)
+
+	if err := p.trx.Save(products).Error; err != nil {
+		p.trx.Rollback()
 		return err
 	}
 
-	if err := tx.Commit().Error; err != nil {
+	if funcScopeTrx {
+		return p.TransactionCommit()
+	}
+
+	return nil
+}
+
+func (p *Postgres) UpsertProductImages(ctx context.Context, productImages []*entity.ProductImage) error {
+	funcScopeTrx := p.InitiateTransaction(ctx)
+
+	if err := p.trx.Save(productImages).Error; err != nil {
+		p.trx.Rollback()
 		return err
+	}
+
+	if funcScopeTrx {
+		return p.TransactionCommit()
 	}
 
 	return nil

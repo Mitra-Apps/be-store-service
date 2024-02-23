@@ -1236,6 +1236,40 @@ func (m *Product) validate(all bool) error {
 
 	// no validation rules for ProductTypeId
 
+	for idx, item := range m.GetImages() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ProductValidationError{
+						field:  fmt.Sprintf("Images[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ProductValidationError{
+						field:  fmt.Sprintf("Images[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ProductValidationError{
+					field:  fmt.Sprintf("Images[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return ProductMultiError(errors)
 	}
@@ -1312,6 +1346,111 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProductValidationError{}
+
+// Validate checks the field values on ProductImage with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ProductImage) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ProductImage with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ProductImageMultiError, or
+// nil if none found.
+func (m *ProductImage) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ProductImage) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for ImageId
+
+	// no validation rules for ImageBase64Str
+
+	if len(errors) > 0 {
+		return ProductImageMultiError(errors)
+	}
+
+	return nil
+}
+
+// ProductImageMultiError is an error wrapping multiple validation errors
+// returned by ProductImage.ValidateAll() if the designated constraints aren't met.
+type ProductImageMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ProductImageMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ProductImageMultiError) AllErrors() []error { return m }
+
+// ProductImageValidationError is the validation error returned by
+// ProductImage.Validate if the designated constraints aren't met.
+type ProductImageValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductImageValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductImageValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductImageValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductImageValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductImageValidationError) ErrorName() string { return "ProductImageValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ProductImageValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductImage.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductImageValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductImageValidationError{}
 
 // Validate checks the field values on CreateStoreRequest with the rules
 // defined in the proto definition for this message. If any rules are

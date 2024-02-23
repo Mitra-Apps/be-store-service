@@ -34,13 +34,21 @@ type UnitOfMeasure struct {
 
 type Product struct {
 	base_model.BaseModel
-	StoreID       uuid.UUID `gorm:"type:uuid;not null"`
-	Name          string    `gorm:"type:varchar(255);not null"`
-	SaleStatus    bool      `gorm:"type:bool;not null"`
-	Price         float64   `gorm:"decimal(17,2); not null; default:0"`
-	Stock         int64     `gorm:"type:int;"`
-	UomID         int64     `gorm:"type:uuid;not null"`
-	ProductTypeID int64     `gorm:"type:uuid;not null"`
+	StoreID       uuid.UUID       `gorm:"type:uuid;not null"`
+	Name          string          `gorm:"type:varchar(255);not null"`
+	SaleStatus    bool            `gorm:"type:bool;not null"`
+	Price         float64         `gorm:"decimal(17,2); not null; default:0"`
+	Stock         int64           `gorm:"type:int;"`
+	UomID         int64           `gorm:"type:uuid;not null"`
+	ProductTypeID int64           `gorm:"type:uuid;not null"`
+	Images        []*ProductImage `gorm:"foreignKey:ProductId"`
+}
+
+type ProductImage struct {
+	base_model.BaseModel
+	ProductId      uuid.UUID `gorm:"type:uuid;not null"`
+	ImageId        uuid.UUID `gorm:"type:uuid;not null"`
+	ImageBase64Str string    `gorm:"-"`
 }
 
 func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
@@ -63,6 +71,12 @@ func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
 			return status.Errorf(codes.InvalidArgument, "Invalid uuid for store id")
 		}
 		p.StoreID = storeId
+	}
+
+	for _, i := range product.Images {
+		p.Images = append(p.Images, &ProductImage{
+			ImageBase64Str: i.ImageBase64Str,
+		})
 	}
 
 	p.Name = product.Name

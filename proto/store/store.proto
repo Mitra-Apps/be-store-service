@@ -95,6 +95,13 @@ message Product {
     int64 stock = 6;
 	int64 uom_id = 7;
 	int64 product_type_id = 8;
+    repeated ProductImage images = 9;
+}
+
+message ProductImage {
+    string id = 1;
+    string image_id = 2;
+    string image_base64_str = 3;
 }
 
 // Store service definition
