@@ -49,6 +49,7 @@ type ProductImage struct {
 	ProductId      uuid.UUID `gorm:"type:uuid;not null"`
 	ImageId        uuid.UUID `gorm:"type:uuid;not null"`
 	ImageBase64Str string    `gorm:"-"`
+	ImageURL       string    `gorm:"-"`
 }
 
 func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {

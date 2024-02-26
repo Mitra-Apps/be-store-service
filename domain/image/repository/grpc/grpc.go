@@ -32,3 +32,13 @@ func (g *GrpcClient) UploadImage(ctx context.Context, imageBase64Str, groupName,
 	imageID := uuid.MustParse(res.Data.GetId())
 	return &imageID, nil
 }
+
+func (g *GrpcClient) GetImagesByIds(ctx context.Context, ids []string) ([]*utilityPb.Image, error) {
+	res, err := g.pb.GetImagesByIds(ctx, &utilityPb.GetImagesByIdsRequest{
+		Ids: ids,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.GetData(), nil
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
+	utilityPb "github.com/Mitra-Apps/be-utility-service/domain/proto/utility"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -356,6 +357,9 @@ func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, p
 	if products, err = s.productRepository.GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
 	}
+	if err := s.GetProductImagesInformation(ctx, products); err != nil {
+		return nil, err
+	}
 	return products, nil
 }
 func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error) {
@@ -383,7 +387,37 @@ func (s *service) GetProductById(ctx context.Context, id uuid.UUID) (p *prodEnti
 	} else if p == nil && err == nil {
 		return nil, status.Errorf(codes.NotFound, "Product id not found")
 	}
+	if err := s.GetProductImagesInformation(ctx, []*prodEntity.Product{p}); err != nil {
+		return nil, err
+	}
 	return p, nil
+}
+
+func (s *service) GetProductImagesInformation(ctx context.Context, products []*prodEntity.Product) error {
+	prodImages := []*prodEntity.ProductImage{}
+	for _, p := range products {
+		prodImages = append(prodImages, p.Images...)
+	}
+	if len(prodImages) > 0 {
+		ids := []string{}
+		for _, img := range prodImages {
+			ids = append(ids, img.ImageId.String())
+		}
+		images, err := s.imageRepository.GetImagesByIds(ctx, ids)
+		if err != nil {
+			return err
+		}
+		imgMap := make(map[string]*utilityPb.Image)
+		for _, i := range images {
+			imgMap[i.Id] = i
+		}
+		for _, p := range products {
+			for _, img := range p.Images {
+				img.ImageURL = imgMap[img.ImageId.String()].Path
+			}
+		}
+	}
+	return nil
 }
 
 func (s *service) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error) {

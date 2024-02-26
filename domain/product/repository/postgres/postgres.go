@@ -23,7 +23,9 @@ func NewPostgres(db *gorm.DB) *Postgres {
 
 func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
 	prods := []*entity.Product{}
-	tx := p.db.WithContext(ctx).Where("store_id = ?", storeID)
+	tx := p.db.WithContext(ctx).
+		Preload("Images").
+		Where("store_id = ?", storeID)
 	if !isIncludeDeactivated {
 		tx = tx.Where("sale_status = ?", true)
 	}
@@ -43,7 +45,9 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, 
 
 func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
 	var prod entity.Product
-	tx := p.db.WithContext(ctx).First(&prod, id)
+	tx := p.db.WithContext(ctx).
+		Preload("Images").
+		First(&prod, id)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -59,7 +63,9 @@ func (p *Postgres) GetProductsByStoreIdAndNames(ctx context.Context, storeID uui
 		lowerCaseNames = append(lowerCaseNames, strings.ToLower(s))
 	}
 	prods := []*entity.Product{}
-	tx := p.db.WithContext(ctx).Where("store_id = ? AND LOWER(name) IN ?", storeID, lowerCaseNames).Find(&prods)
+	tx := p.db.WithContext(ctx).
+		Preload("Images").
+		Where("store_id = ? AND LOWER(name) IN ?", storeID, lowerCaseNames).Find(&prods)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -230,7 +236,9 @@ func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*
 
 func (p *Postgres) GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error) {
 	cat := entity.ProductCategory{}
-	err := p.db.WithContext(ctx).Where("id = ?", id).First(&cat).Error
+	err := p.db.WithContext(ctx).
+		Where("id = ?", id).
+		First(&cat).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
