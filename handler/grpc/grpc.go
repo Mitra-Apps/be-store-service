@@ -11,6 +11,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/service"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -260,8 +261,25 @@ func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitO
 }
 
 func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
-	if err := req.Validate(); err != nil {
-		return nil, err
+	if err := req.ValidateAll(); err != nil {
+		st := status.New(codes.InvalidArgument, "Error when validating request")
+		if multiErrs, ok := err.(pb.UpsertProductCategoryRequestMultiError); ok {
+			for _, multiErr := range multiErrs {
+				if validationErr, ok := multiErr.(pb.UpsertProductCategoryRequestValidationError); ok {
+					detail := errdetails.BadRequest{
+						FieldViolations: []*errdetails.BadRequest_FieldViolation{
+							{
+								Field:       validationErr.Field(),
+								Description: validationErr.Cause().Error(),
+							},
+						},
+					}
+					st, _ = st.WithDetails(&detail)
+				}
+			}
+		}
+
+		return nil, st.Err()
 	}
 
 	claims, err := middleware.GetClaimsFromContext(ctx)
