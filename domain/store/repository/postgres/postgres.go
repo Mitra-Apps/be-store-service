@@ -176,6 +176,10 @@ func (p *postgres) DeleteStores(ctx context.Context, storeIds []string) error {
 			return err
 		}
 
+		if err := tx.Exec("DELETE FROM products WHERE store_id IN (?)", storeIds).Error; err != nil {
+			return err
+		}
+
 		return tx.Exec("DELETE FROM stores WHERE id IN (?)", storeIds).Error
 	})
 }
