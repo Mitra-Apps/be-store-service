@@ -1375,6 +1375,8 @@ func (m *ProductImage) validate(all bool) error {
 
 	// no validation rules for ImageBase64Str
 
+	// no validation rules for ImageUrl
+
 	if len(errors) > 0 {
 		return ProductImageMultiError(errors)
 	}

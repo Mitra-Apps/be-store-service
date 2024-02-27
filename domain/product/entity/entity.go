@@ -118,6 +118,14 @@ func (p *Product) ToProto() *pb.Product {
 	if p == nil {
 		return nil
 	}
+	images := []*pb.ProductImage{}
+	for _, i := range p.Images {
+		images = append(images, &pb.ProductImage{
+			Id:       i.ID.String(),
+			ImageId:  i.ImageId.String(),
+			ImageUrl: i.ImageURL,
+		})
+	}
 	return &pb.Product{
 		Id:            p.ID.String(),
 		StoreId:       p.StoreID.String(),
@@ -127,6 +135,7 @@ func (p *Product) ToProto() *pb.Product {
 		Stock:         p.Stock,
 		UomId:         p.UomID,
 		ProductTypeId: p.ProductTypeID,
+		Images:        images,
 	}
 }
 

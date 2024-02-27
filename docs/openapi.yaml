@@ -581,6 +581,8 @@ components:
                     type: string
                 imageBase64Str:
                     type: string
+                imageUrl:
+                    type: string
         ProductType:
             type: object
             properties:

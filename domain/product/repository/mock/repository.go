@@ -231,6 +231,46 @@ func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasuresByIds(ctx, uomIds 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasuresByIds", reflect.TypeOf((*MockProductRepository)(nil).GetUnitOfMeasuresByIds), ctx, uomIds)
 }
 
+// InitiateTransaction mocks base method.
+func (m *MockProductRepository) InitiateTransaction(ctx context.Context) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitiateTransaction", ctx)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// InitiateTransaction indicates an expected call of InitiateTransaction.
+func (mr *MockProductRepositoryMockRecorder) InitiateTransaction(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitiateTransaction", reflect.TypeOf((*MockProductRepository)(nil).InitiateTransaction), ctx)
+}
+
+// TransactionCommit mocks base method.
+func (m *MockProductRepository) TransactionCommit() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TransactionCommit")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TransactionCommit indicates an expected call of TransactionCommit.
+func (mr *MockProductRepositoryMockRecorder) TransactionCommit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransactionCommit", reflect.TypeOf((*MockProductRepository)(nil).TransactionCommit))
+}
+
+// TransactionRollback mocks base method.
+func (m *MockProductRepository) TransactionRollback() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "TransactionRollback")
+}
+
+// TransactionRollback indicates an expected call of TransactionRollback.
+func (mr *MockProductRepositoryMockRecorder) TransactionRollback() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransactionRollback", reflect.TypeOf((*MockProductRepository)(nil).TransactionRollback))
+}
+
 // UpsertProductCategory mocks base method.
 func (m *MockProductRepository) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
 	m.ctrl.T.Helper()
@@ -243,6 +283,20 @@ func (m *MockProductRepository) UpsertProductCategory(ctx context.Context, prodC
 func (mr *MockProductRepositoryMockRecorder) UpsertProductCategory(ctx, prodCategory interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductCategory", reflect.TypeOf((*MockProductRepository)(nil).UpsertProductCategory), ctx, prodCategory)
+}
+
+// UpsertProductImages mocks base method.
+func (m *MockProductRepository) UpsertProductImages(ctx context.Context, productImages []*entity.ProductImage) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertProductImages", ctx, productImages)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertProductImages indicates an expected call of UpsertProductImages.
+func (mr *MockProductRepositoryMockRecorder) UpsertProductImages(ctx, productImages interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductImages", reflect.TypeOf((*MockProductRepository)(nil).UpsertProductImages), ctx, productImages)
 }
 
 // UpsertProductType mocks base method.

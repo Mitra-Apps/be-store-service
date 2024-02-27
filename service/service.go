@@ -285,8 +285,10 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 		}
 	}
 
-	if err := s.productRepository.UpsertProductImages(ctx, productImages); err != nil {
-		return err
+	if len(productImages) > 0 {
+		if err := s.productRepository.UpsertProductImages(ctx, productImages); err != nil {
+			return err
+		}
 	}
 
 	if err := s.productRepository.TransactionCommit(); err != nil {
@@ -357,7 +359,7 @@ func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, p
 	if products, err = s.productRepository.GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
 	}
-	if err := s.GetProductImagesInformation(ctx, products); err != nil {
+	if err := s.GetProductImagesInformation(ctx, nil, products); err != nil {
 		return nil, err
 	}
 	return products, nil
@@ -387,16 +389,20 @@ func (s *service) GetProductById(ctx context.Context, id uuid.UUID) (p *prodEnti
 	} else if p == nil && err == nil {
 		return nil, status.Errorf(codes.NotFound, "Product id not found")
 	}
-	if err := s.GetProductImagesInformation(ctx, []*prodEntity.Product{p}); err != nil {
+	if err := s.GetProductImagesInformation(ctx, p, nil); err != nil {
 		return nil, err
 	}
 	return p, nil
 }
 
-func (s *service) GetProductImagesInformation(ctx context.Context, products []*prodEntity.Product) error {
+func (s *service) GetProductImagesInformation(ctx context.Context, product *prodEntity.Product, products []*prodEntity.Product) error {
 	prodImages := []*prodEntity.ProductImage{}
-	for _, p := range products {
-		prodImages = append(prodImages, p.Images...)
+	if product == nil {
+		for _, p := range products {
+			prodImages = append(prodImages, p.Images...)
+		}
+	} else {
+		prodImages = append(prodImages, product.Images...)
 	}
 	if len(prodImages) > 0 {
 		ids := []string{}
@@ -411,8 +417,14 @@ func (s *service) GetProductImagesInformation(ctx context.Context, products []*p
 		for _, i := range images {
 			imgMap[i.Id] = i
 		}
-		for _, p := range products {
-			for _, img := range p.Images {
+		if product == nil {
+			for _, p := range products {
+				for _, img := range p.Images {
+					img.ImageURL = imgMap[img.ImageId.String()].Path
+				}
+			}
+		} else {
+			for _, img := range product.Images {
 				img.ImageURL = imgMap[img.ImageId.String()].Path
 			}
 		}
