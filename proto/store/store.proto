@@ -102,6 +102,7 @@ message ProductImage {
     string id = 1;
     string image_id = 2;
     string image_base64_str = 3;
+    string image_url = 4;
 }
 
 // Store service definition

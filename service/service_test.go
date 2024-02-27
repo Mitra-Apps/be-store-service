@@ -138,7 +138,7 @@ func Test_service_OpenCloseStore(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository, nil, nil)
+			s := New(tt.fields.storeRepository, nil, nil, nil)
 			if err := s.OpenCloseStore(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isActive); tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)
@@ -248,7 +248,7 @@ func TestCreateStore(t *testing.T) {
 
 			storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
 			storage := storeRepoMock.NewMockStorage(ctrl)
-			service := New(storeRepository, nil, storage)
+			service := New(storeRepository, nil, storage, nil)
 
 			tc.setupMocks(storeRepository, storage)
 			resultStore, err := service.CreateStore(ctx, tc.inputStore)
@@ -535,7 +535,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil)
+			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil, nil)
 			if err := s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.products); tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)
@@ -595,7 +595,7 @@ func TestUpdateStore(t *testing.T) {
 
 			storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
 			storage := storeRepoMock.NewMockStorage(ctrl)
-			service := New(storeRepository, nil, storage)
+			service := New(storeRepository, nil, storage, nil)
 
 			tc.setupMocks(storeRepository, storage)
 			result, err := service.UpdateStore(ctx, tc.inputStore.storeID, tc.inputStore.store)
@@ -701,7 +701,7 @@ func Test_service_UpsertUnitOfMeasure(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil)
+			s := New(nil, tt.fields.productRepository, nil, nil)
 			if err := s.UpsertUnitOfMeasure(tt.args.ctx, tt.args.uom); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)
@@ -785,7 +785,7 @@ func Test_service_UpsertProductCategory(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil)
+			s := New(nil, tt.fields.productRepository, nil, nil)
 			if err := s.UpsertProductCategory(tt.args.ctx, tt.args.productCategory); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)
@@ -910,7 +910,7 @@ func Test_service_UpsertProductType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil)
+			s := New(nil, tt.fields.productRepository, nil, nil)
 			if err := s.UpsertProductType(tt.args.ctx, tt.args.productType); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 			} else {
@@ -972,7 +972,7 @@ func Test_service_GetUnitOfMeasures(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil)
+			s := New(nil, tt.fields.productRepository, nil, nil)
 			if uom, err := s.GetUnitOfMeasures(tt.args.ctx, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Nil(t, uom)
@@ -1073,7 +1073,7 @@ func Test_service_GetProductsByStoreId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil)
+			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil, nil)
 			if gotProducts, err := s.GetProductsByStoreId(tt.args.ctx, tt.args.storeID, tt.args.productTypeId, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Nil(t, gotProducts)
@@ -1137,7 +1137,7 @@ func Test_service_GetProductCategories(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil)
+			s := New(nil, tt.fields.productRepository, nil, nil)
 			if uom, err := s.GetProductCategories(tt.args.ctx, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Nil(t, uom)
@@ -1230,7 +1230,7 @@ func Test_service_GetProductTypes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil)
+			s := New(nil, tt.fields.productRepository, nil, nil)
 			if prodType, err := s.GetProductTypes(tt.args.ctx, tt.args.productCategoryId, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Nil(t, prodType)
@@ -1309,7 +1309,7 @@ func Test_service_GetProductById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil)
+			s := New(nil, tt.fields.productRepository, nil, nil)
 			if p, err := s.GetProductById(tt.args.ctx, tt.args.productId); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Nil(t, p)
