@@ -1,7 +1,7 @@
 version: "3.0"
 services:
   stag-store-service:
-    image: ${ECR_REGISTRY}/${IMAGE_NAME}:${COMMIT_HASH}
+    image: ${ECR_REGISTRY}/${IMAGE_NAME}:${TAG}
     ports:
       - 7200:7200
       - 7201:7201
@@ -12,6 +12,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=123456
       - DB_NAME=store-service
+      - GRPC_UTILITY_HOST=stag-utility-service:7300
       - STORAGE_ENDPOINT=172.27.0.8:9000
       - STORAGE_PUBLIC_URL=http://172.19.14.120:9100
       - STORAGE_ACCESS_KEY=18qnD4xSmhYZPXbTOICR
