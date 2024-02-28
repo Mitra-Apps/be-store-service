@@ -1242,6 +1242,114 @@ func Test_service_GetProductTypes(t *testing.T) {
 	}
 }
 
+func Test_service_UpdateUnitOfMeasure(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	ctx := context.Background()
+	errMsg := "ERROR"
+	err := errors.New(errMsg)
+	var uomId1 int64 = 1
+	var uomId2 int64 = 2
+	var uomId3 int64 = 3
+
+	initialUom := &prodEntity.UnitOfMeasure{
+		Name:     "celcius",
+		Symbol:   "c",
+		IsActive: true,
+	}
+
+	updatedUom1 := &prodEntity.UnitOfMeasure{
+		Name:     "fahrenheit",
+		Symbol:   "f",
+		IsActive: true,
+	}
+
+	updatedUom2 := &prodEntity.UnitOfMeasure{
+		Name:     "kelvin",
+		Symbol:   "k",
+		IsActive: true,
+	}
+
+	// first scenario: ERROR getting UoM by ID
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId1).Return(nil, err)
+
+	// second scenario: ERROR updating the UoM
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(initialUom, nil)
+	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom1).Return(err).AnyTimes()
+
+	// third scenario: SUCCESS updating the UoM
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId3).Return(initialUom, nil)
+	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom2).Return(nil).AnyTimes()
+
+	type fields struct {
+		productRepository *prodRepoMock.MockProductRepository
+	}
+
+	type args struct {
+		ctx   context.Context
+		uomId int64
+		uom   *prodEntity.UnitOfMeasure
+	}
+
+	tests := []struct {
+		name          string
+		fields        fields
+		args          args
+		wantErr       bool
+		expectedError error
+	}{
+		{
+			name: "UpdateUnitOfMeasure_Error_UnableToGetUoMByID",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:   ctx,
+				uomId: uomId1,
+				uom:   updatedUom1,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.Internal, "Error when getting uom: "+errMsg),
+		},
+		{
+			name: "UpdateUnitOfMeasure_Error_UnableToUpdateUoM",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:   ctx,
+				uomId: uomId2,
+				uom:   updatedUom1,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.Internal, "Error when updating unit of measure: "+errMsg),
+		},
+		{
+			name: "UpdateUnitOfMeasure_NoError_SuccessUpdatingUoM",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:   ctx,
+				uomId: uomId3,
+				uom:   updatedUom2,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(nil, tt.fields.productRepository, nil, nil)
+			if err := s.UpdateUnitOfMeasure(tt.args.ctx, tt.args.uomId, tt.args.uom); err != nil && tt.wantErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
+
 func Test_service_GetProductById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)

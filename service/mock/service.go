@@ -215,6 +215,20 @@ func (mr *MockServiceMockRecorder) UpdateStore(ctx, storeID, update interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStore", reflect.TypeOf((*MockService)(nil).UpdateStore), ctx, storeID, update)
 }
 
+// UpdateUnitOfMeasure mocks base method.
+func (m *MockService) UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *entity.UnitOfMeasure) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUnitOfMeasure", ctx, uomId, uom)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUnitOfMeasure indicates an expected call of UpdateUnitOfMeasure.
+func (mr *MockServiceMockRecorder) UpdateUnitOfMeasure(ctx, uomId, uom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUnitOfMeasure", reflect.TypeOf((*MockService)(nil).UpdateUnitOfMeasure), ctx, uomId, uom)
+}
+
 // UpsertProductCategory mocks base method.
 func (m *MockService) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
 	m.ctrl.T.Helper()

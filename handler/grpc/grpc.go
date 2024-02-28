@@ -260,6 +260,32 @@ func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitO
 	}, nil
 }
 
+func (g *GrpcRoute) UpdateUnitOfMeasure(ctx context.Context, req *pb.UpdateUnitOfMeasureRequest) (*pb.UpdateUnitOfMeasureResponse, error) {
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	uom := prodEntity.UnitOfMeasure{}
+	if err := uom.FromProto(req.Uom); err != nil {
+		return nil, err
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+	uom.UpdatedBy = claims.UserID
+
+	if err := g.service.UpdateUnitOfMeasure(ctx, req.UomId, &uom); err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateUnitOfMeasureResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
+}
+
 func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
 	if err := req.ValidateAll(); err != nil {
 		st := status.New(codes.InvalidArgument, "Error when validating request")
