@@ -157,6 +157,19 @@ func (p *Postgres) GetUnitOfMeasureBySymbol(ctx context.Context, symbol string) 
 	return &uom, nil
 }
 
+func (p *Postgres) GetUnitOfMeasureById(ctx context.Context, uomId int64) (*entity.UnitOfMeasure, error) {
+	uom := entity.UnitOfMeasure{}
+	err := p.db.WithContext(ctx).First(&uom, uomId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &uom, nil
+}
+
 func (p *Postgres) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) ([]*entity.UnitOfMeasure, error) {
 	uom := []*entity.UnitOfMeasure{}
 	var err error

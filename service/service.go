@@ -35,6 +35,7 @@ type Service interface {
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
 	GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error)
+	UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *prodEntity.UnitOfMeasure) error
 }
 type service struct {
 	storeRepository   repository.StoreServiceRepository
@@ -318,6 +319,23 @@ func (s *service) UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitO
 	if err := s.productRepository.UpsertUnitOfMeasure(ctx, uom); err != nil {
 		return status.Errorf(codes.Internal, "Error when inserting / updating unit of measure :"+err.Error())
 	}
+	return nil
+}
+
+func (s *service) UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *prodEntity.UnitOfMeasure) error {
+	existingUom, err := s.productRepository.GetUnitOfMeasureById(ctx, uomId)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting uom: "+err.Error())
+	}
+
+	existingUom.Name = uom.Name
+	existingUom.Symbol = uom.Symbol
+	existingUom.IsActive = uom.IsActive
+
+	if err := s.productRepository.UpsertUnitOfMeasure(ctx, existingUom); err != nil {
+		return status.Errorf(codes.Internal, "Error when updating unit of measure: "+err.Error())
+	}
+
 	return nil
 }
 

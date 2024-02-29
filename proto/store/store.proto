@@ -191,6 +191,13 @@ service StoreService {
         };
     }
 
+    rpc UpdateUnitOfMeasure(UpdateUnitOfMeasureRequest) returns (UpdateUnitOfMeasureResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/uom/{uom_id}"
+            body: "uom"
+        };
+    }
+
     rpc GetProductCategories(GetProductCategoriesRequest) returns (GetProductCategoriesResponse) {
         option (google.api.http) = {
             get: "/api/v1/product-category/{is_include_deactivated}"
@@ -306,6 +313,16 @@ message UpsertUnitOfMeasureRequest {
 }
 
 message UpsertUnitOfMeasureResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UpdateUnitOfMeasureRequest {
+    int64 uom_id = 1 [(validate.rules).int64.gt = 1];
+    UnitOfMeasure uom = 2;
+}
+
+message UpdateUnitOfMeasureResponse {
     int32 code = 1;
     string message = 2;
 }
