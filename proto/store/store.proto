@@ -211,6 +211,13 @@ service StoreService {
         };
     }
 
+    rpc UpdateProductCategory(UpsertProductCategoryRequest) returns (UpsertProductCategoryResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/product-category/{id}"
+            body: "productCategory"
+        };
+    }
+
     rpc GetProductTypes(GetProductTypesRequest) returns (GetProductTypesResponse) {
         option (google.api.http) = {
             get: "/api/v1/product-type/{product_category_id}/{is_include_deactivated}"
@@ -328,7 +335,8 @@ message UpdateUnitOfMeasureResponse {
 }
 
 message UpsertProductCategoryRequest {
-    ProductCategory productCategory = 1;
+    int64 id = 1;
+    ProductCategory productCategory = 2;
 }
 
 message UpsertProductCategoryResponse {
