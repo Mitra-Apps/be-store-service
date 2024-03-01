@@ -68,6 +68,9 @@ const (
 	// StoreServiceUpsertUnitOfMeasureProcedure is the fully-qualified name of the StoreService's
 	// UpsertUnitOfMeasure RPC.
 	StoreServiceUpsertUnitOfMeasureProcedure = "/StoreService/UpsertUnitOfMeasure"
+	// StoreServiceUpdateUnitOfMeasureProcedure is the fully-qualified name of the StoreService's
+	// UpdateUnitOfMeasure RPC.
+	StoreServiceUpdateUnitOfMeasureProcedure = "/StoreService/UpdateUnitOfMeasure"
 	// StoreServiceGetProductCategoriesProcedure is the fully-qualified name of the StoreService's
 	// GetProductCategories RPC.
 	StoreServiceGetProductCategoriesProcedure = "/StoreService/GetProductCategories"
@@ -100,6 +103,7 @@ var (
 	storeServiceUpsertProductsMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("UpsertProducts")
 	storeServiceGetUnitOfMeasuresMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("GetUnitOfMeasures")
 	storeServiceUpsertUnitOfMeasureMethodDescriptor   = storeServiceServiceDescriptor.Methods().ByName("UpsertUnitOfMeasure")
+	storeServiceUpdateUnitOfMeasureMethodDescriptor   = storeServiceServiceDescriptor.Methods().ByName("UpdateUnitOfMeasure")
 	storeServiceGetProductCategoriesMethodDescriptor  = storeServiceServiceDescriptor.Methods().ByName("GetProductCategories")
 	storeServiceUpsertProductCategoryMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("UpsertProductCategory")
 	storeServiceUpdateProductCategoryMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("UpdateProductCategory")
@@ -128,6 +132,7 @@ type StoreServiceClient interface {
 	UpsertProducts(context.Context, *connect.Request[store.UpsertProductsRequest]) (*connect.Response[store.UpsertProductsResponse], error)
 	GetUnitOfMeasures(context.Context, *connect.Request[store.GetUnitOfMeasuresRequest]) (*connect.Response[store.GetUnitOfMeasuresResponse], error)
 	UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error)
+	UpdateUnitOfMeasure(context.Context, *connect.Request[store.UpdateUnitOfMeasureRequest]) (*connect.Response[store.UpdateUnitOfMeasureResponse], error)
 	GetProductCategories(context.Context, *connect.Request[store.GetProductCategoriesRequest]) (*connect.Response[store.GetProductCategoriesResponse], error)
 	UpsertProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
 	UpdateProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
@@ -217,6 +222,12 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(storeServiceUpsertUnitOfMeasureMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		updateUnitOfMeasure: connect.NewClient[store.UpdateUnitOfMeasureRequest, store.UpdateUnitOfMeasureResponse](
+			httpClient,
+			baseURL+StoreServiceUpdateUnitOfMeasureProcedure,
+			connect.WithSchema(storeServiceUpdateUnitOfMeasureMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 		getProductCategories: connect.NewClient[store.GetProductCategoriesRequest, store.GetProductCategoriesResponse](
 			httpClient,
 			baseURL+StoreServiceGetProductCategoriesProcedure,
@@ -264,6 +275,7 @@ type storeServiceClient struct {
 	upsertProducts        *connect.Client[store.UpsertProductsRequest, store.UpsertProductsResponse]
 	getUnitOfMeasures     *connect.Client[store.GetUnitOfMeasuresRequest, store.GetUnitOfMeasuresResponse]
 	upsertUnitOfMeasure   *connect.Client[store.UpsertUnitOfMeasureRequest, store.UpsertUnitOfMeasureResponse]
+	updateUnitOfMeasure   *connect.Client[store.UpdateUnitOfMeasureRequest, store.UpdateUnitOfMeasureResponse]
 	getProductCategories  *connect.Client[store.GetProductCategoriesRequest, store.GetProductCategoriesResponse]
 	upsertProductCategory *connect.Client[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse]
 	updateProductCategory *connect.Client[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse]
@@ -331,6 +343,11 @@ func (c *storeServiceClient) UpsertUnitOfMeasure(ctx context.Context, req *conne
 	return c.upsertUnitOfMeasure.CallUnary(ctx, req)
 }
 
+// UpdateUnitOfMeasure calls StoreService.UpdateUnitOfMeasure.
+func (c *storeServiceClient) UpdateUnitOfMeasure(ctx context.Context, req *connect.Request[store.UpdateUnitOfMeasureRequest]) (*connect.Response[store.UpdateUnitOfMeasureResponse], error) {
+	return c.updateUnitOfMeasure.CallUnary(ctx, req)
+}
+
 // GetProductCategories calls StoreService.GetProductCategories.
 func (c *storeServiceClient) GetProductCategories(ctx context.Context, req *connect.Request[store.GetProductCategoriesRequest]) (*connect.Response[store.GetProductCategoriesResponse], error) {
 	return c.getProductCategories.CallUnary(ctx, req)
@@ -377,6 +394,7 @@ type StoreServiceHandler interface {
 	UpsertProducts(context.Context, *connect.Request[store.UpsertProductsRequest]) (*connect.Response[store.UpsertProductsResponse], error)
 	GetUnitOfMeasures(context.Context, *connect.Request[store.GetUnitOfMeasuresRequest]) (*connect.Response[store.GetUnitOfMeasuresResponse], error)
 	UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error)
+	UpdateUnitOfMeasure(context.Context, *connect.Request[store.UpdateUnitOfMeasureRequest]) (*connect.Response[store.UpdateUnitOfMeasureResponse], error)
 	GetProductCategories(context.Context, *connect.Request[store.GetProductCategoriesRequest]) (*connect.Response[store.GetProductCategoriesResponse], error)
 	UpsertProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
 	UpdateProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
@@ -462,6 +480,12 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(storeServiceUpsertUnitOfMeasureMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	storeServiceUpdateUnitOfMeasureHandler := connect.NewUnaryHandler(
+		StoreServiceUpdateUnitOfMeasureProcedure,
+		svc.UpdateUnitOfMeasure,
+		connect.WithSchema(storeServiceUpdateUnitOfMeasureMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	storeServiceGetProductCategoriesHandler := connect.NewUnaryHandler(
 		StoreServiceGetProductCategoriesProcedure,
 		svc.GetProductCategories,
@@ -518,6 +542,8 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 			storeServiceGetUnitOfMeasuresHandler.ServeHTTP(w, r)
 		case StoreServiceUpsertUnitOfMeasureProcedure:
 			storeServiceUpsertUnitOfMeasureHandler.ServeHTTP(w, r)
+		case StoreServiceUpdateUnitOfMeasureProcedure:
+			storeServiceUpdateUnitOfMeasureHandler.ServeHTTP(w, r)
 		case StoreServiceGetProductCategoriesProcedure:
 			storeServiceGetProductCategoriesHandler.ServeHTTP(w, r)
 		case StoreServiceUpsertProductCategoryProcedure:
@@ -583,6 +609,10 @@ func (UnimplementedStoreServiceHandler) GetUnitOfMeasures(context.Context, *conn
 
 func (UnimplementedStoreServiceHandler) UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpsertUnitOfMeasure is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) UpdateUnitOfMeasure(context.Context, *connect.Request[store.UpdateUnitOfMeasureRequest]) (*connect.Response[store.UpdateUnitOfMeasureResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpdateUnitOfMeasure is not implemented"))
 }
 
 func (UnimplementedStoreServiceHandler) GetProductCategories(context.Context, *connect.Request[store.GetProductCategoriesRequest]) (*connect.Response[store.GetProductCategoriesResponse], error) {

@@ -444,6 +444,36 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/uom/{uomId}:
+        put:
+            tags:
+                - StoreService
+            operationId: StoreService_UpdateUnitOfMeasure
+            parameters:
+                - name: uomId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UnitOfMeasure'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpdateUnitOfMeasureResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
 components:
     schemas:
         CreateStoreResponse:
@@ -756,6 +786,14 @@ components:
                 data:
                     $ref: '#/components/schemas/Store'
             description: Response message for updating a store
+        UpdateUnitOfMeasureResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         UpsertProductCategoryResponse:
             type: object
             properties:
