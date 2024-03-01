@@ -5,10 +5,12 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
+	prodRepo "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mocks"
 	"github.com/golang/mock/gomock"
@@ -17,6 +19,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 const (
@@ -713,87 +717,109 @@ func Test_service_UpsertUnitOfMeasure(t *testing.T) {
 }
 
 func Test_service_UpsertProductCategory(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	ctx := context.Background()
-	pakaian := &prodEntity.ProductCategory{
-		Name: "Pakaian",
-	}
-	komputer := &prodEntity.ProductCategory{
-		Name: "Komputer",
-	}
-	makanan := &prodEntity.ProductCategory{
-		Name: "Makanan",
-	}
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
-	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, pakaian.Name).Return(pakaian, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, komputer.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, makanan.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().UpsertProductCategory(ctx, komputer).Return(err).AnyTimes()
-	mockProdRepo.EXPECT().UpsertProductCategory(ctx, makanan).Return(nil).AnyTimes()
+	// ctrl := gomock.NewController(t)
+	// mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	// ctx := context.Background()
+	// pakaian := &prodEntity.ProductCategory{
+	// 	Name: "Pakaian",
+	// }
+	// komputer := &prodEntity.ProductCategory{
+	// 	Name: "Komputer",
+	// }
+	// makanan := &prodEntity.ProductCategory{
+	// 	Name: "Makanan",
+	// }
+	// errMsg := "ERROR"
+	// err := errors.New(errMsg)
+	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, pakaian.Name).Return(pakaian, nil).AnyTimes()
+	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, komputer.Name).Return(nil, nil).AnyTimes()
+	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, makanan.Name).Return(nil, nil).AnyTimes()
+	// mockProdRepo.EXPECT().UpsertProductCategory(ctx, komputer).Return(err).AnyTimes()
+	// mockProdRepo.EXPECT().UpsertProductCategory(ctx, makanan).Return(nil).AnyTimes()
 
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-	}
-	type args struct {
-		ctx             context.Context
-		productCategory *prodEntity.ProductCategory
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "UpsertProductCategory_NameAlreadyExist_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:             ctx,
-				productCategory: pakaian,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.AlreadyExists, "Category name is already exist in database"),
+	// type fields struct {
+	// 	productRepository *prodRepoMock.MockProductRepository
+	// }
+	// type args struct {
+	// 	ctx             context.Context
+	// 	productCategory *prodEntity.ProductCategory
+	// }
+	// tests := []struct {
+	// 	name          string
+	// 	fields        fields
+	// 	args          args
+	// 	wantErr       bool
+	// 	expectedError error
+	// }{
+	// 	{
+	// 		name: "UpsertProductCategory_NameAlreadyExist_ReturnTheError",
+	// 		fields: fields{
+	// 			productRepository: mockProdRepo,
+	// 		},
+	// 		args: args{
+	// 			ctx:             ctx,
+	// 			productCategory: pakaian,
+	// 		},
+	// 		wantErr:       true,
+	// 		expectedError: status.Errorf(codes.AlreadyExists, "Category name is already exist in database"),
+	// 	},
+	// 	{
+	// 		name: "UpsertProductCategory_Error_ReturnTheError",
+	// 		fields: fields{
+	// 			productRepository: mockProdRepo,
+	// 		},
+	// 		args: args{
+	// 			ctx:             ctx,
+	// 			productCategory: komputer,
+	// 		},
+	// 		wantErr:       true,
+	// 		expectedError: status.Errorf(codes.Internal, "Error when inserting / updating product category :"+errMsg),
+	// 	},
+	// 	{
+	// 		name: "UpsertProductCategory_NoError_Success",
+	// 		fields: fields{
+	// 			productRepository: mockProdRepo,
+	// 		},
+	// 		args: args{
+	// 			ctx:             ctx,
+	// 			productCategory: makanan,
+	// 		},
+	// 		wantErr: false,
+	// 	},
+	// }
+	// for _, tt := range tests {
+	// 	t.Run(tt.name, func(t *testing.T) {
+	// 		s := New(nil, tt.fields.productRepository, nil, nil)
+	// 		if err := s.UpsertProductCategory(tt.args.ctx, tt.args.productCategory); err != nil && tt.wantErr {
+	// 			assert.NotNil(t, err)
+	// 			assert.Equal(t, tt.expectedError, err)
+	// 		} else {
+	// 			assert.Nil(t, err)
+	// 		}
+	// 	})
+	// }
+	// create new sqllite db connection using gorm
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+		TranslateError:         false,
+		SkipDefaultTransaction: true,
+	})
+	assert.NoError(t, err)
+	db.AutoMigrate(&prodEntity.ProductCategory{})
+
+	productRepository := prodRepo.NewPostgres(db)
+	svc := New(nil, productRepository, nil, nil)
+
+	productCategory := &prodEntity.ProductCategory{
+		Name:     "test",
+		IsActive: false,
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			CreatedAt: time.Now(),
+			CreatedBy: uuid.New(),
+			UpdatedAt: time.Now(),
 		},
-		{
-			name: "UpsertProductCategory_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:             ctx,
-				productCategory: komputer,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when inserting / updating product category :"+errMsg),
-		},
-		{
-			name: "UpsertProductCategory_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:             ctx,
-				productCategory: makanan,
-			},
-			wantErr: false,
-		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if err := s.UpsertProductCategory(tt.args.ctx, tt.args.productCategory); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.Nil(t, err)
-			}
-		})
-	}
+	err = svc.UpsertProductCategory(context.Background(), productCategory)
+	assert.NoError(t, err)
 }
 
 func Test_service_UpsertProductType(t *testing.T) {

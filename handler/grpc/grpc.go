@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
@@ -30,7 +31,26 @@ func New(service service.Service) pb.StoreServiceServer {
 
 func (s *GrpcRoute) CreateStore(ctx context.Context, req *pb.CreateStoreRequest) (*pb.CreateStoreResponse, error) {
 	if err := req.ValidateAll(); err != nil {
-		return nil, err
+		st := status.New(codes.InvalidArgument, "Error when validating request")
+		if multiErrs, ok := err.(pb.CreateStoreRequestMultiError); ok {
+			for _, multiErr := range multiErrs {
+				if validationErr, ok := multiErr.(pb.CreateStoreRequestValidationError); ok {
+					// print type of validationErr error
+					fmt.Printf("%T\n", validationErr.Cause())
+					detail := errdetails.BadRequest{
+						FieldViolations: []*errdetails.BadRequest_FieldViolation{
+							{
+								Field:       validationErr.Field(),
+								Description: validationErr.Cause().Error(),
+							},
+						},
+					}
+					st, _ = st.WithDetails(&detail)
+				}
+			}
+		}
+
+		return nil, st.Err()
 	}
 
 	store := &entity.Store{}
@@ -261,6 +281,10 @@ func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitO
 }
 
 func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
+	if req.GetId() > 0 {
+		req.ProductCategory.Id = req.GetId()
+	}
+
 	if err := req.ValidateAll(); err != nil {
 		st := status.New(codes.InvalidArgument, "Error when validating request")
 		if multiErrs, ok := err.(pb.UpsertProductCategoryRequestMultiError); ok {
@@ -299,6 +323,14 @@ func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertPro
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
 	}, nil
+}
+
+func (g *GrpcRoute) UpdateProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
+	if req.GetId() == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "id is required")
+	}
+
+	return g.UpsertProductCategory(ctx, req)
 }
 
 func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProductTypeRequest) (*pb.UpsertProductTypeResponse, error) {
