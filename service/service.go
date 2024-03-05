@@ -323,16 +323,32 @@ func (s *service) UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitO
 }
 
 func (s *service) UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *prodEntity.UnitOfMeasure) error {
-	existingUom, err := s.productRepository.GetUnitOfMeasureById(ctx, uomId)
-	if err != nil {
-		return status.Errorf(codes.Internal, "Error when getting uom: "+err.Error())
+	currentUom, getUomByIdErr := s.productRepository.GetUnitOfMeasureById(ctx, uomId)
+	if getUomByIdErr != nil {
+		return status.Errorf(codes.Internal, "Error when getting uom: "+getUomByIdErr.Error())
 	}
 
-	existingUom.Name = uom.Name
-	existingUom.Symbol = uom.Symbol
-	existingUom.IsActive = uom.IsActive
+	existingUom, err := s.productRepository.GetUnitOfMeasureByName(ctx, uom.Name)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting uom by name : "+err.Error())
+	}
+	if existingUom != nil && existingUom.ID != currentUom.ID {
+		return status.Errorf(codes.AlreadyExists, "Name is already used by another UoM")
+	}
 
-	if err := s.productRepository.UpsertUnitOfMeasure(ctx, existingUom); err != nil {
+	existingUom, err = s.productRepository.GetUnitOfMeasureBySymbol(ctx, uom.Symbol)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when getting uom by symbol : "+err.Error())
+	}
+	if existingUom != nil && existingUom.ID != currentUom.ID {
+		return status.Errorf(codes.AlreadyExists, "Symbol is already used by another UoM")
+	}
+
+	currentUom.Name = strings.ToLower(uom.Name)
+	currentUom.Symbol = uom.Symbol
+	currentUom.IsActive = uom.IsActive
+
+	if err := s.productRepository.UpsertUnitOfMeasure(ctx, currentUom); err != nil {
 		return status.Errorf(codes.Internal, "Error when updating unit of measure: "+err.Error())
 	}
 

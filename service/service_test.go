@@ -1279,33 +1279,55 @@ func Test_service_UpdateUnitOfMeasure(t *testing.T) {
 	var uomId3 int64 = 3
 
 	initialUom := &prodEntity.UnitOfMeasure{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 1,
+		},
 		Name:     "celcius",
 		Symbol:   "c",
 		IsActive: true,
 	}
 
 	updatedUom1 := &prodEntity.UnitOfMeasure{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 2,
+		},
 		Name:     "fahrenheit",
 		Symbol:   "f",
 		IsActive: true,
 	}
 
 	updatedUom2 := &prodEntity.UnitOfMeasure{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 3,
+		},
 		Name:     "kelvin",
 		Symbol:   "k",
 		IsActive: true,
 	}
 
-	// first scenario: ERROR getting UoM by ID
+	// 1st scenario: ERROR getting UoM by ID
 	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId1).Return(nil, err)
 
-	// second scenario: ERROR updating the UoM
+	// 2nd scenario: ERROR, Name already used by another UoM
 	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(initialUom, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, initialUom.Name).Return(updatedUom1, nil)
+
+	// 3rd scenario: ERROR, Symbol already used by another UoM
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(initialUom, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom1.Name).Return(nil, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom1.Symbol).Return(updatedUom2, nil)
+
+	// 4th scenario: ERROR, fail updating the UoM
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(updatedUom1, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom1.Name).Return(nil, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom1.Symbol).Return(nil, nil)
 	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom1).Return(err).AnyTimes()
 
-	// third scenario: SUCCESS updating the UoM
-	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId3).Return(initialUom, nil)
-	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom2).Return(nil).AnyTimes()
+	// 5th scenario: SUCCESS updating the UoM
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId3).Return(updatedUom2, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom2.Name).Return(nil, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom2.Symbol).Return(nil, nil)
+	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom2).Return(nil)
 
 	type fields struct {
 		productRepository *prodRepoMock.MockProductRepository
@@ -1336,6 +1358,32 @@ func Test_service_UpdateUnitOfMeasure(t *testing.T) {
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.Internal, "Error when getting uom: "+errMsg),
+		},
+		{
+			name: "UpdateUnitOfMeasure_Error_UoMNameAlreadyExists",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:   ctx,
+				uomId: uomId2,
+				uom:   initialUom,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Name is already used by another UoM"),
+		},
+		{
+			name: "UpdateUnitOfMeasure_Error_SymbolAlreadyExists",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:   ctx,
+				uomId: uomId2,
+				uom:   updatedUom1,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Symbol is already used by another UoM"),
 		},
 		{
 			name: "UpdateUnitOfMeasure_Error_UnableToUpdateUoM",
@@ -1369,6 +1417,7 @@ func Test_service_UpdateUnitOfMeasure(t *testing.T) {
 			s := New(nil, tt.fields.productRepository, nil, nil)
 			if err := s.UpdateUnitOfMeasure(tt.args.ctx, tt.args.uomId, tt.args.uom); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
+				assert.Equal(t, tt.expectedError, err)
 			} else {
 				assert.Nil(t, err)
 			}
