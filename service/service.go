@@ -356,6 +356,15 @@ func (s *service) UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *pro
 }
 
 func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error {
+	existingProdCategory, err := s.productRepository.GetProductCategoryByName(ctx, strings.ToLower(prodCategory.Name))
+	if err != nil {
+		return err
+	}
+
+	if existingProdCategory != nil && existingProdCategory.ID != prodCategory.ID {
+		return status.Errorf(codes.AlreadyExists, "Name is already used by another product category")
+	}
+
 	return s.productRepository.UpsertProductCategory(ctx, prodCategory)
 }
 
