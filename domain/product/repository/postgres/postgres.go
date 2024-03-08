@@ -216,49 +216,40 @@ func (p *Postgres) UpsertUnitOfMeasure(ctx context.Context, uom *entity.UnitOfMe
 	return nil
 }
 
-func (p *Postgres) GetProductCategories(ctx context.Context, isIncludeDeactivated bool) ([]*entity.ProductCategory, error) {
-	cat := []*entity.ProductCategory{}
-	var err error
-	tx := p.db.WithContext(ctx)
-	if !isIncludeDeactivated {
-		tx = tx.Where("is_active = ?", true)
-	}
-	tx = tx.Order("name ASC")
-	err = tx.Find(&cat).Error
-
-	if err != nil {
+func (p *Postgres) GetProductCategories(ctx context.Context, includeDeactivated bool) ([]*entity.ProductCategory, error) {
+	categories := []*entity.ProductCategory{}
+	tx := p.db.WithContext(ctx).Where("is_active = ?", includeDeactivated).Order("name ASC")
+	if err := tx.Find(&categories).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return cat, nil
+	return categories, nil
 }
 
 func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
-	cat := entity.ProductCategory{}
-	err := p.db.WithContext(ctx).Where("LOWER(name) = ?", strings.ToLower(name)).First(&cat).Error
-	if err != nil {
+	category := &entity.ProductCategory{}
+	if err := p.db.WithContext(ctx).
+		Where("LOWER(name) = ?", strings.ToLower(name)).
+		First(category).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return &cat, nil
+	return category, nil
 }
 
 func (p *Postgres) GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error) {
-	cat := entity.ProductCategory{}
-	err := p.db.WithContext(ctx).
-		Where("id = ?", id).
-		First(&cat).Error
-	if err != nil {
+	category := entity.ProductCategory{}
+	if err := p.db.WithContext(ctx).Where("id = ?", id).First(&category).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return &cat, nil
+	return &category, nil
 }
 
 func (p *Postgres) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
