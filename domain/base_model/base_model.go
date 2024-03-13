@@ -13,7 +13,7 @@ type BaseModel struct {
 	CreatedAt time.Time      `gorm:"type:timestamptz;not null;default:CURRENT_TIMESTAMP"`
 	CreatedBy uuid.UUID      `gorm:"type:uuid;not null"`
 	UpdatedAt time.Time      `gorm:"type:timestamptz;null"`
-	UpdatedBy uuid.UUID      `gorm:"type:uuid;null"`
+	UpdatedBy uuid.UUID       `gorm:"type:uuid;null"`
 	DeletedAt gorm.DeletedAt `gorm:"index;type:timestamptz;null"`
 	DeletedBy uuid.UUID      `gorm:"type:uuid;null"`
 }

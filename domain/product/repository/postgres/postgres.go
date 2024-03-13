@@ -106,7 +106,8 @@ func (p *Postgres) TransactionCommit() error {
 func (p *Postgres) UpsertProducts(ctx context.Context, products []*entity.Product) error {
 	funcScopeTrx := p.InitiateTransaction(ctx)
 
-	if err := p.trx.Save(products).Error; err != nil {
+	if err := p.trx.Omit("Images").
+		Save(products).Error; err != nil {
 		p.trx.Rollback()
 		return err
 	}
@@ -131,6 +132,38 @@ func (p *Postgres) UpsertProductImages(ctx context.Context, productImages []*ent
 	}
 
 	return nil
+}
+
+func (p *Postgres) DeleteProductImages(ctx context.Context, productImages []*entity.ProductImage) error {
+	funcScopeTrx := p.InitiateTransaction(ctx)
+
+	if err := p.trx.Delete(productImages).Error; err != nil {
+		p.trx.Rollback()
+		return err
+	}
+
+	if funcScopeTrx {
+		return p.TransactionCommit()
+	}
+
+	return nil
+}
+
+func (p *Postgres) GetProductImagesByProductIds(ctx context.Context, productIds []uuid.UUID) ([]*entity.ProductImage, map[uuid.UUID][]*entity.ProductImage, error) {
+	prodImages := []*entity.ProductImage{}
+	if tx := p.db.WithContext(ctx).Where("product_id IN ?", productIds).Find(&prodImages); tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil, nil
+		}
+		return nil, nil, tx.Error
+	}
+
+	byProduct := make(map[uuid.UUID][]*entity.ProductImage)
+	for _, i := range prodImages {
+		byProduct[i.ProductId] = append(byProduct[i.ProductId], i)
+	}
+
+	return prodImages, byProduct, nil
 }
 
 func (p *Postgres) GetUnitOfMeasureByName(ctx context.Context, name string) (*entity.UnitOfMeasure, error) {

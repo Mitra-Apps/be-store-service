@@ -25,7 +25,7 @@ type Service interface {
 	ListStores(ctx context.Context, page int32, limit int32) ([]*entity.Store, error)
 	DeleteStores(ctx context.Context, storeIDs []string) error
 	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
-	UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, products []*prodEntity.Product) error
+	UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, isUpdate bool, products ...*prodEntity.Product) error
 	UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitOfMeasure) error
 	UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
 	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
@@ -195,10 +195,15 @@ func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleName
 	return nil
 }
 
-func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, products []*prodEntity.Product) error {
+func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, isUpdate bool, products ...*prodEntity.Product) error {
 	if len(products) == 0 {
 		return status.Errorf(codes.InvalidArgument, "No product inserted")
 	}
+
+	if storeID == uuid.Nil {
+		return status.Errorf(codes.InvalidArgument, "Store id is required")
+	}
+
 	existingStoreByStoreId, err := s.storeRepository.GetStore(ctx, storeID.String())
 	if err != nil {
 		return err
@@ -221,6 +226,12 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	productTypeIds := []int64{}
 	prodTypeIdsMap := make(map[int64]bool)
 	for _, p := range products {
+		if isUpdate && p.ID == uuid.Nil {
+			return status.Errorf(codes.InvalidArgument, "Product id is required")
+		} else if !isUpdate && p.ID != uuid.Nil {
+			return status.Errorf(codes.InvalidArgument, "Product id must be empty")
+		}
+
 		p.StoreID = storeID
 		names = append(names, p.Name)
 		if p.UomID == 0 {
@@ -238,17 +249,19 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 			prodTypeIdsMap[p.ProductTypeID] = true
 		}
 	}
-	existingProds, err := s.productRepository.GetProductsByStoreIdAndNames(ctx, storeID, names)
-	if err != nil {
-		return err
-	}
-	if len(existingProds) > 0 {
-		existingProdNames := []string{}
-		for _, p := range existingProds {
-			existingProdNames = append(existingProdNames, p.Name)
+	if !isUpdate {
+		existingProds, err := s.productRepository.GetProductsByStoreIdAndNames(ctx, storeID, names)
+		if err != nil {
+			return err
 		}
-		return status.Errorf(codes.AlreadyExists,
-			fmt.Sprintf("Product are already exist : %s", strings.Join(existingProdNames, ",")))
+		if len(existingProds) > 0 {
+			existingProdNames := []string{}
+			for _, p := range existingProds {
+				existingProdNames = append(existingProdNames, p.Name)
+			}
+			return status.Errorf(codes.AlreadyExists,
+				fmt.Sprintf("Product are already exist : %s", strings.Join(existingProdNames, ",")))
+		}
 	}
 
 	existingUoms, err := s.productRepository.GetUnitOfMeasuresByIds(ctx, uomIds)
@@ -269,25 +282,97 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	s.productRepository.InitiateTransaction(ctx)
 	err = s.productRepository.UpsertProducts(ctx, products)
 	if err != nil {
-		return status.Errorf(codes.Internal, "Error when inserting products : "+err.Error())
+		return status.Errorf(codes.Internal, "Error when inserting / updating products : "+err.Error())
 	}
-	var productImages []*prodEntity.ProductImage
+
+	var prodIds []uuid.UUID
 	for _, p := range products {
-		for _, i := range p.Images {
-			if i != nil {
-				imageId, err := s.imageRepository.UploadImage(ctx, i.ImageBase64Str, "product", userID.String())
+		prodIds = append(prodIds, p.ID)
+	}
+
+	var addProductImages []*prodEntity.ProductImage
+	if isUpdate {
+		// add product images if the product image id is nil
+		// remove product images if if the product image id exist in db but not exist in the request.
+		// if the product images id exist in the db and in the request, do nothing.
+		var removeProductImages []*prodEntity.ProductImage
+
+		prodImages, existingProdImagesByProdIdMap, err := s.productRepository.GetProductImagesByProductIds(ctx, prodIds)
+		if err != nil {
+			return status.Errorf(codes.Internal, "Error when getting product images : "+err.Error())
+		}
+
+		existingProdImagesMap := make(map[uuid.UUID]*prodEntity.ProductImage)
+		for _, i := range prodImages {
+			existingProdImagesMap[i.ID] = i
+		}
+
+		for _, p := range products {
+			fromReqProdImagesMap := make(map[uuid.UUID]*prodEntity.ProductImage)
+			for _, i := range p.Images {
+				if i.BaseModel.ID == uuid.Nil {
+					i.ProductId = p.ID
+					addProductImages = append(addProductImages, i)
+				} else {
+					fromReqProdImagesMap[i.ID] = i
+				}
+			}
+
+			// remove product images if if the product image id exist in db but not exist in the request.
+			for _, i := range existingProdImagesByProdIdMap[p.ID] {
+				if fromReqProdImagesMap[i.ID] == nil {
+					removeProductImages = append(removeProductImages, i)
+				}
+			}
+
+			// upload new images
+			for _, i := range addProductImages {
+				imageId, err := s.UploadImageToStorage(ctx, i.ImageBase64Str, userID)
 				if err != nil {
 					s.productRepository.TransactionRollback()
 					return err
 				}
 				i.ImageId = *imageId
-				productImages = append(productImages, i)
+			}
+
+			// remove images from storage and remove product_image data from database
+			if len(removeProductImages) > 0 {
+				removeProdImageIds := []string{}
+				for _, i := range removeProductImages {
+					log.Println("Remove : ", i.ID.String())
+					removeProdImageIds = append(removeProdImageIds, i.ID.String())
+				}
+				log.Printf("Remove product images : %v \n", removeProdImageIds)
+				if err := s.imageRepository.RemoveImage(ctx, removeProdImageIds, "product", userID.String()); err != nil {
+					s.productRepository.TransactionRollback()
+					return status.Errorf(codes.Internal, "Error when removing images from storage : "+err.Error())
+				}
+				if err := s.productRepository.DeleteProductImages(ctx, removeProductImages); err != nil {
+					s.productRepository.TransactionRollback()
+					return status.Errorf(codes.Internal, "Error when deleting product images : "+err.Error())
+				}
+			}
+		}
+	} else {
+		for _, p := range products {
+			for _, i := range p.Images {
+				if i != nil {
+					imageId, err := s.UploadImageToStorage(ctx, i.ImageBase64Str, userID)
+					if err != nil {
+						return err
+					}
+					i.ProductId = p.ID
+					i.ImageId = *imageId
+					addProductImages = append(addProductImages, i)
+				}
 			}
 		}
 	}
 
-	if len(productImages) > 0 {
-		if err := s.productRepository.UpsertProductImages(ctx, productImages); err != nil {
+	if len(addProductImages) > 0 {
+		log.Printf("Add product images count : %d \n", len(addProductImages))
+		if err := s.productRepository.UpsertProductImages(ctx, addProductImages); err != nil {
+			s.productRepository.TransactionRollback()
 			return err
 		}
 	}
@@ -299,6 +384,18 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	log.Println("Product is successfully inserted")
 
 	return nil
+}
+
+func (s *service) UploadImageToStorage(ctx context.Context, imageBase64Str string, userID uuid.UUID) (*uuid.UUID, error) {
+	if strings.Trim(imageBase64Str, " ") == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Image in Base64 format is required")
+	}
+	imageId, err := s.imageRepository.UploadImage(ctx, imageBase64Str, "product", userID.String())
+	if err != nil {
+		s.productRepository.TransactionRollback()
+		return nil, err
+	}
+	return imageId, nil
 }
 
 func (s *service) UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitOfMeasure) error {

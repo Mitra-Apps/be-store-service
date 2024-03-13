@@ -383,6 +383,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		roleNames []string
 		storeID   uuid.UUID
 		products  []*prodEntity.Product
+		isUpdate  bool
 	}
 	tests := []struct {
 		name          string
@@ -536,7 +537,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil, nil)
-			if err := s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.products); tt.wantErr {
+			if err := s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isUpdate, tt.args.products...); tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)
 			} else {

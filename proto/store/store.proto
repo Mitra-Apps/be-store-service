@@ -171,10 +171,17 @@ service StoreService {
         };
     }
 
-    rpc UpsertProducts(UpsertProductsRequest) returns (UpsertProductsResponse) {
+    rpc InsertProducts(InsertProductsRequest) returns (InsertProductsResponse) {
         option (google.api.http) = {
             post: "/api/v1/products"
             body: "*"
+        };
+    }
+
+    rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/product/{product_id}"
+            body: "product"
         };
     }
 
@@ -298,15 +305,26 @@ message OpenCloseStoreResponse {
     string message = 2;
 }
 
-message UpsertProductsRequest {
+message InsertProductsRequest {
     string store_id = 1;
     repeated Product productList = 2;
 }
 
-message UpsertProductsResponse {
+message InsertProductsResponse {
     int32 code = 1;
     string message = 2;
 }
+
+message UpdateProductRequest {
+    string product_id = 1;
+    Product product = 2;
+}
+
+message UpdateProductResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
 
 message UpsertUnitOfMeasureRequest {
     UnitOfMeasure uom = 1;

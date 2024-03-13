@@ -50,6 +50,7 @@ type ProductImage struct {
 	ImageId        uuid.UUID `gorm:"type:uuid;not null"`
 	ImageBase64Str string    `gorm:"-"`
 	ImageURL       string    `gorm:"-"`
+	IsDelete       bool      `gorm:"-"`
 }
 
 func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
@@ -75,9 +76,11 @@ func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
 	}
 
 	for _, i := range product.Images {
-		p.Images = append(p.Images, &ProductImage{
-			ImageBase64Str: i.ImageBase64Str,
-		})
+		pi := &ProductImage{}
+		if err := pi.FromProto(i); err != nil {
+			return err
+		}
+		p.Images = append(p.Images, pi)
 	}
 
 	p.Name = product.Name
@@ -87,6 +90,26 @@ func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
 	p.UomID = product.UomId
 	p.ProductTypeID = product.ProductTypeId
 
+	return nil
+}
+
+func (p *ProductImage) FromProto(img *pb.ProductImage) error {
+	if img.Id != "" && img.Id != uuid.Nil.String() {
+		prodImgIdUUID, err := uuid.Parse(img.Id)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "Invalid uuid for id")
+		}
+		p.ID = prodImgIdUUID
+	}
+	p.ImageBase64Str = img.ImageBase64Str
+	if img.ImageId != "" && img.ImageId != uuid.Nil.String() {
+		imgIdUUID, err := uuid.Parse(img.ImageId)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "Invalid uuid for image id")
+		}
+		p.ImageId = imgIdUUID
+	}
+	p.ImageURL = img.ImageUrl
 	return nil
 }
 
