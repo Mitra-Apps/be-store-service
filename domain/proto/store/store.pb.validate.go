@@ -1236,6 +1236,8 @@ func (m *Product) validate(all bool) error {
 
 	// no validation rules for ProductTypeId
 
+	// no validation rules for ProductCategoryId
+
 	for idx, item := range m.GetImages() {
 		_, _ = idx, item
 
