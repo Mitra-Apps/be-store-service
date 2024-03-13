@@ -34,14 +34,15 @@ type UnitOfMeasure struct {
 
 type Product struct {
 	base_model.BaseModel
-	StoreID       uuid.UUID       `gorm:"type:uuid;not null"`
-	Name          string          `gorm:"type:varchar(255);not null"`
-	SaleStatus    bool            `gorm:"type:bool;not null"`
-	Price         float64         `gorm:"decimal(17,2); not null; default:0"`
-	Stock         int64           `gorm:"type:int;"`
-	UomID         int64           `gorm:"type:uuid;not null"`
-	ProductTypeID int64           `gorm:"type:uuid;not null"`
-	Images        []*ProductImage `gorm:"foreignKey:ProductId"`
+	StoreID           uuid.UUID       `gorm:"type:uuid;not null"`
+	Name              string          `gorm:"type:varchar(255);not null"`
+	SaleStatus        bool            `gorm:"type:bool;not null"`
+	Price             float64         `gorm:"decimal(17,2); not null; default:0"`
+	Stock             int64           `gorm:"type:int;"`
+	UomID             int64           `gorm:"type:uuid;not null"`
+	ProductTypeID     int64           `gorm:"type:uuid;not null"`
+	Images            []*ProductImage `gorm:"foreignKey:ProductId"`
+	ProductCategoryID int64           `gorm:"-"`
 }
 
 type ProductImage struct {
@@ -86,6 +87,7 @@ func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
 	p.Stock = product.Stock
 	p.UomID = product.UomId
 	p.ProductTypeID = product.ProductTypeId
+	p.ProductCategoryID = product.ProductCategoryId
 
 	return nil
 }
@@ -127,15 +129,16 @@ func (p *Product) ToProto() *pb.Product {
 		})
 	}
 	return &pb.Product{
-		Id:            p.ID.String(),
-		StoreId:       p.StoreID.String(),
-		Name:          p.Name,
-		SaleStatus:    p.SaleStatus,
-		Price:         p.Price,
-		Stock:         p.Stock,
-		UomId:         p.UomID,
-		ProductTypeId: p.ProductTypeID,
-		Images:        images,
+		Id:                p.ID.String(),
+		StoreId:           p.StoreID.String(),
+		Name:              p.Name,
+		SaleStatus:        p.SaleStatus,
+		Price:             p.Price,
+		Stock:             p.Stock,
+		UomId:             p.UomID,
+		ProductTypeId:     p.ProductTypeID,
+		ProductCategoryId: p.ProductCategoryID,
+		Images:            images,
 	}
 }
 

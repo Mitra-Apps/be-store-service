@@ -624,6 +624,8 @@ components:
                     type: string
                 productTypeId:
                     type: string
+                productCategoryId:
+                    type: string
                 images:
                     type: array
                     items:
