@@ -40,7 +40,37 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, 
 		}
 		return nil, err
 	}
+	if err := p.SetAdditionalProductInformation(ctx, prods...); err != nil {
+		return nil, err
+	}
 	return prods, nil
+}
+
+func (p *Postgres) SetAdditionalProductInformation(ctx context.Context, products ...*entity.Product) error {
+	prodTypeIds := []int64{}
+	m := make(map[int64]bool)
+	for _, p := range products {
+		if !m[p.ProductTypeID] {
+			prodTypeIds = append(prodTypeIds, p.ProductTypeID)
+			m[p.ProductTypeID] = true
+		}
+	}
+	prodTypes, err := p.GetProductTypesByIds(ctx, prodTypeIds)
+	if err != nil {
+		return err
+	}
+	prm := make(map[int64]entity.ProductType)
+	prdistinct := make(map[int64]bool)
+	for _, pr := range prodTypes {
+		if !prdistinct[pr.ID] {
+			prm[pr.ID] = *pr
+			prdistinct[pr.ID] = true
+		}
+	}
+	for _, p := range products {
+		p.ProductCategoryID = prm[p.ProductTypeID].ProductCategoryID
+	}
+	return nil
 }
 
 func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
@@ -53,6 +83,9 @@ func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Pr
 			return nil, nil
 		}
 		return nil, tx.Error
+	}
+	if err := p.SetAdditionalProductInformation(ctx, &prod); err != nil {
+		return nil, err
 	}
 	return &prod, nil
 }
@@ -249,49 +282,40 @@ func (p *Postgres) UpsertUnitOfMeasure(ctx context.Context, uom *entity.UnitOfMe
 	return nil
 }
 
-func (p *Postgres) GetProductCategories(ctx context.Context, isIncludeDeactivated bool) ([]*entity.ProductCategory, error) {
-	cat := []*entity.ProductCategory{}
-	var err error
-	tx := p.db.WithContext(ctx)
-	if !isIncludeDeactivated {
-		tx = tx.Where("is_active = ?", true)
-	}
-	tx = tx.Order("name ASC")
-	err = tx.Find(&cat).Error
-
-	if err != nil {
+func (p *Postgres) GetProductCategories(ctx context.Context, includeDeactivated bool) ([]*entity.ProductCategory, error) {
+	categories := []*entity.ProductCategory{}
+	tx := p.db.WithContext(ctx).Where("is_active = ?", includeDeactivated).Order("name ASC")
+	if err := tx.Find(&categories).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return cat, nil
+	return categories, nil
 }
 
 func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
-	cat := entity.ProductCategory{}
-	err := p.db.WithContext(ctx).Where("LOWER(name) = ?", strings.ToLower(name)).First(&cat).Error
-	if err != nil {
+	category := &entity.ProductCategory{}
+	if err := p.db.WithContext(ctx).
+		Where("LOWER(name) = ?", strings.ToLower(name)).
+		First(category).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return &cat, nil
+	return category, nil
 }
 
 func (p *Postgres) GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error) {
-	cat := entity.ProductCategory{}
-	err := p.db.WithContext(ctx).
-		Where("id = ?", id).
-		First(&cat).Error
-	if err != nil {
+	category := entity.ProductCategory{}
+	if err := p.db.WithContext(ctx).Where("id = ?", id).First(&category).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return &cat, nil
+	return &category, nil
 }
 
 func (p *Postgres) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {

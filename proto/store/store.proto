@@ -95,7 +95,8 @@ message Product {
     int64 stock = 6;
 	int64 uom_id = 7;
 	int64 product_type_id = 8;
-    repeated ProductImage images = 9;
+    int64 product_category_id = 9;
+    repeated ProductImage images = 10;
 }
 
 message ProductImage {
@@ -214,6 +215,13 @@ service StoreService {
     rpc UpsertProductCategory(UpsertProductCategoryRequest) returns (UpsertProductCategoryResponse) {
         option (google.api.http) = {
             post: "/api/v1/product-category"
+            body: "productCategory"
+        };
+    }
+
+    rpc UpdateProductCategory(UpsertProductCategoryRequest) returns (UpsertProductCategoryResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/product-category/{id}"
             body: "productCategory"
         };
     }
@@ -346,7 +354,8 @@ message UpdateUnitOfMeasureResponse {
 }
 
 message UpsertProductCategoryRequest {
-    ProductCategory productCategory = 1;
+    int64 id = 1;
+    ProductCategory productCategory = 2;
 }
 
 message UpsertProductCategoryResponse {

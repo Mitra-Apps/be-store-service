@@ -1236,6 +1236,8 @@ func (m *Product) validate(all bool) error {
 
 	// no validation rules for ProductTypeId
 
+	// no validation rules for ProductCategoryId
+
 	for idx, item := range m.GetImages() {
 		_, _ = idx, item
 
@@ -4045,6 +4047,8 @@ func (m *UpsertProductCategoryRequest) validate(all bool) error {
 	}
 
 	var errors []error
+
+	// no validation rules for Id
 
 	if all {
 		switch v := interface{}(m.GetProductCategory()).(type) {

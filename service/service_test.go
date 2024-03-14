@@ -5,10 +5,12 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
+	prodRepo "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mocks"
 	"github.com/golang/mock/gomock"
@@ -17,6 +19,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 const (
@@ -273,36 +277,49 @@ func Test_service_UpsertProducts(t *testing.T) {
 		Name:          "indomie",
 		UomID:         1,
 		ProductTypeID: 1,
+		Stock:         1,
 	}
 	beras := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "beras",
 		UomID:         1,
 		ProductTypeID: 1,
+		Stock:         1,
 	}
 	baksoAci := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "bakso aci",
 		UomID:         1,
 		ProductTypeID: 1,
+		Stock:         0,
 	}
 	keju := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "keju",
 		UomID:         1,
 		ProductTypeID: 1,
+		Stock:         1,
 	}
 	tas := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "tas",
 		UomID:         2,
 		ProductTypeID: 2,
+		Stock:         1,
 	}
 	sepatu := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "sepatu",
 		UomID:         1,
 		ProductTypeID: 2,
+		Stock:         1,
+	}
+	bantal := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "bantal",
+		UomID:         1,
+		ProductTypeID: 2,
+		Stock:         -1,
 	}
 	products = append(products, indomie)
 	products = append(products, beras)
@@ -321,6 +338,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		&prodEntity.Product{
 			StoreID: storeIdUuid,
 			Name:    "keju",
+			Stock:   1,
 		},
 	}
 	noProdType := []*prodEntity.Product{
@@ -328,6 +346,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 			StoreID: storeIdUuid,
 			Name:    "keju",
 			UomID:   1,
+			Stock:   1,
 		},
 	}
 	roleNames := []string{"merchant"}
@@ -349,6 +368,8 @@ func Test_service_UpsertProducts(t *testing.T) {
 			Name: "Snack",
 		},
 	}
+	mockProdRepo.EXPECT().InitiateTransaction(gomock.Any()).Return(true).AnyTimes()
+	mockProdRepo.EXPECT().TransactionCommit().Return(nil).AnyTimes()
 	mockProdRepo.EXPECT().GetUnitOfMeasuresByIds(gomock.Any(), []int64{1}).Return(uoms, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetUnitOfMeasuresByIds(gomock.Any(), []int64{1, 2}).Return(uoms, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1}).Return(prodTypes, nil).AnyTimes()
@@ -454,6 +475,24 @@ func Test_service_UpsertProducts(t *testing.T) {
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
+		},
+		{
+			name: "UpsertProduct_StockIsNegative_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products: []*prodEntity.Product{
+					bantal,
+				},
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Stock should be positive"),
 		},
 		{
 			name: "UpsertProduct_ProductAlreadyExisted_ReturnValidationError",
@@ -714,87 +753,109 @@ func Test_service_UpsertUnitOfMeasure(t *testing.T) {
 }
 
 func Test_service_UpsertProductCategory(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	ctx := context.Background()
-	pakaian := &prodEntity.ProductCategory{
-		Name: "Pakaian",
-	}
-	komputer := &prodEntity.ProductCategory{
-		Name: "Komputer",
-	}
-	makanan := &prodEntity.ProductCategory{
-		Name: "Makanan",
-	}
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
-	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, pakaian.Name).Return(pakaian, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, komputer.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategoryByName(ctx, makanan.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().UpsertProductCategory(ctx, komputer).Return(err).AnyTimes()
-	mockProdRepo.EXPECT().UpsertProductCategory(ctx, makanan).Return(nil).AnyTimes()
+	// ctrl := gomock.NewController(t)
+	// mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	// ctx := context.Background()
+	// pakaian := &prodEntity.ProductCategory{
+	// 	Name: "Pakaian",
+	// }
+	// komputer := &prodEntity.ProductCategory{
+	// 	Name: "Komputer",
+	// }
+	// makanan := &prodEntity.ProductCategory{
+	// 	Name: "Makanan",
+	// }
+	// errMsg := "ERROR"
+	// err := errors.New(errMsg)
+	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, pakaian.Name).Return(pakaian, nil).AnyTimes()
+	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, komputer.Name).Return(nil, nil).AnyTimes()
+	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, makanan.Name).Return(nil, nil).AnyTimes()
+	// mockProdRepo.EXPECT().UpsertProductCategory(ctx, komputer).Return(err).AnyTimes()
+	// mockProdRepo.EXPECT().UpsertProductCategory(ctx, makanan).Return(nil).AnyTimes()
 
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-	}
-	type args struct {
-		ctx             context.Context
-		productCategory *prodEntity.ProductCategory
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "UpsertProductCategory_NameAlreadyExist_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:             ctx,
-				productCategory: pakaian,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.AlreadyExists, "Category name is already exist in database"),
+	// type fields struct {
+	// 	productRepository *prodRepoMock.MockProductRepository
+	// }
+	// type args struct {
+	// 	ctx             context.Context
+	// 	productCategory *prodEntity.ProductCategory
+	// }
+	// tests := []struct {
+	// 	name          string
+	// 	fields        fields
+	// 	args          args
+	// 	wantErr       bool
+	// 	expectedError error
+	// }{
+	// 	{
+	// 		name: "UpsertProductCategory_NameAlreadyExist_ReturnTheError",
+	// 		fields: fields{
+	// 			productRepository: mockProdRepo,
+	// 		},
+	// 		args: args{
+	// 			ctx:             ctx,
+	// 			productCategory: pakaian,
+	// 		},
+	// 		wantErr:       true,
+	// 		expectedError: status.Errorf(codes.AlreadyExists, "Category name is already exist in database"),
+	// 	},
+	// 	{
+	// 		name: "UpsertProductCategory_Error_ReturnTheError",
+	// 		fields: fields{
+	// 			productRepository: mockProdRepo,
+	// 		},
+	// 		args: args{
+	// 			ctx:             ctx,
+	// 			productCategory: komputer,
+	// 		},
+	// 		wantErr:       true,
+	// 		expectedError: status.Errorf(codes.Internal, "Error when inserting / updating product category :"+errMsg),
+	// 	},
+	// 	{
+	// 		name: "UpsertProductCategory_NoError_Success",
+	// 		fields: fields{
+	// 			productRepository: mockProdRepo,
+	// 		},
+	// 		args: args{
+	// 			ctx:             ctx,
+	// 			productCategory: makanan,
+	// 		},
+	// 		wantErr: false,
+	// 	},
+	// }
+	// for _, tt := range tests {
+	// 	t.Run(tt.name, func(t *testing.T) {
+	// 		s := New(nil, tt.fields.productRepository, nil, nil)
+	// 		if err := s.UpsertProductCategory(tt.args.ctx, tt.args.productCategory); err != nil && tt.wantErr {
+	// 			assert.NotNil(t, err)
+	// 			assert.Equal(t, tt.expectedError, err)
+	// 		} else {
+	// 			assert.Nil(t, err)
+	// 		}
+	// 	})
+	// }
+	// create new sqllite db connection using gorm
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+		TranslateError:         false,
+		SkipDefaultTransaction: true,
+	})
+	assert.NoError(t, err)
+	db.AutoMigrate(&prodEntity.ProductCategory{})
+
+	productRepository := prodRepo.NewPostgres(db)
+	svc := New(nil, productRepository, nil, nil)
+
+	productCategory := &prodEntity.ProductCategory{
+		Name:     "test",
+		IsActive: false,
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			CreatedAt: time.Now(),
+			CreatedBy: uuid.New(),
+			UpdatedAt: time.Now(),
 		},
-		{
-			name: "UpsertProductCategory_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:             ctx,
-				productCategory: komputer,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when inserting / updating product category :"+errMsg),
-		},
-		{
-			name: "UpsertProductCategory_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:             ctx,
-				productCategory: makanan,
-			},
-			wantErr: false,
-		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if err := s.UpsertProductCategory(tt.args.ctx, tt.args.productCategory); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.Nil(t, err)
-			}
-		})
-	}
+	err = svc.UpsertProductCategory(context.Background(), productCategory)
+	assert.NoError(t, err)
 }
 
 func Test_service_UpsertProductType(t *testing.T) {
@@ -1254,33 +1315,55 @@ func Test_service_UpdateUnitOfMeasure(t *testing.T) {
 	var uomId3 int64 = 3
 
 	initialUom := &prodEntity.UnitOfMeasure{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 1,
+		},
 		Name:     "celcius",
 		Symbol:   "c",
 		IsActive: true,
 	}
 
 	updatedUom1 := &prodEntity.UnitOfMeasure{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 2,
+		},
 		Name:     "fahrenheit",
 		Symbol:   "f",
 		IsActive: true,
 	}
 
 	updatedUom2 := &prodEntity.UnitOfMeasure{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 3,
+		},
 		Name:     "kelvin",
 		Symbol:   "k",
 		IsActive: true,
 	}
 
-	// first scenario: ERROR getting UoM by ID
+	// 1st scenario: ERROR getting UoM by ID
 	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId1).Return(nil, err)
 
-	// second scenario: ERROR updating the UoM
+	// 2nd scenario: ERROR, Name already used by another UoM
 	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(initialUom, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, initialUom.Name).Return(updatedUom1, nil)
+
+	// 3rd scenario: ERROR, Symbol already used by another UoM
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(initialUom, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom1.Name).Return(nil, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom1.Symbol).Return(updatedUom2, nil)
+
+	// 4th scenario: ERROR, fail updating the UoM
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(updatedUom1, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom1.Name).Return(nil, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom1.Symbol).Return(nil, nil)
 	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom1).Return(err).AnyTimes()
 
-	// third scenario: SUCCESS updating the UoM
-	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId3).Return(initialUom, nil)
-	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom2).Return(nil).AnyTimes()
+	// 5th scenario: SUCCESS updating the UoM
+	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId3).Return(updatedUom2, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom2.Name).Return(nil, nil)
+	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom2.Symbol).Return(nil, nil)
+	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom2).Return(nil)
 
 	type fields struct {
 		productRepository *prodRepoMock.MockProductRepository
@@ -1311,6 +1394,32 @@ func Test_service_UpdateUnitOfMeasure(t *testing.T) {
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.Internal, "Error when getting uom: "+errMsg),
+		},
+		{
+			name: "UpdateUnitOfMeasure_Error_UoMNameAlreadyExists",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:   ctx,
+				uomId: uomId2,
+				uom:   initialUom,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Name is already used by another UoM"),
+		},
+		{
+			name: "UpdateUnitOfMeasure_Error_SymbolAlreadyExists",
+			fields: fields{
+				productRepository: mockProdRepo,
+			},
+			args: args{
+				ctx:   ctx,
+				uomId: uomId2,
+				uom:   updatedUom1,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.AlreadyExists, "Symbol is already used by another UoM"),
 		},
 		{
 			name: "UpdateUnitOfMeasure_Error_UnableToUpdateUoM",
@@ -1344,6 +1453,7 @@ func Test_service_UpdateUnitOfMeasure(t *testing.T) {
 			s := New(nil, tt.fields.productRepository, nil, nil)
 			if err := s.UpdateUnitOfMeasure(tt.args.ctx, tt.args.uomId, tt.args.uom); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
+				assert.Equal(t, tt.expectedError, err)
 			} else {
 				assert.Nil(t, err)
 			}

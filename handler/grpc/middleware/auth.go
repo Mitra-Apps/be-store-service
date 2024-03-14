@@ -3,11 +3,10 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"log"
+	"os"
 	"strings"
 
-	"github.com/Mitra-Apps/be-user-service/auth"
-	"github.com/golang-jwt/jwt/v5"
+	userService "github.com/Mitra-Apps/be-user-service/service"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -43,7 +42,7 @@ func Auth(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, hand
 	}
 
 	// extract the jwt token and get the userId
-	userId, roleNames, err := verifyToken(token)
+	userId, roleNames, err := verifyToken(ctx, token)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid token")
 	}
@@ -65,43 +64,14 @@ func getTokenValue(headers metadata.MD) string {
 	return token
 }
 
-func verifyToken(tokenString string) (string, []string, error) {
-	token, err := auth.VerifyToken(tokenString)
+func verifyToken(ctx context.Context, tokenString string) (string, []string, error) {
+	authClient := userService.NewAuthClient(os.Getenv("JWT_SECRET"))
+	claims, err := authClient.ValidateToken(ctx, tokenString)
 	if err != nil {
 		return "", nil, err
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return "", nil, fmt.Errorf("token claims are not of type jwt.MapClaims")
-	}
-
-	userId, userIdOk := claims["sub"].(string)
-	rolesRaw, rolesOK := claims["roles"]
-	// expirationTime, expOk := claims["exp"].(float64)
-
-	if !userIdOk {
-		return "", nil, fmt.Errorf("invalid token")
-	}
-
-	var roleNames []string
-	if rolesOK {
-		roles, ok := rolesRaw.([]interface{})
-		if !ok {
-			log.Fatal("Error converting roles to []interface{}")
-		}
-
-		// Convert each role to a string.
-		for _, role := range roles {
-			roleString, ok := role.(string)
-			if !ok {
-				log.Fatal("Error converting role to string")
-			}
-			roleNames = append(roleNames, roleString)
-		}
-	}
-
-	return userId, roleNames, nil
+	return claims.Subject, claims.Roles, nil
 }
 
 func GetClaimsFromContext(ctx context.Context) (*JwtClaims, error) {
