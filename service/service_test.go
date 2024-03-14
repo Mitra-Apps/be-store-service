@@ -414,7 +414,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name: "UpsertProduct_NoProductProvided_ReturnValidationError",
+			name: "CreateProduct_NoProductProvided_ReturnValidationError",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -424,12 +424,29 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   storeIdUuid,
 				roleNames: roleNames,
 				products:  nil,
+				isUpdate:  false,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "No product inserted"),
 		},
 		{
-			name: "UpsertProduct_DifferenStoreIDNotAdmin_DontHavePermission",
+			name: "UpdateProduct_NoProductProvided_ReturnValidationError",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  nil,
+				isUpdate:  true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "No product inserted"),
+		},
+		{
+			name: "CreateProduct_DifferenStoreIDNotAdmin_DontHavePermission",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -440,12 +457,30 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   otherStoreIdUuid,
 				roleNames: roleNames,
 				products:  products,
+				isUpdate:  false,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store"),
 		},
 		{
-			name: "UpsertProduct_UomNotProvided_Error",
+			name: "UpdateProduct_DifferenStoreIDNotAdmin_DontHavePermission",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   otherStoreIdUuid,
+				roleNames: roleNames,
+				products:  products,
+				isUpdate:  true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store"),
+		},
+		{
+			name: "CreateProduct_UomNotProvided_Error",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -456,9 +491,44 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   storeIdUuid,
 				roleNames: roleNames,
 				products:  noUOM,
+				isUpdate:  false,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "Uom id is required"),
+		},
+		{
+			name: "UpdateProduct_UomNotProvided_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  noUOM,
+				isUpdate:  true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Uom id is required"),
+		},
+		{
+			name: "CreateProduct_ProdTypeNotProvided_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  noProdType,
+				isUpdate:  false,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
 		},
 		{
 			name: "UpsertProduct_ProdTypeNotProvided_Error",
@@ -472,6 +542,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   storeIdUuid,
 				roleNames: roleNames,
 				products:  noProdType,
+				isUpdate:  true,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
