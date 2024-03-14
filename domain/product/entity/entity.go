@@ -18,31 +18,33 @@ type ProductCategory struct {
 
 type ProductType struct {
 	base_model.BaseMasterDataModel
-	Name              string     `gorm:"type:varchar(255);not null"`
-	IsActive          bool       `gorm:"type:bool;not null"`
-	ProductCategoryID int64      `gorm:"type:uuid;not null"`
-	Products          []*Product `gorm:"foreignKey:ProductTypeID"`
+	Name              string          `gorm:"type:varchar(255);not null"`
+	IsActive          bool            `gorm:"type:bool;not null"`
+	ProductCategoryID int64           `gorm:"type:uuid;not null"`
+	ProductCategory   ProductCategory `gorm:"foreignKey:ProductCategoryID"`
 }
 
 type UnitOfMeasure struct {
 	base_model.BaseMasterDataModel
-	Name     string     `gorm:"type:varchar(255);not null;unique"`
-	Symbol   string     `gorm:"type:varchar(50);not null;unique"`
-	IsActive bool       `gorm:"type:bool;not null"`
-	Products []*Product `gorm:"foreignKey:UomID"`
+	Name     string `gorm:"type:varchar(255);not null;unique"`
+	Symbol   string `gorm:"type:varchar(50);not null;unique"`
+	IsActive bool   `gorm:"type:bool;not null"`
 }
 
 type Product struct {
 	base_model.BaseModel
-	StoreID           uuid.UUID       `gorm:"type:uuid;not null"`
-	Name              string          `gorm:"type:varchar(255);not null"`
-	SaleStatus        bool            `gorm:"type:bool;not null"`
-	Price             float64         `gorm:"decimal(17,2); not null; default:0"`
-	Stock             int64           `gorm:"type:int;"`
-	UomID             int64           `gorm:"type:uuid;not null"`
-	ProductTypeID     int64           `gorm:"type:uuid;not null"`
-	Images            []*ProductImage `gorm:"foreignKey:ProductId"`
-	ProductCategoryID int64           `gorm:"-"`
+	StoreID             uuid.UUID       `gorm:"type:uuid;not null"`
+	Name                string          `gorm:"type:varchar(255);not null"`
+	SaleStatus          bool            `gorm:"type:bool;not null"`
+	Price               float64         `gorm:"decimal(17,2); not null; default:0"`
+	Stock               int64           `gorm:"type:int;"`
+	UomID               int64           `gorm:"type:int;not null"`
+	ProductTypeID       int64           `gorm:"type:uuid;not null"`
+	Images              []*ProductImage `gorm:"foreignKey:ProductId"`
+	ProductType         ProductType     `gorm:"foreignKey:ProductTypeID"`
+	ProductTypeName     string          `gorm:"-"`
+	ProductCategoryID   int64           `gorm:"-"`
+	ProductCategoryName string          `gorm:"-"`
 }
 
 type ProductImage struct {
@@ -87,7 +89,9 @@ func (p *Product) FromProto(product *pb.Product, storeIdPrm *string) error {
 	p.Stock = product.Stock
 	p.UomID = product.UomId
 	p.ProductTypeID = product.ProductTypeId
+	p.ProductTypeName = product.ProductTypeName
 	p.ProductCategoryID = product.ProductCategoryId
+	p.ProductCategoryName = product.ProductCategoryName
 
 	return nil
 }
@@ -129,16 +133,18 @@ func (p *Product) ToProto() *pb.Product {
 		})
 	}
 	return &pb.Product{
-		Id:                p.ID.String(),
-		StoreId:           p.StoreID.String(),
-		Name:              p.Name,
-		SaleStatus:        p.SaleStatus,
-		Price:             p.Price,
-		Stock:             p.Stock,
-		UomId:             p.UomID,
-		ProductTypeId:     p.ProductTypeID,
-		ProductCategoryId: p.ProductCategoryID,
-		Images:            images,
+		Id:                  p.ID.String(),
+		StoreId:             p.StoreID.String(),
+		Name:                p.Name,
+		SaleStatus:          p.SaleStatus,
+		Price:               p.Price,
+		Stock:               p.Stock,
+		UomId:               p.UomID,
+		ProductTypeId:       p.ProductTypeID,
+		ProductTypeName:     p.ProductTypeName,
+		ProductCategoryId:   p.ProductCategoryID,
+		ProductCategoryName: p.ProductCategoryName,
+		Images:              images,
 	}
 }
 

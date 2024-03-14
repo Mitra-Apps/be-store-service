@@ -25,6 +25,8 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, 
 	prods := []*entity.Product{}
 	tx := p.db.WithContext(ctx).
 		Preload("Images").
+		Preload("ProductType").
+		Preload("ProductType.ProductCategory").
 		Where("store_id = ?", storeID)
 	if !isIncludeDeactivated {
 		tx = tx.Where("sale_status = ?", true)
@@ -40,43 +42,22 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, 
 		}
 		return nil, err
 	}
-	if err := p.SetAdditionalProductInformation(ctx, prods...); err != nil {
-		return nil, err
-	}
-	return prods, nil
-}
 
-func (p *Postgres) SetAdditionalProductInformation(ctx context.Context, products ...*entity.Product) error {
-	prodTypeIds := []int64{}
-	m := make(map[int64]bool)
-	for _, p := range products {
-		if !m[p.ProductTypeID] {
-			prodTypeIds = append(prodTypeIds, p.ProductTypeID)
-			m[p.ProductTypeID] = true
-		}
+	for _, p := range prods {
+		p.ProductTypeName = p.ProductType.Name
+		p.ProductCategoryID = p.ProductType.ProductCategoryID
+		p.ProductCategoryName = p.ProductType.ProductCategory.Name
 	}
-	prodTypes, err := p.GetProductTypesByIds(ctx, prodTypeIds)
-	if err != nil {
-		return err
-	}
-	prm := make(map[int64]entity.ProductType)
-	prdistinct := make(map[int64]bool)
-	for _, pr := range prodTypes {
-		if !prdistinct[pr.ID] {
-			prm[pr.ID] = *pr
-			prdistinct[pr.ID] = true
-		}
-	}
-	for _, p := range products {
-		p.ProductCategoryID = prm[p.ProductTypeID].ProductCategoryID
-	}
-	return nil
+
+	return prods, nil
 }
 
 func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
 	var prod entity.Product
 	tx := p.db.WithContext(ctx).
 		Preload("Images").
+		Preload("ProductType").
+		Preload("ProductType.ProductCategory").
 		First(&prod, id)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
@@ -84,9 +65,10 @@ func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Pr
 		}
 		return nil, tx.Error
 	}
-	if err := p.SetAdditionalProductInformation(ctx, &prod); err != nil {
-		return nil, err
-	}
+	prod.ProductTypeName = prod.ProductType.Name
+	prod.ProductCategoryID = prod.ProductType.ProductCategoryID
+	prod.ProductCategoryName = prod.ProductType.ProductCategory.Name
+
 	return &prod, nil
 }
 
@@ -322,7 +304,9 @@ func (p *Postgres) GetProductTypes(ctx context.Context, productCategoryID int64,
 
 func (p *Postgres) GetProductTypesByIds(ctx context.Context, typeIds []int64) ([]*entity.ProductType, error) {
 	prodTypes := []*entity.ProductType{}
-	err := p.db.WithContext(ctx).Where("id IN ?", typeIds).Find(&prodTypes).Error
+	err := p.db.WithContext(ctx).
+		Where("id IN ?", typeIds).
+		Find(&prodTypes).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
