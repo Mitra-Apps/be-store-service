@@ -277,36 +277,49 @@ func Test_service_UpsertProducts(t *testing.T) {
 		Name:          "indomie",
 		UomID:         1,
 		ProductTypeID: 1,
+		Stock:         1,
 	}
 	beras := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "beras",
 		UomID:         1,
 		ProductTypeID: 1,
+		Stock:         1,
 	}
 	baksoAci := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "bakso aci",
 		UomID:         1,
 		ProductTypeID: 1,
+		Stock:         0,
 	}
 	keju := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "keju",
 		UomID:         1,
 		ProductTypeID: 1,
+		Stock:         1,
 	}
 	tas := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "tas",
 		UomID:         2,
 		ProductTypeID: 2,
+		Stock:         1,
 	}
 	sepatu := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "sepatu",
 		UomID:         1,
 		ProductTypeID: 2,
+		Stock:         1,
+	}
+	bantal := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "bantal",
+		UomID:         1,
+		ProductTypeID: 2,
+		Stock:         -1,
 	}
 	products = append(products, indomie)
 	products = append(products, beras)
@@ -325,6 +338,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		&prodEntity.Product{
 			StoreID: storeIdUuid,
 			Name:    "keju",
+			Stock:   1,
 		},
 	}
 	noProdType := []*prodEntity.Product{
@@ -332,6 +346,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 			StoreID: storeIdUuid,
 			Name:    "keju",
 			UomID:   1,
+			Stock:   1,
 		},
 	}
 	roleNames := []string{"merchant"}
@@ -353,6 +368,8 @@ func Test_service_UpsertProducts(t *testing.T) {
 			Name: "Snack",
 		},
 	}
+	mockProdRepo.EXPECT().InitiateTransaction(gomock.Any()).Return(true).AnyTimes()
+	mockProdRepo.EXPECT().TransactionCommit().Return(nil).AnyTimes()
 	mockProdRepo.EXPECT().GetUnitOfMeasuresByIds(gomock.Any(), []int64{1}).Return(uoms, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetUnitOfMeasuresByIds(gomock.Any(), []int64{1, 2}).Return(uoms, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1}).Return(prodTypes, nil).AnyTimes()
@@ -457,6 +474,24 @@ func Test_service_UpsertProducts(t *testing.T) {
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
+		},
+		{
+			name: "UpsertProduct_StockIsNegative_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products: []*prodEntity.Product{
+					bantal,
+				},
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Stock should be positive"),
 		},
 		{
 			name: "UpsertProduct_ProductAlreadyExisted_ReturnValidationError",

@@ -229,6 +229,9 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 		if p.ProductTypeID == 0 {
 			return status.Errorf(codes.InvalidArgument, "Product type id is required")
 		}
+		if p.Stock < 0 {
+			return status.Errorf(codes.InvalidArgument, "Stock should be positive")
+		}
 		if !uomIdsMap[p.UomID] {
 			uomIds = append(uomIds, p.UomID)
 			uomIdsMap[p.UomID] = true
