@@ -194,7 +194,7 @@ func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRe
 	}, nil
 }
 
-func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRequest) (*pb.UpsertProductsResponse, error) {
+func (s *GrpcRoute) InsertProducts(ctx context.Context, req *pb.InsertProductsRequest) (*pb.InsertProductsResponse, error) {
 	claims, err := middleware.GetClaimsFromContext(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
@@ -209,12 +209,8 @@ func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRe
 		productList = append(productList, &pr)
 	}
 
-	if err := validateProduct(productList); err != nil {
+	if err := validateProduct(productList...); err != nil {
 		return nil, err
-	}
-
-	if strings.Trim(req.StoreId, " ") == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "Store id is required")
 	}
 
 	storeIdUuid, err := uuid.Parse(req.StoreId)
@@ -222,18 +218,48 @@ func (s *GrpcRoute) UpsertProducts(ctx context.Context, req *pb.UpsertProductsRe
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 
-	err = s.service.UpsertProducts(ctx, claims.UserID, claims.RoleNames, storeIdUuid, productList)
+	err = s.service.UpsertProducts(ctx, claims.UserID, claims.RoleNames, storeIdUuid, false, productList...)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.UpsertProductsResponse{
+	return &pb.InsertProductsResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
 	}, nil
 }
 
-func validateProduct(products []*prodEntity.Product) error {
+func (s *GrpcRoute) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.UpdateProductResponse, error) {
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+
+	product := &prodEntity.Product{}
+	req.Product.Id = req.ProductId
+	if err := product.FromProto(req.Product, nil); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+	if err := validateProduct(product); err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
+	err = s.service.UpsertProducts(ctx, claims.UserID, claims.RoleNames, product.StoreID, true, product)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateProductResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
+}
+
+func validateProduct(products ...*prodEntity.Product) error {
 	for _, p := range products {
 		if p.Name == "" {
 			return status.Errorf(codes.InvalidArgument, "Name is required")

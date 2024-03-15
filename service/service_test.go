@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
+	imageRepoMock "github.com/Mitra-Apps/be-store-service/domain/image/repository/mock"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
 	prodRepo "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
@@ -26,14 +27,16 @@ import (
 )
 
 const (
-	userID          = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
-	otherUserID     = "2f27d467-9f83-4170-96ab-36e0994f37ca"
-	storeID         = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
-	otherStoreID    = "52d11042-8c45-453e-86af-fe1e4d7facf6"
-	otherStoreID2   = "52d11042-8c45-453e-86af-fe1e4d7facf7"
-	productID       = "7d56be32-70a2-4f49-b66b-63e6f8e719d7"
-	otherProductID  = "7d56be32-70a2-4f49-b66b-63e6f8e719d8"
-	otherProductID2 = "7d56be32-70a2-4f49-b66b-63e6f8e719d9"
+	userID               = "8b15140c-f6d0-4f2f-8302-57383a51adaf"
+	otherUserID          = "2f27d467-9f83-4170-96ab-36e0994f37ca"
+	storeID              = "7d56be32-70a2-4f49-b66b-63e6f8e719d5"
+	otherStoreID         = "52d11042-8c45-453e-86af-fe1e4d7facf6"
+	otherStoreID2        = "52d11042-8c45-453e-86af-fe1e4d7facf7"
+	productID            = "7d56be32-70a2-4f49-b66b-63e6f8e719d7"
+	otherProductID       = "7d56be32-70a2-4f49-b66b-63e6f8e719d8"
+	otherProductID2      = "7d56be32-70a2-4f49-b66b-63e6f8e719d9"
+	productImageID       = "7d56be32-70a2-4f49-b66b-63e6f8e719e7"
+	otherproductImageID2 = "7d56be32-70a2-4f49-b66b-63e6f8e719e9"
 )
 
 func Test_service_OpenCloseStore(t *testing.T) {
@@ -268,11 +271,15 @@ func Test_service_UpsertProducts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	mockImageRepo := imageRepoMock.NewMockImageRepository(ctrl)
 	ctx := context.Background()
 	userIdUuid, _ := uuid.Parse(userID)
 	otherUserIdUuid, _ := uuid.Parse(otherUserID)
 	storeIdUuid, _ := uuid.Parse(storeID)
 	otherStoreIdUuid, _ := uuid.Parse(otherStoreID)
+	productIdUuid, _ := uuid.Parse(productID)
+	otherProductID2Uuid, _ := uuid.Parse(otherProductID2)
+	productImageIDUuid, _ := uuid.Parse(productImageID)
 	products := []*prodEntity.Product{}
 	indomie := &prodEntity.Product{
 		StoreID:       storeIdUuid,
@@ -317,13 +324,6 @@ func Test_service_UpsertProducts(t *testing.T) {
 		ProductTypeID: 2,
 		Stock:         1,
 	}
-	bantal := &prodEntity.Product{
-		StoreID:       storeIdUuid,
-		Name:          "bantal",
-		Uom:           "pieces",
-		ProductTypeID: 2,
-		Stock:         -1,
-	}
 	products = append(products, indomie)
 	products = append(products, beras)
 	existedProducts := []*prodEntity.Product{}
@@ -338,8 +338,25 @@ func Test_service_UpsertProducts(t *testing.T) {
 		keju,
 		sepatu,
 	}
+	noProductId := []*prodEntity.Product{
+		&prodEntity.Product{
+			StoreID: storeIdUuid,
+			Name:    "keju",
+			Stock:   1,
+		},
+	}
 	noUOM := []*prodEntity.Product{
 		&prodEntity.Product{
+			StoreID: storeIdUuid,
+			Name:    "keju",
+			Stock:   1,
+		},
+	}
+	noUOMForUpdate := []*prodEntity.Product{
+		&prodEntity.Product{
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
+			},
 			StoreID: storeIdUuid,
 			Name:    "keju",
 			Stock:   1,
@@ -350,6 +367,17 @@ func Test_service_UpsertProducts(t *testing.T) {
 			StoreID: storeIdUuid,
 			Name:    "keju",
 			Uom:     "kg",
+		},
+	}
+	noProdTypeForUpdate := []*prodEntity.Product{
+		&prodEntity.Product{
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
+			},
+			StoreID: storeIdUuid,
+			Name:    "keju",
+			Uom:     "kg",
+			Stock:   1,
 		},
 	}
 	roleNames := []string{"merchant"}
@@ -363,6 +391,31 @@ func Test_service_UpsertProducts(t *testing.T) {
 			Name: "Snack",
 		},
 	}
+	addProdImage1 := &prodEntity.ProductImage{
+		ProductId:      productIdUuid,
+		ImageBase64Str: "aaa",
+	}
+	addProdImage2 := &prodEntity.ProductImage{
+		ProductId:      productIdUuid,
+		ImageBase64Str: "aaa",
+	}
+	removeProdImage1 := &prodEntity.ProductImage{
+		ProductId:      productIdUuid,
+		ImageBase64Str: "aaa",
+	}
+	removeProdImage2 := &prodEntity.ProductImage{
+		ProductId:      productIdUuid,
+		ImageBase64Str: "aaa",
+	}
+	productImagesToBeAdded := []*prodEntity.ProductImage{addProdImage1, addProdImage2}
+	productImagesToBeRemoved := []*prodEntity.ProductImage{removeProdImage1, removeProdImage2}
+
+	existingProdImagesMap := make(map[uuid.UUID][]*prodEntity.ProductImage)
+	existingProdImagesMap[productIdUuid] = append(existingProdImagesMap[productIdUuid], productImagesToBeRemoved...)
+
+	mockProdRepo.EXPECT().InitiateTransaction(gomock.Any()).Return(true).AnyTimes()
+	mockProdRepo.EXPECT().TransactionCommit().Return(nil).AnyTimes()
+	mockProdRepo.EXPECT().TransactionRollback().AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1}).Return(prodTypes, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1, 2}).Return(prodTypes, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{2}).Return(prodTypes, nil).AnyTimes()
@@ -373,9 +426,17 @@ func Test_service_UpsertProducts(t *testing.T) {
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"bantal"}).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, []string{"indomie", "beras"}).Return(nil, nil).AnyTimes()
 
-	mockProdRepo.EXPECT().InitiateTransaction(ctx).AnyTimes()
-	mockProdRepo.EXPECT().TransactionCommit().Return(nil).AnyTimes()
-	mockProdRepo.EXPECT().UpsertProducts(ctx, products).Return(nil).AnyTimes()
+	mockProdRepo.EXPECT().UpsertProducts(ctx, gomock.Any()).Return(nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductImagesByProductIds(ctx, []uuid.UUID{productIdUuid}).Return(productImagesToBeRemoved, existingProdImagesMap, nil).AnyTimes()
+
+	var imageIdres *uuid.UUID
+	imageIdres = &productImageIDUuid
+	mockImageRepo.EXPECT().UploadImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).Return(imageIdres, nil).AnyTimes()
+	mockImageRepo.EXPECT().RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	mockProdRepo.EXPECT().UpsertProductImages(ctx, gomock.Any()).Return(nil).AnyTimes()
+	mockProdRepo.EXPECT().DeleteProductImages(ctx, productImagesToBeRemoved).Return(nil).AnyTimes()
+
 	mockStoreRepo.EXPECT().GetStore(gomock.Any(), otherStoreID).Return(&entity.Store{
 		BaseModel: base_model.BaseModel{
 			ID: otherStoreIdUuid,
@@ -392,6 +453,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 	type fields struct {
 		productRepository *prodRepoMock.MockProductRepository
 		storeRepository   *storeRepoMock.MockStoreServiceRepository
+		imageRepository   *imageRepoMock.MockImageRepository
 	}
 	type args struct {
 		ctx       context.Context
@@ -399,6 +461,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		roleNames []string
 		storeID   uuid.UUID
 		products  []*prodEntity.Product
+		isUpdate  bool
 	}
 	tests := []struct {
 		name          string
@@ -408,7 +471,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name: "UpsertProduct_NoProductProvided_ReturnValidationError",
+			name: "CreateProduct_NoProductProvided_ReturnValidationError",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -418,12 +481,29 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   storeIdUuid,
 				roleNames: roleNames,
 				products:  nil,
+				isUpdate:  false,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "No product inserted"),
 		},
 		{
-			name: "UpsertProduct_DifferenStoreIDNotAdmin_DontHavePermission",
+			name: "UpdateProduct_NoProductProvided_ReturnValidationError",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  nil,
+				isUpdate:  true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "No product inserted"),
+		},
+		{
+			name: "CreateProduct_DifferenStoreIDNotAdmin_DontHavePermission",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -434,12 +514,30 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   otherStoreIdUuid,
 				roleNames: roleNames,
 				products:  products,
+				isUpdate:  false,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store"),
 		},
 		{
-			name: "UpsertProduct_UomNotProvided_Error",
+			name: "UpdateProduct_DifferenStoreIDNotAdmin_DontHavePermission",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   otherStoreIdUuid,
+				roleNames: roleNames,
+				products:  products,
+				isUpdate:  true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store"),
+		},
+		{
+			name: "CreateProduct_UomNotProvided_Error",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -450,12 +548,47 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   storeIdUuid,
 				roleNames: roleNames,
 				products:  noUOM,
+				isUpdate:  false,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
 		},
 		{
-			name: "UpsertProduct_ProdTypeNotProvided_Error",
+			name: "UpdateProduct_ProductIdNotProvided_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  noProductId,
+				isUpdate:  true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Product id is required"),
+		},
+		{
+			name: "UpdateProduct_UomNotProvided_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  noUOMForUpdate,
+				isUpdate:  true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
+		},
+		{
+			name: "CreateProduct_ProdTypeNotProvided_Error",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -466,12 +599,30 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   storeIdUuid,
 				roleNames: roleNames,
 				products:  noProdType,
+				isUpdate:  false,
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
 		},
 		{
-			name: "UpsertProduct_StockIsNegative_Error",
+			name: "UpdateProduct_ProdTypeNotProvided_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products:  noProdTypeForUpdate,
+				isUpdate:  true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
+		},
+		{
+			name: "CreateProduct_StockIsNegative_Error",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -482,14 +633,48 @@ func Test_service_UpsertProducts(t *testing.T) {
 				storeID:   storeIdUuid,
 				roleNames: roleNames,
 				products: []*prodEntity.Product{
-					bantal,
+					&prodEntity.Product{
+						StoreID:       storeIdUuid,
+						Name:          "bantal",
+						Uom:           "kg",
+						ProductTypeID: 2,
+						Stock:         -1,
+					},
 				},
 			},
 			wantErr:       true,
 			expectedError: status.Errorf(codes.InvalidArgument, "Stock should be positive"),
 		},
 		{
-			name: "UpsertProduct_ProductAlreadyExisted_ReturnValidationError",
+			name: "UpdateProduct_StockIsNegative_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products: []*prodEntity.Product{
+					&prodEntity.Product{
+						BaseModel: base_model.BaseModel{
+							ID: productIdUuid,
+						},
+						StoreID:       storeIdUuid,
+						Name:          "bantal",
+						Uom:           "kg",
+						ProductTypeID: 2,
+						Stock:         -1,
+					},
+				},
+				isUpdate: true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Stock should be positive"),
+		},
+		{
+			name: "CreateProduct_ProductAlreadyExisted_ReturnValidationError",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -505,7 +690,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 			expectedError: status.Errorf(codes.AlreadyExists, "Product are already exist : "+strings.Join(existedProdNames, ",")),
 		},
 		{
-			name: "UpsertProduct_InvalidUOM_Error",
+			name: "CreateProduct_InvalidUOM_Error",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -521,7 +706,45 @@ func Test_service_UpsertProducts(t *testing.T) {
 			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
 		},
 		{
-			name: "UpsertProduct_InvalidProductType_Error",
+			name: "UpdateProduct_InvalidUOM_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products: []*prodEntity.Product{
+					&prodEntity.Product{
+						BaseModel: base_model.BaseModel{
+							ID: productIdUuid,
+						},
+						StoreID:       storeIdUuid,
+						Name:          "keju",
+						Uom:           "kg",
+						ProductTypeID: 1,
+						Stock:         1,
+					},
+					&prodEntity.Product{
+						BaseModel: base_model.BaseModel{
+							ID: otherProductID2Uuid,
+						},
+						StoreID:       storeIdUuid,
+						Name:          "tas",
+						Uom:           "",
+						ProductTypeID: 2,
+						Stock:         1,
+					},
+				},
+				isUpdate: true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
+		},
+		{
+			name: "CreateProduct_InvalidProductType_Error",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -537,7 +760,45 @@ func Test_service_UpsertProducts(t *testing.T) {
 			expectedError: status.Errorf(codes.NotFound, "Product type id is not found"),
 		},
 		{
-			name: "UpsertProduct_DifferenStoreIDButAdmin_Success",
+			name: "UpdateProduct_InvalidProductType_Error",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products: []*prodEntity.Product{
+					&prodEntity.Product{
+						BaseModel: base_model.BaseModel{
+							ID: productIdUuid,
+						},
+						StoreID:       storeIdUuid,
+						Name:          "keju",
+						Uom:           "kg",
+						ProductTypeID: 1,
+						Stock:         1,
+					},
+					&prodEntity.Product{
+						BaseModel: base_model.BaseModel{
+							ID: otherProductID2Uuid,
+						},
+						StoreID:       storeIdUuid,
+						Name:          "sepatu",
+						Uom:           "kg",
+						ProductTypeID: 2,
+						Stock:         1,
+					},
+				},
+				isUpdate: true,
+			},
+			wantErr:       true,
+			expectedError: status.Errorf(codes.NotFound, "Product type id is not found"),
+		},
+		{
+			name: "CreateProduct_DifferenStoreIDButAdmin_Success",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
@@ -552,10 +813,40 @@ func Test_service_UpsertProducts(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "UpsertProduct_NoError_Success",
+			name: "UpdateProduct_DifferenStoreIDButAdmin_Success",
 			fields: fields{
 				productRepository: mockProdRepo,
 				storeRepository:   mockStoreRepo,
+				imageRepository:   mockImageRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   otherStoreIdUuid,
+				roleNames: adminRoleNames,
+				products: []*prodEntity.Product{
+					&prodEntity.Product{
+						BaseModel: base_model.BaseModel{
+							ID: productIdUuid,
+						},
+						StoreID:       storeIdUuid,
+						Name:          "indomie",
+						Uom:           "kg",
+						ProductTypeID: 1,
+						Stock:         1,
+						Images:        productImagesToBeAdded,
+					},
+				},
+				isUpdate: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "CreateProduct_NoError_Success",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+				imageRepository:   mockImageRepo,
 			},
 			args: args{
 				ctx:       ctx,
@@ -566,11 +857,40 @@ func Test_service_UpsertProducts(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "UpdateProduct_NoError_Success",
+			fields: fields{
+				productRepository: mockProdRepo,
+				storeRepository:   mockStoreRepo,
+				imageRepository:   mockImageRepo,
+			},
+			args: args{
+				ctx:       ctx,
+				userID:    userIdUuid,
+				storeID:   storeIdUuid,
+				roleNames: roleNames,
+				products: []*prodEntity.Product{
+					&prodEntity.Product{
+						BaseModel: base_model.BaseModel{
+							ID: productIdUuid,
+						},
+						StoreID:       storeIdUuid,
+						Name:          "indomie",
+						Uom:           "kg",
+						ProductTypeID: 1,
+						Stock:         1,
+						Images:        productImagesToBeAdded,
+					},
+				},
+				isUpdate: true,
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil, nil)
-			if err := s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.products); tt.wantErr {
+			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil, tt.fields.imageRepository)
+			if err := s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isUpdate, tt.args.products...); tt.wantErr {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err)
 			} else {

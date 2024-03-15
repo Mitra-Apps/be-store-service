@@ -42,3 +42,12 @@ func (g *GrpcClient) GetImagesByIds(ctx context.Context, ids []string) ([]*utili
 	}
 	return res.GetData(), nil
 }
+
+func (g *GrpcClient) RemoveImage(ctx context.Context, ids []string, groupName, userID string) error {
+	_, err := g.pb.DeleteImages(ctx, &utilityPb.DeleteImagesRequest{
+		UserId:    userID,
+		GroupName: groupName,
+		ImageIds:  ids,
+	})
+	return err
+}
