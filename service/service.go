@@ -406,7 +406,8 @@ func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated
 	var uoms []string
 	err = lib.ReadToFile(fileName, lib.JsonFormat, &uoms)
 	if err != nil {
-		return nil, nil, status.Errorf(codes.Internal, err.Error())
+		err = nil
+		// return nil, nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return cat, uoms, nil
