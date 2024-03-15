@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -12,10 +14,10 @@ import (
 	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
 	prodRepo "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
-	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mocks"
-	"github.com/golang/mock/gomock"
+	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -275,49 +277,50 @@ func Test_service_UpsertProducts(t *testing.T) {
 	indomie := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "indomie",
-		UomID:         1,
+		Uom:           "bungkus",
 		ProductTypeID: 1,
 		Stock:         1,
 	}
 	beras := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "beras",
-		UomID:         1,
+		Uom:           "kg",
 		ProductTypeID: 1,
 		Stock:         1,
 	}
 	baksoAci := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "bakso aci",
-		UomID:         1,
+		Uom:           "pieces",
 		ProductTypeID: 1,
 		Stock:         0,
 	}
 	keju := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "keju",
-		UomID:         1,
+		Uom:           "kg",
 		ProductTypeID: 1,
 		Stock:         1,
 	}
 	tas := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "tas",
-		UomID:         2,
+		Uom:           "",
 		ProductTypeID: 2,
 		Stock:         1,
 	}
+
 	sepatu := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "sepatu",
-		UomID:         1,
+		Uom:           "pasang",
 		ProductTypeID: 2,
 		Stock:         1,
 	}
 	bantal := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "bantal",
-		UomID:         1,
+		Uom:           "pieces",
 		ProductTypeID: 2,
 		Stock:         -1,
 	}
@@ -330,6 +333,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		keju,
 		tas,
 	}
+
 	invalidProdTypeProduct := []*prodEntity.Product{
 		keju,
 		sepatu,
@@ -345,21 +349,12 @@ func Test_service_UpsertProducts(t *testing.T) {
 		&prodEntity.Product{
 			StoreID: storeIdUuid,
 			Name:    "keju",
-			UomID:   1,
-			Stock:   1,
+			Uom:     "kg",
 		},
 	}
 	roleNames := []string{"merchant"}
 	adminRoleNames := []string{"merchant", "admin"}
 	existedProdNames := []string{"bakso aci", "keju"}
-	uoms := []*prodEntity.UnitOfMeasure{
-		&prodEntity.UnitOfMeasure{
-			BaseMasterDataModel: base_model.BaseMasterDataModel{
-				ID: 1,
-			},
-			Name: "kilogram",
-		},
-	}
 	prodTypes := []*prodEntity.ProductType{
 		&prodEntity.ProductType{
 			BaseMasterDataModel: base_model.BaseMasterDataModel{
@@ -368,18 +363,18 @@ func Test_service_UpsertProducts(t *testing.T) {
 			Name: "Snack",
 		},
 	}
-	mockProdRepo.EXPECT().InitiateTransaction(gomock.Any()).Return(true).AnyTimes()
-	mockProdRepo.EXPECT().TransactionCommit().Return(nil).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasuresByIds(gomock.Any(), []int64{1}).Return(uoms, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasuresByIds(gomock.Any(), []int64{1, 2}).Return(uoms, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1}).Return(prodTypes, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1, 2}).Return(prodTypes, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{2}).Return(prodTypes, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, existedProdNames).Return(existedProducts, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"keju", "tas"}).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"keju", "sepatu"}).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"indomie", "beras"}).Return(nil, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"bantal"}).Return(nil, nil).AnyTimes()
 	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, []string{"indomie", "beras"}).Return(nil, nil).AnyTimes()
 
+	mockProdRepo.EXPECT().InitiateTransaction(ctx).AnyTimes()
+	mockProdRepo.EXPECT().TransactionCommit().Return(nil).AnyTimes()
 	mockProdRepo.EXPECT().UpsertProducts(ctx, products).Return(nil).AnyTimes()
 	mockStoreRepo.EXPECT().GetStore(gomock.Any(), otherStoreID).Return(&entity.Store{
 		BaseModel: base_model.BaseModel{
@@ -457,7 +452,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				products:  noUOM,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Uom id is required"),
+			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
 		},
 		{
 			name: "UpsertProduct_ProdTypeNotProvided_Error",
@@ -523,7 +518,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				products:  invalidUomProduct,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.NotFound, "Unit of measure id is not found"),
+			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
 		},
 		{
 			name: "UpsertProduct_InvalidProductType_Error",
@@ -1152,12 +1147,24 @@ func Test_service_GetProductCategories(t *testing.T) {
 	ctx := context.Background()
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
-	uoms := []*prodEntity.ProductCategory{}
-	uoms = append(uoms, &prodEntity.ProductCategory{
-		Name: "kg",
+	category := []*prodEntity.ProductCategory{}
+	category = append(category, &prodEntity.ProductCategory{
+		Name: "shirt",
 	})
+	uoms := []string{"pieces", "kilogram", "ons", "pound", "botol"}
 	mockProdRepo.EXPECT().GetProductCategories(ctx, false).Return(nil, err).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategories(ctx, true).Return(uoms, nil).AnyTimes()
+	mockProdRepo.EXPECT().GetProductCategories(ctx, true).Return(category, nil).AnyTimes()
+
+	// write file
+	fileName := "uom.json"
+	file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	defer func() {
+		file.Close()
+		_ = os.Remove("uom.json")
+	}()
+	encoder := json.NewEncoder(file)
+	_ = encoder.Encode(uoms)
+
 	type fields struct {
 		productRepository *prodRepoMock.MockProductRepository
 	}
@@ -1182,7 +1189,7 @@ func Test_service_GetProductCategories(t *testing.T) {
 				isIncludeDeactivated: false,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when getting unit of measures :"+errMsg),
+			expectedError: status.Errorf(codes.Internal, "Error when getting product categories :"+errMsg),
 		},
 		{
 			name: "GetProductCategories_NoError_Success",
@@ -1199,11 +1206,13 @@ func Test_service_GetProductCategories(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(nil, tt.fields.productRepository, nil, nil)
-			if uom, err := s.GetProductCategories(tt.args.ctx, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
+			if cats, uom, err := s.GetProductCategories(tt.args.ctx, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
 				assert.NotNil(t, err)
+				assert.Nil(t, cats)
 				assert.Nil(t, uom)
 			} else {
 				assert.Nil(t, err)
+				assert.NotNil(t, cats)
 				assert.NotNil(t, uom)
 			}
 		})

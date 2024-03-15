@@ -12,6 +12,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
+	"github.com/Mitra-Apps/be-store-service/lib"
 	utilityPb "github.com/Mitra-Apps/be-utility-service/domain/proto/utility"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -32,7 +33,7 @@ type Service interface {
 	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
 	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error)
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error)
-	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error)
+	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
 	GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error)
 	UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *prodEntity.UnitOfMeasure) error
@@ -216,25 +217,16 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	}
 
 	names := []string{}
-	uomIds := []int64{}
-	uomIdsMap := make(map[int64]bool)
 	productTypeIds := []int64{}
 	prodTypeIdsMap := make(map[int64]bool)
 	for _, p := range products {
 		p.StoreID = storeID
 		names = append(names, p.Name)
-		if p.UomID == 0 {
-			return status.Errorf(codes.InvalidArgument, "Uom id is required")
+		if p.Uom == "" {
+			return status.Errorf(codes.InvalidArgument, "Uom is required")
 		}
 		if p.ProductTypeID == 0 {
 			return status.Errorf(codes.InvalidArgument, "Product type id is required")
-		}
-		if p.Stock < 0 {
-			return status.Errorf(codes.InvalidArgument, "Stock should be positive")
-		}
-		if !uomIdsMap[p.UomID] {
-			uomIds = append(uomIds, p.UomID)
-			uomIdsMap[p.UomID] = true
 		}
 		if !prodTypeIdsMap[p.ProductTypeID] {
 			productTypeIds = append(productTypeIds, p.ProductTypeID)
@@ -254,13 +246,6 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 			fmt.Sprintf("Product are already exist : %s", strings.Join(existingProdNames, ",")))
 	}
 
-	existingUoms, err := s.productRepository.GetUnitOfMeasuresByIds(ctx, uomIds)
-	if err != nil {
-		return status.Errorf(codes.Internal, "Error when getting related uom")
-	}
-	if len(uomIds) > len(existingUoms) {
-		return status.Errorf(codes.NotFound, "Unit of measure id is not found")
-	}
 	existingProdTypes, err := s.productRepository.GetProductTypesByIds(ctx, productTypeIds)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error when getting related product type")
@@ -410,12 +395,23 @@ func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, p
 	}
 	return products, nil
 }
-func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, err error) {
+
+func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error) {
 	if cat, err = s.productRepository.GetProductCategories(ctx, isIncludeDeactivated); err != nil {
-		return nil, status.Errorf(codes.Internal, "Error when getting product categories :"+err.Error())
+		return nil, nil, status.Errorf(codes.Internal, "Error when getting product categories :"+err.Error())
 	}
-	return cat, nil
+
+	// read file uom
+	fileName := "uom.json"
+	var uoms []string
+	err = lib.ReadToFile(fileName, lib.JsonFormat, &uoms)
+	if err != nil {
+		return nil, nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return cat, uoms, nil
 }
+
 func (s *service) GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error) {
 	if prodCat, err := s.productRepository.GetProductCategoryById(ctx, productCategoryID); err != nil {
 		return nil, status.Errorf(codes.AlreadyExists, "Error getting product category by id data")
