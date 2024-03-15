@@ -93,10 +93,12 @@ message Product {
 	bool sale_status = 4;
     double price = 5;
     int64 stock = 6;
-	int64 uom_id = 7;
+    string uom = 7;
 	int64 product_type_id = 8;
-    int64 product_category_id = 9;
-    repeated ProductImage images = 10;
+    string product_type_name = 9;
+    int64 product_category_id = 10;
+    string product_category_name = 11;
+    repeated ProductImage images = 12;
 }
 
 message ProductImage {
@@ -411,7 +413,12 @@ message GetProductCategoriesRequest {
 message GetProductCategoriesResponse {
     int32 code = 1;
     string message = 2;
-    repeated ProductCategory data = 3;
+    GetProductCategoriesResponseItem data = 3;
+}
+
+message GetProductCategoriesResponseItem {
+    repeated ProductCategory product_category = 3;
+    repeated string uom = 4;
 }
 
 message GetProductTypesRequest {

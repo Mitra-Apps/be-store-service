@@ -8,7 +8,6 @@ require (
 	github.com/Mitra-Apps/be-user-service v0.0.0-20240304101816-e90a810ad690
 	github.com/Mitra-Apps/be-utility-service v0.0.0-20240306062840-a43f4321248b
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
-	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -18,11 +17,12 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	go.elastic.co/apm/module/apmgrpc v1.15.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20240311173647-c811ad7063a7
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240311173647-c811ad7063a7
+	go.uber.org/mock v0.4.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20240311132316-a219d84964c2
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240311132316-a219d84964c2
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
-	gorm.io/driver/postgres v1.5.7
+	gorm.io/driver/postgres v1.5.6
 	gorm.io/driver/sqlite v1.4.3
 	gorm.io/gorm v1.25.7
 )

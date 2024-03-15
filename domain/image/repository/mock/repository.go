@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	utility "github.com/Mitra-Apps/be-utility-service/domain/proto/utility"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 	uuid "github.com/google/uuid"
 )
 

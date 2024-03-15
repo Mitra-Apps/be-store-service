@@ -267,7 +267,7 @@ func validateProduct(products ...*prodEntity.Product) error {
 		if p.Price <= 0 {
 			return status.Errorf(codes.InvalidArgument, "Price is required")
 		}
-		if p.UomID == 0 {
+		if p.Uom == "" {
 			return status.Errorf(codes.InvalidArgument, "unit of measure is required")
 		}
 		if p.ProductTypeID == 0 {
@@ -475,7 +475,7 @@ func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRe
 }
 
 func (g *GrpcRoute) GetProductCategories(ctx context.Context, req *pb.GetProductCategoriesRequest) (*pb.GetProductCategoriesResponse, error) {
-	cat, err := g.service.GetProductCategories(ctx, req.IsIncludeDeactivated)
+	cat, uom, err := g.service.GetProductCategories(ctx, req.IsIncludeDeactivated)
 	if err != nil {
 		return nil, err
 	}
@@ -486,7 +486,10 @@ func (g *GrpcRoute) GetProductCategories(ctx context.Context, req *pb.GetProduct
 	return &pb.GetProductCategoriesResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
-		Data:    cats,
+		Data: &pb.GetProductCategoriesResponseItem{
+			ProductCategory: cats,
+			Uom:             uom,
+		},
 	}, nil
 }
 

@@ -536,9 +536,18 @@ components:
                 message:
                     type: string
                 data:
+                    $ref: '#/components/schemas/GetProductCategoriesResponseItem'
+        GetProductCategoriesResponseItem:
+            type: object
+            properties:
+                productCategory:
                     type: array
                     items:
                         $ref: '#/components/schemas/ProductCategory'
+                uom:
+                    type: array
+                    items:
+                        type: string
         GetProductListResponse:
             type: object
             properties:
@@ -667,11 +676,15 @@ components:
                     format: double
                 stock:
                     type: string
-                uomId:
+                uom:
                     type: string
                 productTypeId:
                     type: string
+                productTypeName:
+                    type: string
                 productCategoryId:
+                    type: string
+                productCategoryName:
                     type: string
                 images:
                     type: array
