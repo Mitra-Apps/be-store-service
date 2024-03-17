@@ -86,7 +86,11 @@ func (s *service) CreateStore(ctx context.Context, store *entity.Store) (*entity
 	}
 
 	for _, hour := range store.Hours {
-		if hour.Is24Hr {
+
+		if !hour.IsOpen {
+			hour.Open = "00:00"
+			hour.Close = "00:00"
+		} else if hour.Is24Hr {
 			hour.Open = "00:00"
 			hour.Close = "23:59"
 		}
@@ -144,7 +148,10 @@ func (s *service) UpdateStore(ctx context.Context, storeID string, update *entit
 		hour.StoreID = update.ID
 		hour.ID = uuid.Nil
 
-		if hour.Is24Hr {
+		if !hour.IsOpen {
+			hour.Open = "00:00"
+			hour.Close = "00:00"
+		} else if hour.Is24Hr {
 			hour.Open = "00:00"
 			hour.Close = "23:59"
 		}

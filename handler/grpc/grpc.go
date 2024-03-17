@@ -53,6 +53,11 @@ func (s *GrpcRoute) CreateStore(ctx context.Context, req *pb.CreateStoreRequest)
 		return nil, st.Err()
 	}
 
+	storeHoursErr := validateStoreHours(req.Store.Hours)
+	if storeHoursErr != nil {
+		return nil, storeHoursErr
+	}
+
 	store := &entity.Store{}
 	if err := store.FromProto(req.Store); err != nil {
 		return nil, err
@@ -98,6 +103,11 @@ func (s *GrpcRoute) GetStore(ctx context.Context, req *pb.GetStoreRequest) (*pb.
 func (s *GrpcRoute) UpdateStore(ctx context.Context, req *pb.UpdateStoreRequest) (*pb.UpdateStoreResponse, error) {
 	if err := req.ValidateAll(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	storeHoursErr := validateStoreHours(req.Store.Hours)
+	if storeHoursErr != nil {
+		return nil, storeHoursErr
 	}
 
 	store := &entity.Store{}
@@ -481,4 +491,30 @@ func (g *GrpcRoute) GetProductTypes(ctx context.Context, req *pb.GetProductTypes
 		Message: codes.OK.String(),
 		Data:    prodTypes,
 	}, nil
+}
+
+func validateStoreHours(hours []*pb.StoreHour) error {
+	DAYS := map[int32]string{
+		0: "MONDAY",
+		1: "TUESDAY",
+		2: "WEDNESDAY",
+		3: "THURSDAY",
+		4: "FRIDAY",
+		5: "SATURDAY",
+		6: "SUNDAY",
+	}
+
+	errs := []string{}
+
+	for _, hour := range hours {
+		if !hour.IsOpen && hour.Is24Hours {
+			errs = append(errs, DAYS[hour.DayOfWeek])
+		}
+	}
+
+	if len(errs) > 0 {
+		return status.Errorf(codes.InvalidArgument, fmt.Sprintf("Store with is24hours=true cannot have isOpen=false: %v", strings.Join(errs, ", ")))
+	}
+
+	return nil
 }

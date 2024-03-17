@@ -592,6 +592,24 @@ func TestUpdateStore(t *testing.T) {
 	md.Set("x-user-id", sessionUserID.String())
 	ctx = metadata.NewIncomingContext(ctx, md)
 
+	storeIDUuid := uuid.MustParse(storeID)
+
+	existingStore := &entity.Store{
+		BaseModel: base_model.BaseModel{
+			ID: storeIDUuid,
+		},
+		UserID:    sessionUserID,
+		StoreName: "Toko Maju",
+	}
+
+	updatedStore := &entity.Store{
+		BaseModel: base_model.BaseModel{
+			ID: storeIDUuid,
+		},
+		UserID:    sessionUserID,
+		StoreName: "Toko Sebelah",
+	}
+
 	testCases := []struct {
 		name       string
 		setupMocks func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage)
@@ -605,20 +623,19 @@ func TestUpdateStore(t *testing.T) {
 		{
 			name: "Success",
 			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
-				storeRepository.EXPECT().UpdateStore(ctx, gomock.Any()).Return(nil)
+				storeRepository.EXPECT().GetStore(ctx, storeID).Return(existingStore, nil).AnyTimes()
+				storeRepository.EXPECT().UpdateStore(ctx, gomock.Any()).Return(updatedStore, nil)
 			},
+
 			inputStore: struct {
 				storeID string
 				store   *entity.Store
 			}{
-				storeID: "TestStore",
-				store: &entity.Store{
-					StoreName: "TestStore",
-				},
+				storeID: storeID,
+				store:   updatedStore,
 			},
-			expectedStore: &entity.Store{
-				StoreName: "TestStore",
-			},
+			expectedStore: updatedStore,
+			expectedError: nil,
 		},
 	}
 
@@ -633,7 +650,7 @@ func TestUpdateStore(t *testing.T) {
 
 			tc.setupMocks(storeRepository, storage)
 			result, err := service.UpdateStore(ctx, tc.inputStore.storeID, tc.inputStore.store)
-			assert.Equal(t, tc.expectedError, result)
+			assert.Equal(t, tc.expectedStore, result)
 			assert.Equal(t, tc.expectedError, err)
 		})
 	}
