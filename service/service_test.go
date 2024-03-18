@@ -913,6 +913,7 @@ func TestUpdateStore(t *testing.T) {
 	ctx = metadata.NewIncomingContext(ctx, md)
 
 	storeIDUuid := uuid.MustParse(storeID)
+	otherStoreIDUuid := uuid.MustParse(otherStoreID)
 
 	existingStore := &entity.Store{
 		BaseModel: base_model.BaseModel{
@@ -928,6 +929,14 @@ func TestUpdateStore(t *testing.T) {
 		},
 		UserID:    sessionUserID,
 		StoreName: "Toko Sebelah",
+	}
+
+	updatedStore1 := &entity.Store{
+		BaseModel: base_model.BaseModel{
+			ID: otherStoreIDUuid,
+		},
+		UserID:    sessionUserID,
+		StoreName: "Toko Maju 1",
 	}
 
 	testCases := []struct {
@@ -946,7 +955,6 @@ func TestUpdateStore(t *testing.T) {
 				storeRepository.EXPECT().GetStore(ctx, storeID).Return(existingStore, nil).AnyTimes()
 				storeRepository.EXPECT().UpdateStore(ctx, gomock.Any()).Return(updatedStore, nil)
 			},
-
 			inputStore: struct {
 				storeID string
 				store   *entity.Store
@@ -956,6 +964,21 @@ func TestUpdateStore(t *testing.T) {
 			},
 			expectedStore: updatedStore,
 			expectedError: nil,
+		},
+		{
+			name: "Error_StoreNotFound",
+			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
+				storeRepository.EXPECT().GetStore(ctx, otherStoreID).Return(nil, status.Errorf(codes.NotFound, "Store is not found")).AnyTimes()
+			},
+			inputStore: struct {
+				storeID string
+				store   *entity.Store
+			}{
+				storeID: otherStoreID,
+				store:   updatedStore1,
+			},
+			expectedStore: nil,
+			expectedError: status.Errorf(codes.NotFound, "Store is not found"),
 		},
 	}
 
