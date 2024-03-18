@@ -21,6 +21,8 @@ services:
       - JWT_SECRET=secret
     networks:
       - grpc_network
+    volumes:
+      - ./uom.json:/app/uom.json
 networks:
   grpc_network:
     external: true
