@@ -48,7 +48,7 @@ func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store,
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, status.Errorf(codes.NotFound, "Store is not found")
 		}
 		return nil, status.Errorf(codes.Internal, "Error when getting store :"+err.Error())
 	}

@@ -223,7 +223,7 @@ type StoreHour struct {
 	Open      string
 	Close     string
 	Is24Hr    bool
-	IsOpen    bool `gorm:"type:bool;not null;default:true"`
+	IsOpen    bool `gorm:"type:bool;not null;"`
 }
 
 func (s *StoreHour) ToProto() *pb.StoreHour {
