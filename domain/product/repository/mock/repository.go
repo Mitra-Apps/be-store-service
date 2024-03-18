@@ -41,6 +41,20 @@ func (m *MockProductRepository) EXPECT() *MockProductRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DeleteProductImages mocks base method.
+func (m *MockProductRepository) DeleteProductImages(ctx context.Context, productImages []*entity.ProductImage) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteProductImages", ctx, productImages)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteProductImages indicates an expected call of DeleteProductImages.
+func (mr *MockProductRepositoryMockRecorder) DeleteProductImages(ctx, productImages interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductImages", reflect.TypeOf((*MockProductRepository)(nil).DeleteProductImages), ctx, productImages)
+}
+
 // GetProductById mocks base method.
 func (m *MockProductRepository) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
 	m.ctrl.T.Helper()
@@ -99,6 +113,22 @@ func (m *MockProductRepository) GetProductCategoryByName(ctx context.Context, na
 func (mr *MockProductRepositoryMockRecorder) GetProductCategoryByName(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategoryByName", reflect.TypeOf((*MockProductRepository)(nil).GetProductCategoryByName), ctx, name)
+}
+
+// GetProductImagesByProductIds mocks base method.
+func (m *MockProductRepository) GetProductImagesByProductIds(ctx context.Context, productIds []uuid.UUID) ([]*entity.ProductImage, map[uuid.UUID][]*entity.ProductImage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductImagesByProductIds", ctx, productIds)
+	ret0, _ := ret[0].([]*entity.ProductImage)
+	ret1, _ := ret[1].(map[uuid.UUID][]*entity.ProductImage)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetProductImagesByProductIds indicates an expected call of GetProductImagesByProductIds.
+func (mr *MockProductRepositoryMockRecorder) GetProductImagesByProductIds(ctx, productIds interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductImagesByProductIds", reflect.TypeOf((*MockProductRepository)(nil).GetProductImagesByProductIds), ctx, productIds)
 }
 
 // GetProductTypeByName mocks base method.

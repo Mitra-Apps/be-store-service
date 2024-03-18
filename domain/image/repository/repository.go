@@ -10,4 +10,5 @@ import (
 type ImageRepository interface {
 	UploadImage(ctx context.Context, imageBase64Str, groupName, userID string) (*uuid.UUID, error)
 	GetImagesByIds(ctx context.Context, ids []string) ([]*utilityPb.Image, error)
+	RemoveImage(ctx context.Context, ids []string, groupName, userID string) error
 }

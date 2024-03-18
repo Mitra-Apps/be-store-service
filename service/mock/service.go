@@ -264,17 +264,22 @@ func (mr *MockServiceMockRecorder) UpsertProductType(ctx, prodType any) *gomock.
 }
 
 // UpsertProducts mocks base method.
-func (m *MockService) UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, products []*entity.Product) error {
+func (m *MockService) UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, isUpdate bool, products ...*entity.Product) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertProducts", ctx, userID, roleNames, storeID, products)
+	varargs := []interface{}{ctx, userID, roleNames, storeID, isUpdate}
+	for _, a := range products {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpsertProducts", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpsertProducts indicates an expected call of UpsertProducts.
-func (mr *MockServiceMockRecorder) UpsertProducts(ctx, userID, roleNames, storeID, products any) *gomock.Call {
+func (mr *MockServiceMockRecorder) UpsertProducts(ctx, userID, roleNames, storeID, isUpdate interface{}, products ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProducts", reflect.TypeOf((*MockService)(nil).UpsertProducts), ctx, userID, roleNames, storeID, products)
+	varargs := append([]interface{}{ctx, userID, roleNames, storeID, isUpdate}, products...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProducts", reflect.TypeOf((*MockService)(nil).UpsertProducts), varargs...)
 }
 
 // UpsertUnitOfMeasure mocks base method.
