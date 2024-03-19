@@ -133,8 +133,8 @@ type StoreServiceClient interface {
 	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error)
 	GetProductById(context.Context, *connect.Request[store.GetProductByIdRequest]) (*connect.Response[store.GetProductByIdResponse], error)
 	GetProductList(context.Context, *connect.Request[store.GetProductListRequest]) (*connect.Response[store.GetProductListResponse], error)
-	InsertProducts(context.Context, *connect.Request[store.InsertProductsRequest]) (*connect.Response[store.InsertProductsResponse], error)
-	UpdateProduct(context.Context, *connect.Request[store.UpdateProductRequest]) (*connect.Response[store.UpdateProductResponse], error)
+	InsertProducts(context.Context, *connect.Request[store.InsertProductsRequest]) (*connect.Response[store.GenericResponse], error)
+	UpdateProduct(context.Context, *connect.Request[store.UpdateProductRequest]) (*connect.Response[store.GenericResponse], error)
 	GetUnitOfMeasures(context.Context, *connect.Request[store.GetUnitOfMeasuresRequest]) (*connect.Response[store.GetUnitOfMeasuresResponse], error)
 	UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error)
 	UpdateUnitOfMeasure(context.Context, *connect.Request[store.UpdateUnitOfMeasureRequest]) (*connect.Response[store.UpdateUnitOfMeasureResponse], error)
@@ -209,13 +209,13 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(storeServiceGetProductListMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		insertProducts: connect.NewClient[store.InsertProductsRequest, store.InsertProductsResponse](
+		insertProducts: connect.NewClient[store.InsertProductsRequest, store.GenericResponse](
 			httpClient,
 			baseURL+StoreServiceInsertProductsProcedure,
 			connect.WithSchema(storeServiceInsertProductsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		updateProduct: connect.NewClient[store.UpdateProductRequest, store.UpdateProductResponse](
+		updateProduct: connect.NewClient[store.UpdateProductRequest, store.GenericResponse](
 			httpClient,
 			baseURL+StoreServiceUpdateProductProcedure,
 			connect.WithSchema(storeServiceUpdateProductMethodDescriptor),
@@ -283,8 +283,8 @@ type storeServiceClient struct {
 	openCloseStore        *connect.Client[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse]
 	getProductById        *connect.Client[store.GetProductByIdRequest, store.GetProductByIdResponse]
 	getProductList        *connect.Client[store.GetProductListRequest, store.GetProductListResponse]
-	insertProducts        *connect.Client[store.InsertProductsRequest, store.InsertProductsResponse]
-	updateProduct         *connect.Client[store.UpdateProductRequest, store.UpdateProductResponse]
+	insertProducts        *connect.Client[store.InsertProductsRequest, store.GenericResponse]
+	updateProduct         *connect.Client[store.UpdateProductRequest, store.GenericResponse]
 	getUnitOfMeasures     *connect.Client[store.GetUnitOfMeasuresRequest, store.GetUnitOfMeasuresResponse]
 	upsertUnitOfMeasure   *connect.Client[store.UpsertUnitOfMeasureRequest, store.UpsertUnitOfMeasureResponse]
 	updateUnitOfMeasure   *connect.Client[store.UpdateUnitOfMeasureRequest, store.UpdateUnitOfMeasureResponse]
@@ -341,12 +341,12 @@ func (c *storeServiceClient) GetProductList(ctx context.Context, req *connect.Re
 }
 
 // InsertProducts calls StoreService.InsertProducts.
-func (c *storeServiceClient) InsertProducts(ctx context.Context, req *connect.Request[store.InsertProductsRequest]) (*connect.Response[store.InsertProductsResponse], error) {
+func (c *storeServiceClient) InsertProducts(ctx context.Context, req *connect.Request[store.InsertProductsRequest]) (*connect.Response[store.GenericResponse], error) {
 	return c.insertProducts.CallUnary(ctx, req)
 }
 
 // UpdateProduct calls StoreService.UpdateProduct.
-func (c *storeServiceClient) UpdateProduct(ctx context.Context, req *connect.Request[store.UpdateProductRequest]) (*connect.Response[store.UpdateProductResponse], error) {
+func (c *storeServiceClient) UpdateProduct(ctx context.Context, req *connect.Request[store.UpdateProductRequest]) (*connect.Response[store.GenericResponse], error) {
 	return c.updateProduct.CallUnary(ctx, req)
 }
 
@@ -408,8 +408,8 @@ type StoreServiceHandler interface {
 	OpenCloseStore(context.Context, *connect.Request[store.OpenCloseStoreRequest]) (*connect.Response[store.OpenCloseStoreResponse], error)
 	GetProductById(context.Context, *connect.Request[store.GetProductByIdRequest]) (*connect.Response[store.GetProductByIdResponse], error)
 	GetProductList(context.Context, *connect.Request[store.GetProductListRequest]) (*connect.Response[store.GetProductListResponse], error)
-	InsertProducts(context.Context, *connect.Request[store.InsertProductsRequest]) (*connect.Response[store.InsertProductsResponse], error)
-	UpdateProduct(context.Context, *connect.Request[store.UpdateProductRequest]) (*connect.Response[store.UpdateProductResponse], error)
+	InsertProducts(context.Context, *connect.Request[store.InsertProductsRequest]) (*connect.Response[store.GenericResponse], error)
+	UpdateProduct(context.Context, *connect.Request[store.UpdateProductRequest]) (*connect.Response[store.GenericResponse], error)
 	GetUnitOfMeasures(context.Context, *connect.Request[store.GetUnitOfMeasuresRequest]) (*connect.Response[store.GetUnitOfMeasuresResponse], error)
 	UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error)
 	UpdateUnitOfMeasure(context.Context, *connect.Request[store.UpdateUnitOfMeasureRequest]) (*connect.Response[store.UpdateUnitOfMeasureResponse], error)
@@ -625,11 +625,11 @@ func (UnimplementedStoreServiceHandler) GetProductList(context.Context, *connect
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.GetProductList is not implemented"))
 }
 
-func (UnimplementedStoreServiceHandler) InsertProducts(context.Context, *connect.Request[store.InsertProductsRequest]) (*connect.Response[store.InsertProductsResponse], error) {
+func (UnimplementedStoreServiceHandler) InsertProducts(context.Context, *connect.Request[store.InsertProductsRequest]) (*connect.Response[store.GenericResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.InsertProducts is not implemented"))
 }
 
-func (UnimplementedStoreServiceHandler) UpdateProduct(context.Context, *connect.Request[store.UpdateProductRequest]) (*connect.Response[store.UpdateProductResponse], error) {
+func (UnimplementedStoreServiceHandler) UpdateProduct(context.Context, *connect.Request[store.UpdateProductRequest]) (*connect.Response[store.GenericResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpdateProduct is not implemented"))
 }
 

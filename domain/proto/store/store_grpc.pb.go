@@ -61,8 +61,8 @@ type StoreServiceClient interface {
 	OpenCloseStore(ctx context.Context, in *OpenCloseStoreRequest, opts ...grpc.CallOption) (*OpenCloseStoreResponse, error)
 	GetProductById(ctx context.Context, in *GetProductByIdRequest, opts ...grpc.CallOption) (*GetProductByIdResponse, error)
 	GetProductList(ctx context.Context, in *GetProductListRequest, opts ...grpc.CallOption) (*GetProductListResponse, error)
-	InsertProducts(ctx context.Context, in *InsertProductsRequest, opts ...grpc.CallOption) (*InsertProductsResponse, error)
-	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductResponse, error)
+	InsertProducts(ctx context.Context, in *InsertProductsRequest, opts ...grpc.CallOption) (*GenericResponse, error)
+	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*GenericResponse, error)
 	GetUnitOfMeasures(ctx context.Context, in *GetUnitOfMeasuresRequest, opts ...grpc.CallOption) (*GetUnitOfMeasuresResponse, error)
 	UpsertUnitOfMeasure(ctx context.Context, in *UpsertUnitOfMeasureRequest, opts ...grpc.CallOption) (*UpsertUnitOfMeasureResponse, error)
 	UpdateUnitOfMeasure(ctx context.Context, in *UpdateUnitOfMeasureRequest, opts ...grpc.CallOption) (*UpdateUnitOfMeasureResponse, error)
@@ -162,8 +162,8 @@ func (c *storeServiceClient) GetProductList(ctx context.Context, in *GetProductL
 	return out, nil
 }
 
-func (c *storeServiceClient) InsertProducts(ctx context.Context, in *InsertProductsRequest, opts ...grpc.CallOption) (*InsertProductsResponse, error) {
-	out := new(InsertProductsResponse)
+func (c *storeServiceClient) InsertProducts(ctx context.Context, in *InsertProductsRequest, opts ...grpc.CallOption) (*GenericResponse, error) {
+	out := new(GenericResponse)
 	err := c.cc.Invoke(ctx, StoreService_InsertProducts_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -171,8 +171,8 @@ func (c *storeServiceClient) InsertProducts(ctx context.Context, in *InsertProdu
 	return out, nil
 }
 
-func (c *storeServiceClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductResponse, error) {
-	out := new(UpdateProductResponse)
+func (c *storeServiceClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*GenericResponse, error) {
+	out := new(GenericResponse)
 	err := c.cc.Invoke(ctx, StoreService_UpdateProduct_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -272,8 +272,8 @@ type StoreServiceServer interface {
 	OpenCloseStore(context.Context, *OpenCloseStoreRequest) (*OpenCloseStoreResponse, error)
 	GetProductById(context.Context, *GetProductByIdRequest) (*GetProductByIdResponse, error)
 	GetProductList(context.Context, *GetProductListRequest) (*GetProductListResponse, error)
-	InsertProducts(context.Context, *InsertProductsRequest) (*InsertProductsResponse, error)
-	UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductResponse, error)
+	InsertProducts(context.Context, *InsertProductsRequest) (*GenericResponse, error)
+	UpdateProduct(context.Context, *UpdateProductRequest) (*GenericResponse, error)
 	GetUnitOfMeasures(context.Context, *GetUnitOfMeasuresRequest) (*GetUnitOfMeasuresResponse, error)
 	UpsertUnitOfMeasure(context.Context, *UpsertUnitOfMeasureRequest) (*UpsertUnitOfMeasureResponse, error)
 	UpdateUnitOfMeasure(context.Context, *UpdateUnitOfMeasureRequest) (*UpdateUnitOfMeasureResponse, error)
@@ -316,10 +316,10 @@ func (UnimplementedStoreServiceServer) GetProductById(context.Context, *GetProdu
 func (UnimplementedStoreServiceServer) GetProductList(context.Context, *GetProductListRequest) (*GetProductListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductList not implemented")
 }
-func (UnimplementedStoreServiceServer) InsertProducts(context.Context, *InsertProductsRequest) (*InsertProductsResponse, error) {
+func (UnimplementedStoreServiceServer) InsertProducts(context.Context, *InsertProductsRequest) (*GenericResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InsertProducts not implemented")
 }
-func (UnimplementedStoreServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductResponse, error) {
+func (UnimplementedStoreServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*GenericResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
 }
 func (UnimplementedStoreServiceServer) GetUnitOfMeasures(context.Context, *GetUnitOfMeasuresRequest) (*GetUnitOfMeasuresResponse, error) {

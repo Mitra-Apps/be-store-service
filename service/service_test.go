@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -14,8 +15,10 @@ import (
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
 	prodRepo "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
+	errPb "github.com/Mitra-Apps/be-store-service/domain/proto"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
+	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -484,7 +487,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  false,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "No product inserted"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_NO_PRODUCT_INSERTED.String(), "tidak ada produk yang disimpan"),
 		},
 		{
 			name: "UpdateProduct_NoProductProvided_ReturnValidationError",
@@ -500,7 +503,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  true,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "No product inserted"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_NO_PRODUCT_INSERTED.String(), "tidak ada produk yang disimpan"),
 		},
 		{
 			name: "CreateProduct_DifferenStoreIDNotAdmin_DontHavePermission",
@@ -517,7 +520,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  false,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store"),
+			expectedError: util.NewError(codes.PermissionDenied, errPb.StoreErrorCode_DONT_HAVE_PERMISSION_TO_CREATE_OR_UPDATE_STORE.String(), "Anda tidak memiliki izin untuk membuat/memperbarui produk untuk toko ini"),
 		},
 		{
 			name: "UpdateProduct_DifferenStoreIDNotAdmin_DontHavePermission",
@@ -534,7 +537,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  true,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store"),
+			expectedError: util.NewError(codes.PermissionDenied, errPb.StoreErrorCode_DONT_HAVE_PERMISSION_TO_CREATE_OR_UPDATE_STORE.String(), "Anda tidak memiliki izin untuk membuat/memperbarui produk untuk toko ini"),
 		},
 		{
 			name: "CreateProduct_UomNotProvided_Error",
@@ -551,7 +554,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  false,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan"),
 		},
 		{
 			name: "UpdateProduct_ProductIdNotProvided_Error",
@@ -568,7 +571,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  true,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Product id is required"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_IS_REQUIRED.String(), "Product id diperlukan"),
 		},
 		{
 			name: "UpdateProduct_UomNotProvided_Error",
@@ -585,7 +588,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  true,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan"),
 		},
 		{
 			name: "CreateProduct_ProdTypeNotProvided_Error",
@@ -602,7 +605,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  false,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "Product type id diperlukan"),
 		},
 		{
 			name: "UpdateProduct_ProdTypeNotProvided_Error",
@@ -619,7 +622,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate:  true,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Product type id is required"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "Product type id diperlukan"),
 		},
 		{
 			name: "CreateProduct_StockIsNegative_Error",
@@ -643,7 +646,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				},
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Stock should be positive"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STOCK_SHOULD_BE_POSITIVE.String(), "Stock harus positif"),
 		},
 		{
 			name: "UpdateProduct_StockIsNegative_Error",
@@ -671,7 +674,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate: true,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Stock should be positive"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STOCK_SHOULD_BE_POSITIVE.String(), "Stock harus positif"),
 		},
 		{
 			name: "CreateProduct_ProductAlreadyExisted_ReturnValidationError",
@@ -686,8 +689,9 @@ func Test_service_UpsertProducts(t *testing.T) {
 				products:  existedProducts,
 				userID:    userIdUuid,
 			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.AlreadyExists, "Product are already exist : "+strings.Join(existedProdNames, ",")),
+			wantErr: true,
+			expectedError: util.NewError(codes.AlreadyExists, errPb.StoreErrorCode_PRODUCTS_ARE_ALREADY_REGISTERED.String(),
+				fmt.Sprintf("Produk sudah terdaftar : %s", strings.Join(existedProdNames, ","))),
 		},
 		{
 			name: "CreateProduct_InvalidUOM_Error",
@@ -703,7 +707,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				products:  invalidUomProduct,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan"),
 		},
 		{
 			name: "UpdateProduct_InvalidUOM_Error",
@@ -741,7 +745,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate: true,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "Uom is required"),
+			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan"),
 		},
 		{
 			name: "CreateProduct_InvalidProductType_Error",
@@ -757,7 +761,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				products:  invalidProdTypeProduct,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.NotFound, "Product type id is not found"),
+			expectedError: util.NewError(codes.NotFound, errPb.StoreErrorCode_PRODUCT_TYPE_ID_IS_NOT_FOUND.String(), "Product type id tidak ditemukan"),
 		},
 		{
 			name: "UpdateProduct_InvalidProductType_Error",
@@ -795,7 +799,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 				isUpdate: true,
 			},
 			wantErr:       true,
-			expectedError: status.Errorf(codes.NotFound, "Product type id is not found"),
+			expectedError: util.NewError(codes.NotFound, errPb.StoreErrorCode_PRODUCT_TYPE_ID_IS_NOT_FOUND.String(), "Product type id tidak ditemukan"),
 		},
 		{
 			name: "CreateProduct_DifferenStoreIDButAdmin_Success",

@@ -229,6 +229,139 @@ var _ interface {
 	ErrorName() string
 } = BaseModelValidationError{}
 
+// Validate checks the field values on GenericResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GenericResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GenericResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GenericResponseMultiError, or nil if none found.
+func (m *GenericResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GenericResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GenericResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GenericResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GenericResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GenericResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GenericResponseMultiError is an error wrapping multiple validation errors
+// returned by GenericResponse.ValidateAll() if the designated constraints
+// aren't met.
+type GenericResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GenericResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GenericResponseMultiError) AllErrors() []error { return m }
+
+// GenericResponseValidationError is the validation error returned by
+// GenericResponse.Validate if the designated constraints aren't met.
+type GenericResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GenericResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GenericResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GenericResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GenericResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GenericResponseValidationError) ErrorName() string { return "GenericResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GenericResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGenericResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GenericResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GenericResponseValidationError{}
+
 // Validate checks the field values on StoreImage with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -3198,112 +3331,6 @@ var _ interface {
 	ErrorName() string
 } = InsertProductsRequestValidationError{}
 
-// Validate checks the field values on InsertProductsResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *InsertProductsResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on InsertProductsResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// InsertProductsResponseMultiError, or nil if none found.
-func (m *InsertProductsResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *InsertProductsResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	if len(errors) > 0 {
-		return InsertProductsResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// InsertProductsResponseMultiError is an error wrapping multiple validation
-// errors returned by InsertProductsResponse.ValidateAll() if the designated
-// constraints aren't met.
-type InsertProductsResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m InsertProductsResponseMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m InsertProductsResponseMultiError) AllErrors() []error { return m }
-
-// InsertProductsResponseValidationError is the validation error returned by
-// InsertProductsResponse.Validate if the designated constraints aren't met.
-type InsertProductsResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e InsertProductsResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e InsertProductsResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e InsertProductsResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e InsertProductsResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e InsertProductsResponseValidationError) ErrorName() string {
-	return "InsertProductsResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e InsertProductsResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sInsertProductsResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = InsertProductsResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = InsertProductsResponseValidationError{}
-
 // Validate checks the field values on UpdateProductRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -3436,112 +3463,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateProductRequestValidationError{}
-
-// Validate checks the field values on UpdateProductResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *UpdateProductResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on UpdateProductResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// UpdateProductResponseMultiError, or nil if none found.
-func (m *UpdateProductResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *UpdateProductResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	if len(errors) > 0 {
-		return UpdateProductResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// UpdateProductResponseMultiError is an error wrapping multiple validation
-// errors returned by UpdateProductResponse.ValidateAll() if the designated
-// constraints aren't met.
-type UpdateProductResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m UpdateProductResponseMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m UpdateProductResponseMultiError) AllErrors() []error { return m }
-
-// UpdateProductResponseValidationError is the validation error returned by
-// UpdateProductResponse.Validate if the designated constraints aren't met.
-type UpdateProductResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e UpdateProductResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e UpdateProductResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e UpdateProductResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e UpdateProductResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e UpdateProductResponseValidationError) ErrorName() string {
-	return "UpdateProductResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e UpdateProductResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sUpdateProductResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = UpdateProductResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = UpdateProductResponseValidationError{}
 
 // Validate checks the field values on UpsertUnitOfMeasureRequest with the
 // rules defined in the proto definition for this message. If any rules are
