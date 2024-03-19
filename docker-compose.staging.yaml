@@ -14,7 +14,7 @@ services:
       - DB_NAME=store-service
       - GRPC_UTILITY_HOST=stag-utility-service:7300
       - STORAGE_ENDPOINT=172.27.0.3:9000
-      - STORAGE_PUBLIC_URL=http://172.19.14.120:9100
+      - STORAGE_PUBLIC_URL=http://172.19.14.96:9100
       - STORAGE_ACCESS_KEY=18qnD4xSmhYZPXbTOICR
       - STORAGE_SECRET_KEY=OYbMiwBEmTHayFtest5Y0V946FrTs3ZnDMpjV5lM
       - STORAGE_BUCKET_NAME=mitra-apps
