@@ -9,11 +9,13 @@ import (
 	imageRepository "github.com/Mitra-Apps/be-store-service/domain/image/repository"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	prodRepository "github.com/Mitra-Apps/be-store-service/domain/product/repository"
+	errPb "github.com/Mitra-Apps/be-store-service/domain/proto"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/lib"
 	utilityPb "github.com/Mitra-Apps/be-utility-service/domain/proto/utility"
+	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -205,16 +207,17 @@ func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleName
 
 func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, isUpdate bool, products ...*prodEntity.Product) error {
 	if len(products) == 0 {
-		return status.Errorf(codes.InvalidArgument, "No product inserted")
+		return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_NO_PRODUCT_INSERTED.String(), "tidak ada produk yang disimpan")
 	}
 
 	if storeID == uuid.Nil {
-		return status.Errorf(codes.InvalidArgument, "Store id is required")
+		return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STORE_ID_IS_REQUIRED.String(), "Store id diperlukan")
 	}
 
 	existingStoreByStoreId, err := s.storeRepository.GetStore(ctx, storeID.String())
 	if err != nil {
 		return err
+
 	}
 
 	var isAdmin bool
@@ -225,7 +228,7 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 		}
 	}
 	if existingStoreByStoreId.UserID != userID && !isAdmin {
-		return status.Errorf(codes.PermissionDenied, "You don't have permission to create / update product for this store")
+		return util.NewError(codes.PermissionDenied, errPb.StoreErrorCode_DONT_HAVE_PERMISSION_TO_CREATE_OR_UPDATE_STORE.String(), "Anda tidak memiliki izin untuk membuat/memperbarui produk untuk toko ini")
 	}
 
 	names := []string{}
@@ -233,21 +236,21 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	prodTypeIdsMap := make(map[int64]bool)
 	for _, p := range products {
 		if isUpdate && p.ID == uuid.Nil {
-			return status.Errorf(codes.InvalidArgument, "Product id is required")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_IS_REQUIRED.String(), "Product id diperlukan")
 		} else if !isUpdate && p.ID != uuid.Nil {
-			return status.Errorf(codes.InvalidArgument, "Product id must be empty")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_ID_SHOULD_BE_EMPTY.String(), "Product id harus kosong")
 		}
 
 		p.StoreID = storeID
 		names = append(names, p.Name)
 		if p.Uom == "" {
-			return status.Errorf(codes.InvalidArgument, "Uom is required")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan")
 		}
 		if p.ProductTypeID == 0 {
-			return status.Errorf(codes.InvalidArgument, "Product type id is required")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "Product type id diperlukan")
 		}
 		if p.Stock < 0 {
-			return status.Errorf(codes.InvalidArgument, "Stock should be positive")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STOCK_SHOULD_BE_POSITIVE.String(), "Stock harus positif")
 		}
 		if !prodTypeIdsMap[p.ProductTypeID] {
 			productTypeIds = append(productTypeIds, p.ProductTypeID)
@@ -264,23 +267,23 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 			for _, p := range existingProds {
 				existingProdNames = append(existingProdNames, p.Name)
 			}
-			return status.Errorf(codes.AlreadyExists,
-				fmt.Sprintf("Product are already exist : %s", strings.Join(existingProdNames, ",")))
+			return util.NewError(codes.AlreadyExists, errPb.StoreErrorCode_PRODUCTS_ARE_ALREADY_REGISTERED.String(),
+				fmt.Sprintf("Produk sudah terdaftar : %s", strings.Join(existingProdNames, ",")))
 		}
 	}
 
 	existingProdTypes, err := s.productRepository.GetProductTypesByIds(ctx, productTypeIds)
 	if err != nil {
-		return status.Errorf(codes.Internal, "Error when getting related product type")
+		return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_GETTING_RELATED_PRODUCT_TYPE.String(), "Error saat mencari data product type")
 	}
 	if len(productTypeIds) > len(existingProdTypes) {
-		return status.Errorf(codes.NotFound, "Product type id is not found")
+		return util.NewError(codes.NotFound, errPb.StoreErrorCode_PRODUCT_TYPE_ID_IS_NOT_FOUND.String(), "Product type id tidak ditemukan")
 	}
 
 	s.productRepository.InitiateTransaction(ctx)
 	err = s.productRepository.UpsertProducts(ctx, products)
 	if err != nil {
-		return status.Errorf(codes.Internal, "Error when inserting / updating products : "+err.Error())
+		return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_INSERTING_OR_UPDATING_PRODUCT.String(), "Error saat membuat / memperbarui data produk : "+err.Error())
 	}
 
 	var prodIds []uuid.UUID
@@ -297,7 +300,7 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 
 		prodImages, existingProdImagesByProdIdMap, err := s.productRepository.GetProductImagesByProductIds(ctx, prodIds)
 		if err != nil {
-			return status.Errorf(codes.Internal, "Error when getting product images : "+err.Error())
+			return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_GETTING_PRODUCT_IMAGE.String(), "Error saat melakukan pencarian gambar produk : "+err.Error())
 		}
 
 		existingProdImagesMap := make(map[uuid.UUID]*prodEntity.ProductImage)
@@ -343,11 +346,11 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 				log.Printf("Remove product images : %v \n", removeProdImageIds)
 				if err := s.imageRepository.RemoveImage(ctx, removeProdImageIds, "product", userID.String()); err != nil {
 					s.productRepository.TransactionRollback()
-					return status.Errorf(codes.Internal, "Error when removing images from storage : "+err.Error())
+					return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_REMOVING_IMAGE_FROM_STORAGE.String(), "Error saat menghapus gambar dari penyimpanan : "+err.Error())
 				}
 				if err := s.productRepository.DeleteProductImages(ctx, removeProductImages); err != nil {
 					s.productRepository.TransactionRollback()
-					return status.Errorf(codes.Internal, "Error when deleting product images : "+err.Error())
+					return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_DELETING_PRODUCT_IMAGE.String(), "Error saat menghapus gambar produk : "+err.Error())
 				}
 			}
 		}
@@ -386,7 +389,7 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 
 func (s *service) UploadImageToStorage(ctx context.Context, imageBase64Str string, userID uuid.UUID) (*uuid.UUID, error) {
 	if strings.Trim(imageBase64Str, " ") == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "Image in Base64 format is required")
+		return nil, util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_IMAGE_SHOULD_BE_IN_BASE_64_FORMAT.String(), "Gambar produk harus dalam format base 64")
 	}
 	imageId, err := s.imageRepository.UploadImage(ctx, imageBase64Str, "product", userID.String())
 	if err != nil {

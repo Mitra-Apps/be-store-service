@@ -6,10 +6,12 @@ import (
 	"strings"
 
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	errPb "github.com/Mitra-Apps/be-store-service/domain/proto"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
+	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -204,10 +206,10 @@ func (s *GrpcRoute) OpenCloseStore(ctx context.Context, req *pb.OpenCloseStoreRe
 	}, nil
 }
 
-func (s *GrpcRoute) InsertProducts(ctx context.Context, req *pb.InsertProductsRequest) (*pb.InsertProductsResponse, error) {
+func (s *GrpcRoute) InsertProducts(ctx context.Context, req *pb.InsertProductsRequest) (*pb.GenericResponse, error) {
 	claims, err := middleware.GetClaimsFromContext(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+		return nil, util.NewError(codes.Unauthenticated, errPb.StoreErrorCode_ERROR_WHEN_GETTING_CLAIMS_FROM_JWT_TOKEN.String(), "Error saat mendapatkan claims dari jwt token")
 	}
 
 	productList := []*prodEntity.Product{}
@@ -233,16 +235,16 @@ func (s *GrpcRoute) InsertProducts(ctx context.Context, req *pb.InsertProductsRe
 		return nil, err
 	}
 
-	return &pb.InsertProductsResponse{
+	return &pb.GenericResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
 	}, nil
 }
 
-func (s *GrpcRoute) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.UpdateProductResponse, error) {
+func (s *GrpcRoute) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.GenericResponse, error) {
 	claims, err := middleware.GetClaimsFromContext(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+		return nil, util.NewError(codes.Unauthenticated, errPb.StoreErrorCode_ERROR_WHEN_GETTING_CLAIMS_FROM_JWT_TOKEN.String(), "Error saat mendapatkan claims dari jwt token")
 	}
 
 	product := &prodEntity.Product{}
@@ -263,7 +265,7 @@ func (s *GrpcRoute) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequ
 		return nil, err
 	}
 
-	return &pb.UpdateProductResponse{
+	return &pb.GenericResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
 	}, nil
@@ -272,16 +274,16 @@ func (s *GrpcRoute) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequ
 func validateProduct(products ...*prodEntity.Product) error {
 	for _, p := range products {
 		if p.Name == "" {
-			return status.Errorf(codes.InvalidArgument, "Name is required")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_NAME_IS_REQUIRED.String(), "Nama tidak boleh kosong")
 		}
 		if p.Price <= 0 {
-			return status.Errorf(codes.InvalidArgument, "Price is required")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRICE_IS_REQUIRED.String(), "Harga tidak boleh kosong")
 		}
 		if p.Uom == "" {
-			return status.Errorf(codes.InvalidArgument, "unit of measure is required")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan")
 		}
 		if p.ProductTypeID == 0 {
-			return status.Errorf(codes.InvalidArgument, "product type id is required")
+			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "product type diperlukan")
 		}
 	}
 	return nil

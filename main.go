@@ -15,6 +15,7 @@ import (
 	grpcRoute "github.com/Mitra-Apps/be-store-service/handler/grpc"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
+	util "github.com/Mitra-Apps/be-utility-service/config/tools"
 	utilityPb "github.com/Mitra-Apps/be-utility-service/domain/proto/utility"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/joho/godotenv"
@@ -104,7 +105,7 @@ func GrpcNewServer(ctx context.Context, opts []grpc.ServerOption) *grpc.Server {
 }
 
 func HttpNewServer(ctx context.Context, grpcPort, httpPort string) error {
-	mux := runtime.NewServeMux()
+	mux := runtime.NewServeMux(runtime.WithErrorHandler(util.CustomErrorHandler))
 	mux.HandlePath("GET", "/docs/v1/stores/openapi.yaml", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
 		http.ServeFile(w, r, "docs/openapi.yaml")
 	})

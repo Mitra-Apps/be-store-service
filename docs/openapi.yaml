@@ -199,7 +199,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/UpdateProductResponse'
+                                $ref: '#/components/schemas/GenericResponse'
                 default:
                     description: Default error response
                     content:
@@ -223,7 +223,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/InsertProductsResponse'
+                                $ref: '#/components/schemas/GenericResponse'
                 default:
                     description: Default error response
                     content:
@@ -517,6 +517,16 @@ components:
                 data:
                     $ref: '#/components/schemas/Store'
             description: Response message for creating a store
+        GenericResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    type: object
         GetProductByIdResponse:
             type: object
             properties:
@@ -622,14 +632,6 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/Product'
-        InsertProductsResponse:
-            type: object
-            properties:
-                code:
-                    type: integer
-                    format: int32
-                message:
-                    type: string
         ListStoresResponse:
             type: object
             properties:
@@ -837,14 +839,6 @@ components:
                     type: string
                 isActive:
                     type: boolean
-        UpdateProductResponse:
-            type: object
-            properties:
-                code:
-                    type: integer
-                    format: int32
-                message:
-                    type: string
         UpdateStoreResponse:
             type: object
             properties:
