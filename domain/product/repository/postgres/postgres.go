@@ -119,16 +119,10 @@ func (p *Postgres) TransactionCommit() error {
 }
 
 func (p *Postgres) UpsertProducts(ctx context.Context, products []*entity.Product) error {
-	funcScopeTrx := p.InitiateTransaction(ctx)
-
 	if err := p.trx.Omit("Images").
 		Save(products).Error; err != nil {
 		p.trx.Rollback()
 		return err
-	}
-
-	if funcScopeTrx {
-		return p.TransactionCommit()
 	}
 
 	return nil
