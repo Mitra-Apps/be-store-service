@@ -195,6 +195,12 @@ service StoreService {
         };
     }
 
+    rpc DeleteProduct(DeleteProductRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/v1/product/{product_id}"
+        };
+    }
+
     rpc GetUnitOfMeasures(GetUnitOfMeasuresRequest) returns (GetUnitOfMeasuresResponse) {
         option (google.api.http) = {
             get: "/api/v1/uom/{is_include_deactivated}"
@@ -330,6 +336,10 @@ message InsertProductsRequest {
 message UpdateProductRequest {
     string product_id = 1;
     Product product = 2;
+}
+
+message DeleteProductRequest {
+    string product_id = 1;
 }
 
 message UpsertUnitOfMeasureRequest {

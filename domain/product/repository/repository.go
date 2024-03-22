@@ -32,4 +32,5 @@ type ProductRepository interface {
 	TransactionRollback()
 	GetProductImagesByProductIds(ctx context.Context, productIds []uuid.UUID) ([]*entity.ProductImage, map[uuid.UUID][]*entity.ProductImage, error)
 	DeleteProductImages(ctx context.Context, productImages []*entity.ProductImage) error
+	DeleteProductById(ctx context.Context, id uuid.UUID) error
 }

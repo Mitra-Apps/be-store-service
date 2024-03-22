@@ -31,6 +31,7 @@ const (
 	StoreService_GetProductList_FullMethodName        = "/StoreService/GetProductList"
 	StoreService_InsertProducts_FullMethodName        = "/StoreService/InsertProducts"
 	StoreService_UpdateProduct_FullMethodName         = "/StoreService/UpdateProduct"
+	StoreService_DeleteProduct_FullMethodName         = "/StoreService/DeleteProduct"
 	StoreService_GetUnitOfMeasures_FullMethodName     = "/StoreService/GetUnitOfMeasures"
 	StoreService_UpsertUnitOfMeasure_FullMethodName   = "/StoreService/UpsertUnitOfMeasure"
 	StoreService_UpdateUnitOfMeasure_FullMethodName   = "/StoreService/UpdateUnitOfMeasure"
@@ -63,6 +64,7 @@ type StoreServiceClient interface {
 	GetProductList(ctx context.Context, in *GetProductListRequest, opts ...grpc.CallOption) (*GetProductListResponse, error)
 	InsertProducts(ctx context.Context, in *InsertProductsRequest, opts ...grpc.CallOption) (*GenericResponse, error)
 	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*GenericResponse, error)
+	DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetUnitOfMeasures(ctx context.Context, in *GetUnitOfMeasuresRequest, opts ...grpc.CallOption) (*GetUnitOfMeasuresResponse, error)
 	UpsertUnitOfMeasure(ctx context.Context, in *UpsertUnitOfMeasureRequest, opts ...grpc.CallOption) (*UpsertUnitOfMeasureResponse, error)
 	UpdateUnitOfMeasure(ctx context.Context, in *UpdateUnitOfMeasureRequest, opts ...grpc.CallOption) (*UpdateUnitOfMeasureResponse, error)
@@ -180,6 +182,15 @@ func (c *storeServiceClient) UpdateProduct(ctx context.Context, in *UpdateProduc
 	return out, nil
 }
 
+func (c *storeServiceClient) DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, StoreService_DeleteProduct_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *storeServiceClient) GetUnitOfMeasures(ctx context.Context, in *GetUnitOfMeasuresRequest, opts ...grpc.CallOption) (*GetUnitOfMeasuresResponse, error) {
 	out := new(GetUnitOfMeasuresResponse)
 	err := c.cc.Invoke(ctx, StoreService_GetUnitOfMeasures_FullMethodName, in, out, opts...)
@@ -274,6 +285,7 @@ type StoreServiceServer interface {
 	GetProductList(context.Context, *GetProductListRequest) (*GetProductListResponse, error)
 	InsertProducts(context.Context, *InsertProductsRequest) (*GenericResponse, error)
 	UpdateProduct(context.Context, *UpdateProductRequest) (*GenericResponse, error)
+	DeleteProduct(context.Context, *DeleteProductRequest) (*emptypb.Empty, error)
 	GetUnitOfMeasures(context.Context, *GetUnitOfMeasuresRequest) (*GetUnitOfMeasuresResponse, error)
 	UpsertUnitOfMeasure(context.Context, *UpsertUnitOfMeasureRequest) (*UpsertUnitOfMeasureResponse, error)
 	UpdateUnitOfMeasure(context.Context, *UpdateUnitOfMeasureRequest) (*UpdateUnitOfMeasureResponse, error)
@@ -321,6 +333,9 @@ func (UnimplementedStoreServiceServer) InsertProducts(context.Context, *InsertPr
 }
 func (UnimplementedStoreServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*GenericResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
+}
+func (UnimplementedStoreServiceServer) DeleteProduct(context.Context, *DeleteProductRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProduct not implemented")
 }
 func (UnimplementedStoreServiceServer) GetUnitOfMeasures(context.Context, *GetUnitOfMeasuresRequest) (*GetUnitOfMeasuresResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUnitOfMeasures not implemented")
@@ -557,6 +572,24 @@ func _StoreService_UpdateProduct_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_DeleteProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).DeleteProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_DeleteProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).DeleteProduct(ctx, req.(*DeleteProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StoreService_GetUnitOfMeasures_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetUnitOfMeasuresRequest)
 	if err := dec(in); err != nil {
@@ -751,6 +784,10 @@ var StoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateProduct",
 			Handler:    _StoreService_UpdateProduct_Handler,
+		},
+		{
+			MethodName: "DeleteProduct",
+			Handler:    _StoreService_DeleteProduct_Handler,
 		},
 		{
 			MethodName: "GetUnitOfMeasures",

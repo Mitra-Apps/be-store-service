@@ -1911,3 +1911,165 @@ func Test_service_GetProductById(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteProductById(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	mockImageRepo := imageRepoMock.NewMockImageRepository(ctrl)
+
+	ctx := context.Background()
+	errMsg := "ERROR"
+	err := errors.New(errMsg)
+
+	productService := New(nil, mockProdRepo, nil, mockImageRepo)
+
+	productIDUuid := uuid.MustParse(productID)
+	userIDUuid := uuid.MustParse(userID)
+	removeProdImage1 := &prodEntity.ProductImage{
+		ProductId:      productIDUuid,
+		ImageBase64Str: "aaa",
+	}
+	removeProdImage2 := &prodEntity.ProductImage{
+		ProductId:      productIDUuid,
+		ImageBase64Str: "aaa",
+	}
+
+	productImagesToBeRemoved := []*prodEntity.ProductImage{removeProdImage1, removeProdImage2}
+	existingProdImagesMap := make(map[uuid.UUID][]*prodEntity.ProductImage)
+
+	t.Run("Should return empty when success", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIDUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockImageRepo.EXPECT().
+			RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			DeleteProductImages(ctx, productImagesToBeRemoved).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			DeleteProductById(gomock.Any(), productIDUuid).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			TransactionCommit().
+			Times(1)
+
+		err := productService.DeleteProductById(ctx, userIDUuid, productIDUuid)
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("Should return error when failed to get product image", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIDUuid}).
+			Times(1).
+			Return([]*prodEntity.ProductImage{}, existingProdImagesMap, err)
+
+		err := productService.DeleteProductById(ctx, userIDUuid, productIDUuid)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error when failed delete image", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIDUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockImageRepo.EXPECT().
+			RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			DeleteProductImages(ctx, productImagesToBeRemoved).
+			Times(1).
+			Return(err)
+
+		mockProdRepo.EXPECT().
+			TransactionRollback().
+			Times(1)
+
+		err := productService.DeleteProductById(ctx, userIDUuid, productIDUuid)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error when failed remove image", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIDUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockImageRepo.EXPECT().
+			RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(err)
+
+		mockProdRepo.EXPECT().
+			TransactionRollback().
+			Times(1)
+
+		err := productService.DeleteProductById(ctx, userIDUuid, productIDUuid)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error when failed to delete", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIDUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockImageRepo.EXPECT().
+			RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			DeleteProductImages(ctx, productImagesToBeRemoved).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			DeleteProductById(gomock.Any(), productIDUuid).
+			Times(1).
+			Return(err)
+
+		mockProdRepo.EXPECT().
+			TransactionRollback().
+			Times(1)
+
+		err := productService.DeleteProductById(ctx, userIDUuid, productIDUuid)
+
+		assert.Error(t, err)
+	})
+}
