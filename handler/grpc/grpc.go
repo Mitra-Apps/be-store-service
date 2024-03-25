@@ -271,6 +271,20 @@ func (s *GrpcRoute) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequ
 	}, nil
 }
 
+func (s *GrpcRoute) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*empty.Empty, error) {
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, util.NewError(codes.Unauthenticated, errPb.StoreErrorCode_ERROR_WHEN_GETTING_CLAIMS_FROM_JWT_TOKEN.String(), "Error saat mendapatkan claims dari jwt token")
+	}
+
+	id, err := uuid.Parse(req.GetProductId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
+	}
+
+	return &emptypb.Empty{}, s.service.DeleteProductById(ctx, claims.UserID, id)
+}
+
 func validateProduct(products ...*prodEntity.Product) error {
 	for _, p := range products {
 		if p.Name == "" {

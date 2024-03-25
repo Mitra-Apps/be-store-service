@@ -158,6 +158,14 @@ func (p *Postgres) DeleteProductImages(ctx context.Context, productImages []*ent
 	return nil
 }
 
+func (p *Postgres) DeleteProductById(ctx context.Context, id uuid.UUID) error {
+	if err := p.trx.Where("id = ?", id.String()).Delete(&entity.Product{}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (p *Postgres) GetProductImagesByProductIds(ctx context.Context, productIds []uuid.UUID) ([]*entity.ProductImage, map[uuid.UUID][]*entity.ProductImage, error) {
 	prodImages := []*entity.ProductImage{}
 	if tx := p.db.WithContext(ctx).Where("product_id IN ?", productIds).Find(&prodImages); tx.Error != nil {

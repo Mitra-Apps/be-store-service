@@ -41,6 +41,20 @@ func (m *MockProductRepository) EXPECT() *MockProductRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DeleteProductById mocks base method.
+func (m *MockProductRepository) DeleteProductById(ctx context.Context, id uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteProductById", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteProductById indicates an expected call of DeleteProductById.
+func (mr *MockProductRepositoryMockRecorder) DeleteProductById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductById", reflect.TypeOf((*MockProductRepository)(nil).DeleteProductById), ctx, id)
+}
+
 // DeleteProductImages mocks base method.
 func (m *MockProductRepository) DeleteProductImages(ctx context.Context, productImages []*entity.ProductImage) error {
 	m.ctrl.T.Helper()
@@ -50,7 +64,7 @@ func (m *MockProductRepository) DeleteProductImages(ctx context.Context, product
 }
 
 // DeleteProductImages indicates an expected call of DeleteProductImages.
-func (mr *MockProductRepositoryMockRecorder) DeleteProductImages(ctx, productImages interface{}) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) DeleteProductImages(ctx, productImages any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductImages", reflect.TypeOf((*MockProductRepository)(nil).DeleteProductImages), ctx, productImages)
 }
@@ -126,7 +140,7 @@ func (m *MockProductRepository) GetProductImagesByProductIds(ctx context.Context
 }
 
 // GetProductImagesByProductIds indicates an expected call of GetProductImagesByProductIds.
-func (mr *MockProductRepositoryMockRecorder) GetProductImagesByProductIds(ctx, productIds interface{}) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductImagesByProductIds(ctx, productIds any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductImagesByProductIds", reflect.TypeOf((*MockProductRepository)(nil).GetProductImagesByProductIds), ctx, productIds)
 }

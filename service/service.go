@@ -34,6 +34,7 @@ type Service interface {
 	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
 	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
 	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error)
+	DeleteProductById(ctx context.Context, userId uuid.UUID, id uuid.UUID) error
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
@@ -483,6 +484,44 @@ func (s *service) UpsertProductType(ctx context.Context, prodType *prodEntity.Pr
 		return status.Errorf(codes.Internal, "Error when inserting / updating product type :"+err.Error())
 	}
 	return nil
+}
+
+func (s *service) DeleteProductById(ctx context.Context, userId uuid.UUID, id uuid.UUID) error {
+	prodIds := []uuid.UUID{id}
+	prodImages, _, err := s.productRepository.GetProductImagesByProductIds(ctx, prodIds)
+	if err != nil {
+		return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_GETTING_PRODUCT_IMAGE.String(), "Error saat melakukan pencarian gambar produk : "+err.Error())
+	}
+
+	s.productRepository.InitiateTransaction(ctx)
+	removeProdImageIds := []string{}
+	for _, i := range prodImages {
+		log.Println("Remove : ", i.ID.String())
+		removeProdImageIds = append(removeProdImageIds, i.ID.String())
+	}
+
+	log.Printf("Remove product images : %v \n", removeProdImageIds)
+	if len(removeProdImageIds) > 0 {
+		if err := s.imageRepository.RemoveImage(ctx, removeProdImageIds, "product", userId.String()); err != nil {
+			s.productRepository.TransactionRollback()
+			return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_REMOVING_IMAGE_FROM_STORAGE.String(), "Error saat menghapus gambar dari penyimpanan : "+err.Error())
+		}
+
+		if err := s.productRepository.DeleteProductImages(ctx, prodImages); err != nil {
+			s.productRepository.TransactionRollback()
+			return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_DELETING_PRODUCT_IMAGE.String(), "Error saat menghapus gambar produk : "+err.Error())
+		}
+	}
+
+	err = s.productRepository.DeleteProductById(ctx, id)
+	if err != nil {
+		s.productRepository.TransactionRollback()
+		return util.NewError(codes.Internal, errPb.StoreErrorCode_PRODUCT_IS_REQUIRED.String(), "Error saat menghapus produk : "+err.Error())
+	}
+
+	s.productRepository.TransactionCommit()
+
+	return err
 }
 
 func (s *service) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error) {
