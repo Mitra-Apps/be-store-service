@@ -29,18 +29,16 @@ type Service interface {
 	DeleteStores(ctx context.Context, storeIDs []string) error
 	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
 	UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, isUpdate bool, products ...*prodEntity.Product) error
-	UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitOfMeasure) error
 	UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
 	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
 	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
 	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error)
 	DeleteProductById(ctx context.Context, userId uuid.UUID, id uuid.UUID) error
-	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
 	GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error)
-	UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *prodEntity.UnitOfMeasure) error
 }
+
 type service struct {
 	storeRepository   repository.StoreServiceRepository
 	productRepository prodRepository.ProductRepository
@@ -175,6 +173,7 @@ func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleName
 	if strings.Trim(storeID, " ") == "" {
 		return status.Errorf(codes.InvalidArgument, "store id is required")
 	}
+
 	storeIDUuid, err := uuid.Parse(storeID)
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, "store id should be uuid")
@@ -184,6 +183,7 @@ func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleName
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, err.Error())
 	}
+
 	if store == nil {
 		return status.Errorf(codes.InvalidArgument, "Invalid store id")
 	}
@@ -203,6 +203,7 @@ func (s *service) OpenCloseStore(ctx context.Context, userID uuid.UUID, roleName
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error when opening / closing store")
 	}
+
 	return nil
 }
 
@@ -228,6 +229,7 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 			break
 		}
 	}
+
 	if existingStoreByStoreId.UserID != userID && !isAdmin {
 		return util.NewError(codes.PermissionDenied, errPb.StoreErrorCode_DONT_HAVE_PERMISSION_TO_CREATE_OR_UPDATE_STORE.String(), "Anda tidak memiliki izin untuk membuat/memperbarui produk untuk toko ini")
 	}
@@ -258,6 +260,7 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 			prodTypeIdsMap[p.ProductTypeID] = true
 		}
 	}
+
 	if !isUpdate {
 		existingProds, err := s.productRepository.GetProductsByStoreIdAndNames(ctx, storeID, names)
 		if err != nil {
@@ -277,6 +280,7 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	if err != nil {
 		return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_GETTING_RELATED_PRODUCT_TYPE.String(), "Error saat mencari data product type")
 	}
+
 	if len(productTypeIds) > len(existingProdTypes) {
 		return util.NewError(codes.NotFound, errPb.StoreErrorCode_PRODUCT_TYPE_ID_IS_NOT_FOUND.String(), "Product type id tidak ditemukan")
 	}
@@ -392,66 +396,14 @@ func (s *service) UploadImageToStorage(ctx context.Context, imageBase64Str strin
 	if strings.Trim(imageBase64Str, " ") == "" {
 		return nil, util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_IMAGE_SHOULD_BE_IN_BASE_64_FORMAT.String(), "Gambar produk harus dalam format base 64")
 	}
+
 	imageId, err := s.imageRepository.UploadImage(ctx, imageBase64Str, "product", userID.String())
 	if err != nil {
 		s.productRepository.TransactionRollback()
 		return nil, err
 	}
+
 	return imageId, nil
-}
-
-func (s *service) UpsertUnitOfMeasure(ctx context.Context, uom *prodEntity.UnitOfMeasure) error {
-	existingUom, err := s.productRepository.GetUnitOfMeasureByName(ctx, uom.Name)
-	if err != nil {
-		return status.Errorf(codes.Internal, "Error when getting uom by name : "+err.Error())
-	}
-	if existingUom != nil {
-		return status.Errorf(codes.AlreadyExists, "Uom name is already exist in database")
-	}
-	existingUom, err = s.productRepository.GetUnitOfMeasureBySymbol(ctx, uom.Symbol)
-	if err != nil {
-		return status.Errorf(codes.Internal, "Error when getting uom by symbol : "+err.Error())
-	}
-	if existingUom != nil {
-		return status.Errorf(codes.AlreadyExists, "Uom symbol is already exist in database")
-	}
-	if err := s.productRepository.UpsertUnitOfMeasure(ctx, uom); err != nil {
-		return status.Errorf(codes.Internal, "Error when inserting / updating unit of measure :"+err.Error())
-	}
-	return nil
-}
-
-func (s *service) UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *prodEntity.UnitOfMeasure) error {
-	currentUom, getUomByIdErr := s.productRepository.GetUnitOfMeasureById(ctx, uomId)
-	if getUomByIdErr != nil {
-		return status.Errorf(codes.Internal, "Error when getting uom: "+getUomByIdErr.Error())
-	}
-
-	existingUom, err := s.productRepository.GetUnitOfMeasureByName(ctx, uom.Name)
-	if err != nil {
-		return status.Errorf(codes.Internal, "Error when getting uom by name : "+err.Error())
-	}
-	if existingUom != nil && existingUom.ID != currentUom.ID {
-		return status.Errorf(codes.AlreadyExists, "Name is already used by another UoM")
-	}
-
-	existingUom, err = s.productRepository.GetUnitOfMeasureBySymbol(ctx, uom.Symbol)
-	if err != nil {
-		return status.Errorf(codes.Internal, "Error when getting uom by symbol : "+err.Error())
-	}
-	if existingUom != nil && existingUom.ID != currentUom.ID {
-		return status.Errorf(codes.AlreadyExists, "Symbol is already used by another UoM")
-	}
-
-	currentUom.Name = strings.ToLower(uom.Name)
-	currentUom.Symbol = uom.Symbol
-	currentUom.IsActive = uom.IsActive
-
-	if err := s.productRepository.UpsertUnitOfMeasure(ctx, currentUom); err != nil {
-		return status.Errorf(codes.Internal, "Error when updating unit of measure: "+err.Error())
-	}
-
-	return nil
 }
 
 func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error {
@@ -473,16 +425,20 @@ func (s *service) UpsertProductType(ctx context.Context, prodType *prodEntity.Pr
 	} else if prodCat == nil {
 		return status.Errorf(codes.NotFound, "Related product category data is not found")
 	}
+
 	existingProdType, err := s.productRepository.GetProductTypeByName(ctx, prodType.ProductCategoryID, prodType.Name)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error when getting product type by name : "+err.Error())
 	}
+
 	if existingProdType != nil {
 		return status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category")
 	}
+
 	if err := s.productRepository.UpsertProductType(ctx, prodType); err != nil {
-		return status.Errorf(codes.Internal, "Error when inserting / updating product type :"+err.Error())
+		return status.Errorf(codes.Internal, "Error when inserting / updating product Type :"+err.Error())
 	}
+
 	return nil
 }
 
@@ -524,13 +480,6 @@ func (s *service) DeleteProductById(ctx context.Context, userId uuid.UUID, id uu
 	return err
 }
 
-func (s *service) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) (uom []*prodEntity.UnitOfMeasure, err error) {
-	if uom, err = s.productRepository.GetUnitOfMeasures(ctx, isIncludeDeactivated); err != nil {
-		return nil, status.Errorf(codes.Internal, "Error when getting unit of measures :"+err.Error())
-	}
-	return uom, nil
-}
-
 func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error) {
 	if _, err := s.storeRepository.GetStore(ctx, storeID.String()); err != nil {
 		return nil, err
@@ -539,9 +488,11 @@ func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, p
 	if products, err = s.productRepository.GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
 	}
+
 	if err := s.GetProductImagesInformation(ctx, nil, products); err != nil {
 		return nil, err
 	}
+
 	return products, nil
 }
 
@@ -572,6 +523,7 @@ func (s *service) GetProductTypes(ctx context.Context, productCategoryID int64, 
 	if types, err = s.productRepository.GetProductTypes(ctx, productCategoryID, isIncludeDeactivated); err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting product types :"+err.Error())
 	}
+
 	return types, nil
 }
 
@@ -581,6 +533,7 @@ func (s *service) GetProductById(ctx context.Context, id uuid.UUID) (p *prodEnti
 	} else if p == nil && err == nil {
 		return nil, status.Errorf(codes.NotFound, "Product id not found")
 	}
+
 	if err := s.GetProductImagesInformation(ctx, p, nil); err != nil {
 		return nil, err
 	}
@@ -596,19 +549,23 @@ func (s *service) GetProductImagesInformation(ctx context.Context, product *prod
 	} else {
 		prodImages = append(prodImages, product.Images...)
 	}
+
 	if len(prodImages) > 0 {
 		ids := []string{}
 		for _, img := range prodImages {
 			ids = append(ids, img.ImageId.String())
 		}
+
 		images, err := s.imageRepository.GetImagesByIds(ctx, ids)
 		if err != nil {
 			return err
 		}
+
 		imgMap := make(map[string]*utilityPb.Image)
 		for _, i := range images {
 			imgMap[i.Id] = i
 		}
+
 		if product == nil {
 			for _, p := range products {
 				for _, img := range p.Images {
@@ -621,6 +578,7 @@ func (s *service) GetProductImagesInformation(ctx context.Context, product *prod
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -629,5 +587,6 @@ func (s *service) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Error when getting store by user id :"+err.Error())
 	}
+
 	return store, nil
 }
