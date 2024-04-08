@@ -8,10 +8,10 @@ github.com/DATA-DOG/go-sqlmock v1.5.2 h1:OcvFkGmslmlZibjAjaHm3L//6LiuBgolP7Oputl
 github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
 github.com/Microsoft/go-winio v0.6.0 h1:slsWYD/zyx7lCXoZVlvQrj0hPTM1HI4+v1sIda2yDvg=
 github.com/Microsoft/go-winio v0.6.0/go.mod h1:cTAf44im0RAYeL23bpB+fzCyDH2MJiz2BO69KH/soAE=
-github.com/Mitra-Apps/be-user-service v0.0.0-20240304101816-e90a810ad690 h1:dFplnXuXXVSeXU7a/yaArqAuRRlcdhsJ/mlK22vEF44=
-github.com/Mitra-Apps/be-user-service v0.0.0-20240304101816-e90a810ad690/go.mod h1:qDMyoraGpLyHq64UGB5exep+LLCdsW2TNc/PgV9w1l8=
-github.com/Mitra-Apps/be-utility-service v0.0.0-20240315073722-9701dc8f90cb h1:B842L+3ohJL4KL3bo6uOzjV68M9uAle8XLAkOhBImOQ=
-github.com/Mitra-Apps/be-utility-service v0.0.0-20240315073722-9701dc8f90cb/go.mod h1:nnJySAZ2TBxl7SsTftFOb0M3nfQSQGL1x9ruvs4p98M=
+github.com/Mitra-Apps/be-user-service v0.0.0-20240408050620-e3936e389476 h1:US4XOVKcDPsazeX1eQ8o8D7fjfIDG4zgGF9qoDZkcZA=
+github.com/Mitra-Apps/be-user-service v0.0.0-20240408050620-e3936e389476/go.mod h1:ZyurdWBFe5OmZYcWVplp/CwlJno8dXGC9SQKSzlAZo8=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240319082141-b4c292235e6f h1:ZVLYB2GZshBLZNk87GvAVNUND/Ilju3mcG3fAmgZ/PU=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240319082141-b4c292235e6f/go.mod h1:nnJySAZ2TBxl7SsTftFOb0M3nfQSQGL1x9ruvs4p98M=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
