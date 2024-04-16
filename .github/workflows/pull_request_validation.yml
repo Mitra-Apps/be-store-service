@@ -1,0 +1,49 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  pull_request:
+    branches: [ "staging" ]
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21.3'
+
+    - name: Install Dependencies
+      run: |
+        go mod tidy
+
+    - name: Run Unit Test
+      run: go test -v -coverprofile=coverage.out  ./service/
+
+    - name: Convert Coverage File
+      run: gocov convert coverage.out > coverage.json
+
+    - name: Show Coverage
+      run: gocov report coverage.out
+
+  check_coverage:
+    name: Check Coverage Percentage
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Check coverage
+      run: |
+        threshold=60
+        coverage=$(gocov convert coverage.out | gocov report | grep -oP '(?<=coverage: )[^%]+')
+        if (( $(echo "$coverage < $threshold" | bc -l) )); then
+          echo "Coverage is below the threshold of $threshold%"
+          exit 1
+        else
+          echo "Coverage is acceptable ($coverage%)"
+        fi
