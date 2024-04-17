@@ -303,61 +303,6 @@ func validateProduct(products ...*prodEntity.Product) error {
 	return nil
 }
 
-func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitOfMeasureRequest) (*pb.UpsertUnitOfMeasureResponse, error) {
-	if req.Uom.Name == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "name is required")
-	}
-	if req.Uom.Symbol == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "symbol is required")
-	}
-
-	uom := prodEntity.UnitOfMeasure{}
-	if err := uom.FromProto(req.Uom); err != nil {
-		return nil, err
-	}
-
-	claims, err := middleware.GetClaimsFromContext(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
-	}
-	uom.CreatedBy = claims.UserID
-
-	if err := g.service.UpsertUnitOfMeasure(ctx, &uom); err != nil {
-		return nil, err
-	}
-
-	return &pb.UpsertUnitOfMeasureResponse{
-		Code:    int32(codes.OK),
-		Message: codes.OK.String(),
-	}, nil
-}
-
-func (g *GrpcRoute) UpdateUnitOfMeasure(ctx context.Context, req *pb.UpdateUnitOfMeasureRequest) (*pb.UpdateUnitOfMeasureResponse, error) {
-	if err := req.Validate(); err != nil {
-		return nil, err
-	}
-
-	uom := prodEntity.UnitOfMeasure{}
-	if err := uom.FromProto(req.Uom); err != nil {
-		return nil, err
-	}
-
-	claims, err := middleware.GetClaimsFromContext(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
-	}
-	uom.UpdatedBy = claims.UserID
-
-	if err := g.service.UpdateUnitOfMeasure(ctx, req.UomId, &uom); err != nil {
-		return nil, err
-	}
-
-	return &pb.UpdateUnitOfMeasureResponse{
-		Code:    int32(codes.OK),
-		Message: codes.OK.String(),
-	}, nil
-}
-
 func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
 	if req.GetId() > 0 {
 		req.ProductCategory.Id = req.GetId()
@@ -438,22 +383,6 @@ func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProduct
 	return &pb.UpsertProductTypeResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
-	}, nil
-}
-
-func (g *GrpcRoute) GetUnitOfMeasures(ctx context.Context, req *pb.GetUnitOfMeasuresRequest) (*pb.GetUnitOfMeasuresResponse, error) {
-	uom, err := g.service.GetUnitOfMeasures(ctx, req.IsIncludeDeactivated)
-	if err != nil {
-		return nil, err
-	}
-	uoms := []*pb.UnitOfMeasure{}
-	for _, u := range uom {
-		uoms = append(uoms, u.ToProto())
-	}
-	return &pb.GetUnitOfMeasuresResponse{
-		Code:    int32(codes.OK),
-		Message: codes.OK.String(),
-		Data:    uoms,
 	}, nil
 }
 
