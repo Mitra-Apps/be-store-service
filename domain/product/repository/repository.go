@@ -3,13 +3,14 @@ package repository
 import (
 	"context"
 
+	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	"github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	"github.com/google/uuid"
 )
 
 type ProductRepository interface {
 	UpsertProducts(ctx context.Context, product []*entity.Product) error
-	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error)
+	GetProductsByStoreId(ctx context.Context, pagination base_model.Pagination, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, base_model.Pagination, error)
 	GetProductsByStoreIdAndNames(ctx context.Context, storeID uuid.UUID, names []string) ([]*entity.Product, error)
 	GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) ([]*entity.UnitOfMeasure, error)
 	GetUnitOfMeasureByName(ctx context.Context, name string) (*entity.UnitOfMeasure, error)

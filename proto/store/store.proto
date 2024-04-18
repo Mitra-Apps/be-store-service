@@ -115,6 +115,14 @@ message ProductImage {
     string image_url = 4;
 }
 
+message Pagination {
+    int32 page = 1;
+    int32 limit = 2;
+    int32 total_record = 3;
+    int32 records = 4;
+    int32 total_page = 5;
+}
+
 // Store service definition
 service StoreService {
     // Create a new store
@@ -384,12 +392,15 @@ message GetProductListRequest {
     string store_id = 1;
     int64 product_type_id = 2;
     bool is_include_deactivated = 3;
+    int32 page = 4;
+    int32 limit = 5;
 }
 
 message GetProductListResponse {
     int32 code = 1;
     string message = 2;
     repeated Product data = 3;
+    Pagination pagination = 4;
 }
 
 message GetProductByIdRequest {

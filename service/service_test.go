@@ -1278,7 +1278,7 @@ func TestUpsertProductType(t *testing.T) {
 	})
 }
 
-func TestGetProductByStoreId(t *testing.T) {
+func TestGetProductsByStoreId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
@@ -1287,6 +1287,8 @@ func TestGetProductByStoreId(t *testing.T) {
 
 	ctx := context.Background()
 
+	var page int32 = 1
+	var limit int32 = 10
 	storeIDUuid := uuid.MustParse(storeID)
 	otherStoreIDUuid := uuid.MustParse(otherStoreID)
 	otherStoreID2Uuid := uuid.MustParse(otherStoreID2)
@@ -1309,13 +1311,26 @@ func TestGetProductByStoreId(t *testing.T) {
 		},
 	}
 
+	pagingReq := base_model.Pagination{
+		Page:  page,
+		Limit: limit,
+	}
+
+	paging := base_model.Pagination{
+		Records:      0,
+		TotalRecords: 20,
+		Limit:        10,
+		Page:         1,
+		TotalPage:    2,
+	}
+
 	t.Run("Should return error if store id not found", func(t *testing.T) {
 		mockStoreRepo.EXPECT().
 			GetStore(ctx, otherStoreID2).
 			Times(1).
 			Return(nil, status.Errorf(codes.NotFound, "Not Found"))
 
-		_, err := service.GetProductsByStoreId(ctx, otherStoreID2Uuid, nil, false)
+		_, _, err := service.GetProductsByStoreId(ctx, page, limit, otherStoreID2Uuid, nil, false)
 
 		errMsg := status.Errorf(codes.NotFound, "Not Found")
 
@@ -1331,11 +1346,11 @@ func TestGetProductByStoreId(t *testing.T) {
 			Return(otherStore2, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductsByStoreId(ctx, otherStoreIDUuid, gomock.Any(), false).
+			GetProductsByStoreId(ctx, pagingReq, otherStoreIDUuid, gomock.Any(), false).
 			Times(1).
-			Return(nil, errorMsg)
+			Return(nil, paging, errorMsg)
 
-		_, err := service.GetProductsByStoreId(ctx, otherStoreIDUuid, nil, false)
+		_, _, err := service.GetProductsByStoreId(ctx, page, limit, otherStoreIDUuid, nil, false)
 
 		errMsg := status.Errorf(codes.Internal, "Error when getting product list :"+errorMsg.Error())
 
@@ -1350,14 +1365,15 @@ func TestGetProductByStoreId(t *testing.T) {
 			Return(store, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductsByStoreId(ctx, storeIDUuid, gomock.Any(), false).
+			GetProductsByStoreId(ctx, pagingReq, storeIDUuid, gomock.Any(), false).
 			Times(1).
-			Return(products, nil)
+			Return(products, paging, nil)
 
-		result, err := service.GetProductsByStoreId(ctx, storeIDUuid, nil, false)
+		result, pagination, err := service.GetProductsByStoreId(ctx, page, limit, storeIDUuid, nil, false)
 
 		assert.Nil(t, err)
 		assert.Equal(t, products, result)
+		assert.Equal(t, paging, pagination)
 	})
 }
 

@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	base_model "github.com/Mitra-Apps/be-store-service/domain/base_model"
 	entity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -191,18 +192,19 @@ func (mr *MockProductRepositoryMockRecorder) GetProductTypesByIds(ctx, typeIds a
 }
 
 // GetProductsByStoreId mocks base method.
-func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
+func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, pagination base_model.Pagination, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, base_model.Pagination, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, storeID, productTypeId, isIncludeDeactivated)
+	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, pagination, storeID, productTypeId, isIncludeDeactivated)
 	ret0, _ := ret[0].([]*entity.Product)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(base_model.Pagination)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetProductsByStoreId indicates an expected call of GetProductsByStoreId.
-func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreId(ctx, pagination, storeID, productTypeId, isIncludeDeactivated any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreId), ctx, storeID, productTypeId, isIncludeDeactivated)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreId), ctx, pagination, storeID, productTypeId, isIncludeDeactivated)
 }
 
 // GetProductsByStoreIdAndNames mocks base method.
