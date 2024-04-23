@@ -403,29 +403,47 @@ func (g *GrpcRoute) GetProductById(ctx context.Context, req *pb.GetProductByIdRe
 }
 
 func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRequest) (*pb.GetProductListResponse, error) {
+	if req.Page == 0 || req.Limit == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "Page and Limit is required")
+	}
+
 	if strings.Trim(req.StoreId, " ") == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Store id is required")
 	}
+
 	storeId, err := uuid.Parse(req.StoreId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
 	}
+
 	var productTypeId *int64
 	if req.ProductTypeId != 0 {
 		productTypeId = &req.ProductTypeId
 	}
-	products, err := g.service.GetProductsByStoreId(ctx, storeId, productTypeId, req.IsIncludeDeactivated)
+
+	products, pagination, err := g.service.GetProductsByStoreId(ctx, req.Page, req.Limit, storeId, productTypeId, req.IsIncludeDeactivated)
 	if err != nil {
 		return nil, err
 	}
+
 	data := []*pb.Product{}
 	for _, p := range products {
 		data = append(data, p.ToProto())
 	}
+
+	paging := pb.Pagination{
+		Page:        pagination.Page,
+		Limit:       pagination.Limit,
+		TotalRecord: pagination.TotalRecords,
+		Records:     pagination.Records,
+		TotalPage:   pagination.TotalPage,
+	}
+
 	return &pb.GetProductListResponse{
-		Code:    int32(codes.OK),
-		Message: codes.OK.String(),
-		Data:    data,
+		Code:       int32(codes.OK),
+		Message:    codes.OK.String(),
+		Data:       data,
+		Pagination: &paging,
 	}, nil
 }
 

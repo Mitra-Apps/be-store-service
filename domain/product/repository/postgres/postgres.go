@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	"errors"
+	"math"
 	"strings"
 
+	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	"github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -21,8 +23,14 @@ func NewPostgres(db *gorm.DB) *Postgres {
 	return &Postgres{db, nil}
 }
 
-func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
+func (p *Postgres) GetProductsByStoreId(ctx context.Context, pagination base_model.Pagination, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, base_model.Pagination, error) {
 	prods := []*entity.Product{}
+
+	paging := base_model.Pagination{
+		Page:  pagination.Page,
+		Limit: pagination.Limit,
+	}
+
 	tx := p.db.WithContext(ctx).
 		Preload("Images").
 		Preload("ProductType").
@@ -31,16 +39,22 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, 
 	if !isIncludeDeactivated {
 		tx = tx.Where("sale_status = ?", true)
 	}
+
 	if productTypeId != nil {
 		tx = tx.Where("product_type_id = ?", *productTypeId)
 	}
+
 	tx = tx.Order("name ASC")
-	err := tx.Find(&prods).Error
+	err := tx.
+		Scopes(p.paginate(prods, &paging, tx, int64(len(prods)))).
+		Find(&prods).
+		Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, paging, nil
 		}
-		return nil, err
+		return nil, paging, err
 	}
 
 	for _, p := range prods {
@@ -49,7 +63,7 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, 
 		p.ProductCategoryName = p.ProductType.ProductCategory.Name
 	}
 
-	return prods, nil
+	return prods, paging, nil
 }
 
 func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
@@ -364,4 +378,17 @@ func (p *Postgres) UpsertProductType(ctx context.Context, prodType *entity.Produ
 	}
 
 	return nil
+}
+
+func (p *Postgres) paginate(value interface{}, pagination *base_model.Pagination, db *gorm.DB, currRecord int64) func(db *gorm.DB) *gorm.DB {
+	var totalRecords int64
+	db.Model(value).Count(&totalRecords)
+
+	pagination.TotalRecords = int32(totalRecords)
+	pagination.TotalPage = int32(math.Ceil(float64(totalRecords) / float64(pagination.GetLimit())))
+	pagination.Records = int32(pagination.Limit*(pagination.Page-1)) + int32(currRecord)
+
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Offset(int(pagination.GetOffset())).Limit(int(pagination.GetLimit()))
+	}
 }

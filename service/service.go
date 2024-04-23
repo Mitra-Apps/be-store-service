@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	imageRepository "github.com/Mitra-Apps/be-store-service/domain/image/repository"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	prodRepository "github.com/Mitra-Apps/be-store-service/domain/product/repository"
@@ -32,7 +33,7 @@ type Service interface {
 	UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
 	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
 	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
-	GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error)
+	GetProductsByStoreId(ctx context.Context, page int32, limit int32, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, pagination base_model.Pagination, err error)
 	DeleteProductById(ctx context.Context, userId uuid.UUID, id uuid.UUID) error
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
@@ -480,20 +481,25 @@ func (s *service) DeleteProductById(ctx context.Context, userId uuid.UUID, id uu
 	return err
 }
 
-func (s *service) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, err error) {
-	if _, err := s.storeRepository.GetStore(ctx, storeID.String()); err != nil {
-		return nil, err
+func (s *service) GetProductsByStoreId(ctx context.Context, page int32, limit int32, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, pagination base_model.Pagination, err error) {
+	pagination = base_model.Pagination{
+		Page:  page,
+		Limit: limit,
 	}
 
-	if products, err = s.productRepository.GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated); err != nil {
-		return nil, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
+	if _, err := s.storeRepository.GetStore(ctx, storeID.String()); err != nil {
+		return nil, pagination, err
+	}
+
+	if products, pagination, err = s.productRepository.GetProductsByStoreId(ctx, pagination, storeID, productTypeId, isIncludeDeactivated); err != nil {
+		return nil, pagination, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
 	}
 
 	if err := s.GetProductImagesInformation(ctx, nil, products); err != nil {
-		return nil, err
+		return nil, pagination, err
 	}
 
-	return products, nil
+	return products, pagination, nil
 }
 
 func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error) {
