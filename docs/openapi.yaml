@@ -110,6 +110,16 @@ paths:
                   in: query
                   schema:
                     type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
             responses:
                 "200":
                     description: OK
@@ -590,6 +600,8 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/Product'
+                pagination:
+                    $ref: '#/components/schemas/Pagination'
         GetProductTypesResponse:
             type: object
             properties:
@@ -682,6 +694,24 @@ components:
                     format: int32
                 message:
                     type: string
+        Pagination:
+            type: object
+            properties:
+                page:
+                    type: integer
+                    format: int32
+                limit:
+                    type: integer
+                    format: int32
+                totalRecord:
+                    type: integer
+                    format: int32
+                records:
+                    type: integer
+                    format: int32
+                totalPage:
+                    type: integer
+                    format: int32
         Product:
             type: object
             properties:
