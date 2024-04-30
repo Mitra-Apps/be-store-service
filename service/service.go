@@ -407,10 +407,20 @@ func (s *service) UploadImageToStorage(ctx context.Context, imageBase64Str strin
 	return imageId, nil
 }
 
-func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error {
-	existingProdCategory, err := s.productRepository.GetProductCategoryByName(ctx, strings.ToLower(prodCategory.Name))
-	if err != nil {
-		return err
+func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) (err error) {
+	var existingProdCategory *prodEntity.ProductCategory
+	switch prodCategory.ID {
+	case 0:
+		existingProdCategory, err = s.productRepository.GetProductCategoryByName(ctx, strings.ToLower(prodCategory.Name))
+		if err != nil {
+			return err
+		}
+	default:
+		if prodCat, err := s.productRepository.GetProductCategoryById(ctx, prodCategory.ID); err != nil {
+			return status.Errorf(codes.Internal, "Error getting product category by id data")
+		} else if prodCat == nil {
+			return status.Errorf(codes.NotFound, "Product category id is not found")
+		}
 	}
 
 	if existingProdCategory != nil && existingProdCategory.ID != prodCategory.ID {
