@@ -31,7 +31,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        go get -v github.com/Mitra-Apps/be-utility-service@staging
+        go get -v github.com/Mitra-Apps/be-utility-service
         go get -v github.com/Mitra-Apps/be-user-service@development
         go mod tidy
 
