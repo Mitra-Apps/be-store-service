@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GH_PAT }}
 
     - name: Set up Go
       uses: actions/setup-go@v4
@@ -24,8 +26,6 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        go get -v github.com/Mitra-Apps/be-utility-service
-        go get -v github.com/Mitra-Apps/be-user-service@development
         go mod tidy
 
     - name: Run Unit Test
