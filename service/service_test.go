@@ -1084,7 +1084,7 @@ func TestUpsertProductCategory(t *testing.T) {
 
 	pakaian := &prodEntity.ProductCategory{
 		BaseMasterDataModel: base_model.BaseMasterDataModel{
-			ID: 1,
+			ID: 0,
 		},
 		Name: "Pakaian",
 	}
@@ -1119,6 +1119,28 @@ func TestUpsertProductCategory(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if failed to get category by ID", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, gomock.Any()).
+			Times(1).
+			Return(nil, errors.New("any error"))
+
+		err := service.UpsertProductCategory(ctx, kaos)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if category is not exist", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, gomock.Any()).
+			Times(1).
+			Return(nil, nil)
+
+		err := service.UpsertProductCategory(ctx, kaos)
+
+		assert.Error(t, err)
 	})
 
 	t.Run("Should return error if failed upsert product category", func(t *testing.T) {
