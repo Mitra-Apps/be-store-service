@@ -22,13 +22,6 @@ jobs:
       env:
         GOPRIVATE: "github.com/Mitra-Apps/*"
 
-    - name: Configure Git
-      run: |
-        git config --global credential.helper store
-        git config --global user.email "nurcholis.nanda@gmail.com"
-        git config --global user.name "nurcholisnanda"
-        git config --global --list
-
     - name: Install Dependencies
       run: |
         go get -v github.com/Mitra-Apps/be-utility-service
