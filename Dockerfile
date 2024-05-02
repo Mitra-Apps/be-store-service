@@ -9,6 +9,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 
 # Download dependencies
+RUN apk update && apk add --no-cache git
 RUN go mod download
 
 # This will copy all the files in our repo to the inside the container at root location.
