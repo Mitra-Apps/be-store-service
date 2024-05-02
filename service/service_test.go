@@ -1119,7 +1119,7 @@ func TestUpsertProductCategory(t *testing.T) {
 
 		err := service.UpsertProductCategory(ctx, pakaian)
 
-		errMsg := util.NewError(codes.AlreadyExists, string(ERR_RECORD_IS_EXIST), "Name is already used by another product category")
+		errMsg := util.NewError(codes.AlreadyExists, string(ERR_PRODUCT_CATEGORY_IS_EXIST), "Name is already used by another product category")
 
 		assert.Error(t, err)
 		assert.Equal(t, errMsg, err)

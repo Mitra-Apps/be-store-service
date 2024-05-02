@@ -412,11 +412,11 @@ func (s *service) UploadImageToStorage(ctx context.Context, imageBase64Str strin
 func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error {
 	existingProdCategory, err := s.productRepository.GetProductCategoryByName(ctx, strings.ToLower(prodCategory.Name))
 	if err != nil && !strings.Contains(err.Error(), ErrNotFound) {
-		return util.NewError(codes.Internal, string(ERR_INTERNAL_ERROR), err.Error())
+		return util.NewError(codes.Internal, string(ERR_UNKNOWN), err.Error())
 	}
 
 	if existingProdCategory != nil {
-		return util.NewError(codes.AlreadyExists, string(ERR_RECORD_IS_EXIST), "Name is already used by another product category")
+		return util.NewError(codes.AlreadyExists, string(ERR_PRODUCT_CATEGORY_IS_EXIST), "Name is already used by another product category")
 	}
 
 	return s.productRepository.UpsertProductCategory(ctx, prodCategory)
@@ -425,9 +425,9 @@ func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodE
 func (s *service) UpdateProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error {
 	if _, err := s.productRepository.GetProductCategoryById(ctx, prodCategory.ID); err != nil {
 		if strings.Contains(err.Error(), ErrNotFound) {
-			return util.NewError(codes.NotFound, string(ERR_RECORD_NOT_FOUND), err.Error())
+			return util.NewError(codes.NotFound, string(ERR_PRODUCT_CATEGORY_NOT_FOUND), err.Error())
 		}
-		return util.NewError(codes.Internal, string(ERR_INTERNAL_ERROR), err.Error())
+		return util.NewError(codes.Internal, string(ERR_UNKNOWN), err.Error())
 	}
 
 	return s.productRepository.UpsertProductCategory(ctx, prodCategory)

@@ -1,12 +1,11 @@
 package service
 
+// Code detail for error response
 type CodeDetail string
 
 const (
-	ErrNotFound = "not found"
-
-	//Insert Error_Detail here
-	ERR_RECORD_NOT_FOUND CodeDetail = "ERR_RECORD_NOT_FOUND"
-	ERR_INTERNAL_ERROR   CodeDetail = "ERR_INTERNAL_ERROR"
-	ERR_RECORD_IS_EXIST  CodeDetail = "ERR_RECORD_IS_EXIST"
+	ErrNotFound                               = "not found"
+	ERR_UNKNOWN                    CodeDetail = "ERR_UNKNOWN"
+	ERR_PRODUCT_CATEGORY_NOT_FOUND CodeDetail = "ERR_PRODUCT_CATEGORY_NOT_FOUND"
+	ERR_PRODUCT_CATEGORY_IS_EXIST  CodeDetail = "ERR_PRODUCT_CATEGORY_IS_EXIST"
 )
