@@ -6,15 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
+	imageRepository "github.com/Mitra-Apps/be-store-service/domain/image/repository"
 	imageRepoMock "github.com/Mitra-Apps/be-store-service/domain/image/repository/mock"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	prodRepository "github.com/Mitra-Apps/be-store-service/domain/product/repository"
 	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
 	errPb "github.com/Mitra-Apps/be-store-service/domain/proto"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
+	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
 	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/google/uuid"
@@ -1084,7 +1088,7 @@ func TestUpsertProductCategory(t *testing.T) {
 
 	pakaian := &prodEntity.ProductCategory{
 		BaseMasterDataModel: base_model.BaseMasterDataModel{
-			ID: 1,
+			ID: 0,
 		},
 		Name: "Pakaian",
 	}
@@ -1115,7 +1119,7 @@ func TestUpsertProductCategory(t *testing.T) {
 
 		err := service.UpsertProductCategory(ctx, pakaian)
 
-		errMsg := status.Errorf(codes.AlreadyExists, "Name is already used by another product category")
+		errMsg := util.NewError(codes.AlreadyExists, string(ERR_PRODUCT_CATEGORY_IS_EXIST), "Name is already used by another product category")
 
 		assert.Error(t, err)
 		assert.Equal(t, errMsg, err)
@@ -1125,10 +1129,10 @@ func TestUpsertProductCategory(t *testing.T) {
 		mockProdRepo.EXPECT().
 			GetProductCategoryByName(ctx, strings.ToLower(pakaian.Name)).
 			Times(1).
-			Return(pakaian, nil)
+			Return(nil, errors.New("record not found"))
 
 		mockProdRepo.EXPECT().
-			UpsertProductCategory(ctx, pakaian).
+			UpsertProductCategory(ctx, gomock.Any()).
 			Times(1).
 			Return(errors.New("failed"))
 
@@ -1141,7 +1145,7 @@ func TestUpsertProductCategory(t *testing.T) {
 		mockProdRepo.EXPECT().
 			GetProductCategoryByName(ctx, strings.ToLower(pakaian.Name)).
 			Times(1).
-			Return(pakaian, nil)
+			Return(nil, errors.New("record not found"))
 
 		mockProdRepo.EXPECT().
 			UpsertProductCategory(ctx, pakaian).
@@ -1787,4 +1791,561 @@ func TestGetStoreByUserID(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, errMsg, err)
 	})
+}
+
+func TestNew(t *testing.T) {
+	type args struct {
+		storeRepository repository.StoreServiceRepository
+		prodRepository  prodRepository.ProductRepository
+		storage         repository.Storage
+		imageRepo       imageRepository.ImageRepository
+	}
+	tests := []struct {
+		name string
+		args args
+		want Service
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := New(tt.args.storeRepository, tt.args.prodRepository, tt.args.storage, tt.args.imageRepo); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("New() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_CreateStore(t *testing.T) {
+	type args struct {
+		ctx   context.Context
+		store *entity.Store
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    *entity.Store
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.CreateStore(tt.args.ctx, tt.args.store)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.CreateStore() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.CreateStore() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_GetStore(t *testing.T) {
+	type args struct {
+		ctx     context.Context
+		storeID string
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    *entity.Store
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.GetStore(tt.args.ctx, tt.args.storeID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetStore() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.GetStore() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_UpdateStore(t *testing.T) {
+	type args struct {
+		ctx     context.Context
+		storeID string
+		update  *entity.Store
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    *entity.Store
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.UpdateStore(tt.args.ctx, tt.args.storeID, tt.args.update)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.UpdateStore() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.UpdateStore() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_ListStores(t *testing.T) {
+	type args struct {
+		ctx   context.Context
+		page  int32
+		limit int32
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    []*entity.Store
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.ListStores(tt.args.ctx, tt.args.page, tt.args.limit)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.ListStores() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.ListStores() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_DeleteStores(t *testing.T) {
+	type args struct {
+		ctx      context.Context
+		storeIDs []string
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.DeleteStores(tt.args.ctx, tt.args.storeIDs); (err != nil) != tt.wantErr {
+				t.Errorf("service.DeleteStores() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_OpenCloseStore(t *testing.T) {
+	type args struct {
+		ctx       context.Context
+		userID    uuid.UUID
+		roleNames []string
+		storeID   string
+		isActive  bool
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.OpenCloseStore(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isActive); (err != nil) != tt.wantErr {
+				t.Errorf("service.OpenCloseStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_UpsertProducts(t *testing.T) {
+	type args struct {
+		ctx       context.Context
+		userID    uuid.UUID
+		roleNames []string
+		storeID   uuid.UUID
+		isUpdate  bool
+		products  []*prodEntity.Product
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isUpdate, tt.args.products...); (err != nil) != tt.wantErr {
+				t.Errorf("service.UpsertProducts() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_UploadImageToStorage(t *testing.T) {
+	type args struct {
+		ctx            context.Context
+		imageBase64Str string
+		userID         uuid.UUID
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    *uuid.UUID
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.UploadImageToStorage(tt.args.ctx, tt.args.imageBase64Str, tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.UploadImageToStorage() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.UploadImageToStorage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_UpdateProductCategory(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	svc := New(nil, mockProdRepo, nil, nil)
+
+	ctx := context.Background()
+
+	kaos := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 2,
+		},
+		Name: "Pakaian",
+	}
+
+	type args struct {
+		ctx          context.Context
+		prodCategory *prodEntity.ProductCategory
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+		mocks   []*gomock.Call
+	}{
+		{
+			name: "Should return error record not found if no data from repo",
+			s:    svc,
+			args: args{
+				ctx:          ctx,
+				prodCategory: kaos,
+			},
+			wantErr: true,
+			mocks: []*gomock.Call{
+				mockProdRepo.EXPECT().
+					GetProductCategoryById(ctx, gomock.Any()).
+					Return(nil, errors.New("record not found")),
+			},
+		},
+		{
+			name: "Should return error internal error if there is other error from db",
+			s:    svc,
+			args: args{
+				ctx:          ctx,
+				prodCategory: kaos,
+			},
+			wantErr: true,
+			mocks: []*gomock.Call{
+				mockProdRepo.EXPECT().
+					GetProductCategoryById(ctx, gomock.Any()).
+					Return(nil, errors.New("any error")),
+			},
+		},
+		{
+			name: "Should return from Upsert product category",
+			s:    svc,
+			args: args{
+				ctx:          ctx,
+				prodCategory: kaos,
+			},
+			wantErr: true,
+			mocks: []*gomock.Call{
+				mockProdRepo.EXPECT().
+					GetProductCategoryById(ctx, gomock.Any()).
+					Return(kaos, nil),
+				mockProdRepo.EXPECT().
+					UpsertProductCategory(ctx, gomock.Any()).
+					Return(errors.New("failed")),
+			},
+		},
+		{
+			name: "Success",
+			s:    svc,
+			args: args{
+				ctx:          ctx,
+				prodCategory: kaos,
+			},
+			wantErr: false,
+			mocks: []*gomock.Call{
+				mockProdRepo.EXPECT().
+					GetProductCategoryById(ctx, gomock.Any()).
+					Return(kaos, nil),
+				mockProdRepo.EXPECT().
+					UpsertProductCategory(ctx, gomock.Any()).
+					Return(nil),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.UpdateProductCategory(tt.args.ctx, tt.args.prodCategory); (err != nil) != tt.wantErr {
+				t.Errorf("service.UpdateProductCategory() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_UpsertProductType(t *testing.T) {
+	type args struct {
+		ctx      context.Context
+		prodType *prodEntity.ProductType
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.UpsertProductType(tt.args.ctx, tt.args.prodType); (err != nil) != tt.wantErr {
+				t.Errorf("service.UpsertProductType() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_DeleteProductById(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		userId uuid.UUID
+		id     uuid.UUID
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.DeleteProductById(tt.args.ctx, tt.args.userId, tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("service.DeleteProductById() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductsByStoreId(t *testing.T) {
+	type args struct {
+		ctx                  context.Context
+		page                 int32
+		limit                int32
+		storeID              uuid.UUID
+		productTypeId        *int64
+		isIncludeDeactivated bool
+	}
+	tests := []struct {
+		name           string
+		s              *service
+		args           args
+		wantProducts   []*prodEntity.Product
+		wantPagination base_model.Pagination
+		wantErr        bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotProducts, gotPagination, err := tt.s.GetProductsByStoreId(tt.args.ctx, tt.args.page, tt.args.limit, tt.args.storeID, tt.args.productTypeId, tt.args.isIncludeDeactivated)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductsByStoreId() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotProducts, tt.wantProducts) {
+				t.Errorf("service.GetProductsByStoreId() gotProducts = %v, want %v", gotProducts, tt.wantProducts)
+			}
+			if !reflect.DeepEqual(gotPagination, tt.wantPagination) {
+				t.Errorf("service.GetProductsByStoreId() gotPagination = %v, want %v", gotPagination, tt.wantPagination)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductCategories(t *testing.T) {
+	type args struct {
+		ctx                  context.Context
+		isIncludeDeactivated bool
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantCat []*prodEntity.ProductCategory
+		wantUom []string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCat, gotUom, err := tt.s.GetProductCategories(tt.args.ctx, tt.args.isIncludeDeactivated)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductCategories() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotCat, tt.wantCat) {
+				t.Errorf("service.GetProductCategories() gotCat = %v, want %v", gotCat, tt.wantCat)
+			}
+			if !reflect.DeepEqual(gotUom, tt.wantUom) {
+				t.Errorf("service.GetProductCategories() gotUom = %v, want %v", gotUom, tt.wantUom)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductTypes(t *testing.T) {
+	type args struct {
+		ctx                  context.Context
+		productCategoryID    int64
+		isIncludeDeactivated bool
+	}
+	tests := []struct {
+		name      string
+		s         *service
+		args      args
+		wantTypes []*prodEntity.ProductType
+		wantErr   bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTypes, err := tt.s.GetProductTypes(tt.args.ctx, tt.args.productCategoryID, tt.args.isIncludeDeactivated)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductTypes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotTypes, tt.wantTypes) {
+				t.Errorf("service.GetProductTypes() = %v, want %v", gotTypes, tt.wantTypes)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductById(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		id  uuid.UUID
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantP   *prodEntity.Product
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotP, err := tt.s.GetProductById(tt.args.ctx, tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductById() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotP, tt.wantP) {
+				t.Errorf("service.GetProductById() = %v, want %v", gotP, tt.wantP)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductImagesInformation(t *testing.T) {
+	type args struct {
+		ctx      context.Context
+		product  *prodEntity.Product
+		products []*prodEntity.Product
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.GetProductImagesInformation(tt.args.ctx, tt.args.product, tt.args.products); (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductImagesInformation() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_GetStoreByUserID(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		userID uuid.UUID
+	}
+	tests := []struct {
+		name      string
+		s         *service
+		args      args
+		wantStore *entity.Store
+		wantErr   bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotStore, err := tt.s.GetStoreByUserID(tt.args.ctx, tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetStoreByUserID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotStore, tt.wantStore) {
+				t.Errorf("service.GetStoreByUserID() = %v, want %v", gotStore, tt.wantStore)
+			}
+		})
+	}
 }

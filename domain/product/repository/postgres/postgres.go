@@ -293,27 +293,19 @@ func (p *Postgres) GetProductCategories(ctx context.Context, includeDeactivated 
 }
 
 func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
-	category := &entity.ProductCategory{}
-	if err := p.db.WithContext(ctx).
-		Where("LOWER(name) = ?", strings.ToLower(name)).
-		First(category).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
+	var category *entity.ProductCategory
+	if err := p.db.WithContext(ctx).Where("LOWER(name) = ?", strings.ToLower(name)).First(&category).Error; err != nil {
 		return nil, err
 	}
 	return category, nil
 }
 
 func (p *Postgres) GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error) {
-	category := entity.ProductCategory{}
+	var category *entity.ProductCategory
 	if err := p.db.WithContext(ctx).Where("id = ?", id).First(&category).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		return nil, err
 	}
-	return &category, nil
+	return category, nil
 }
 
 func (p *Postgres) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
