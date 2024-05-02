@@ -22,6 +22,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+//go:generate mockgen -source=service.go -destination=mock/service.go -package=mock
 type Service interface {
 	CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error)
 	UpdateStore(ctx context.Context, storeID string, update *entity.Store) (*entity.Store, error)
@@ -31,6 +32,7 @@ type Service interface {
 	OpenCloseStore(ctx context.Context, userID uuid.UUID, roleNames []string, storeID string, isActive bool) error
 	UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, isUpdate bool, products ...*prodEntity.Product) error
 	UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
+	UpdateProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
 	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
 	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
 	GetProductsByStoreId(ctx context.Context, page int32, limit int32, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, pagination base_model.Pagination, err error)
@@ -52,7 +54,7 @@ func New(
 	prodRepository prodRepository.ProductRepository,
 	storage repository.Storage,
 	imageRepo imageRepository.ImageRepository,
-) Service {
+) *service {
 	return &service{
 		storeRepository:   storeRepository,
 		productRepository: prodRepository,
@@ -407,24 +409,25 @@ func (s *service) UploadImageToStorage(ctx context.Context, imageBase64Str strin
 	return imageId, nil
 }
 
-func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) (err error) {
-	var existingProdCategory *prodEntity.ProductCategory
-	switch prodCategory.ID {
-	case 0:
-		existingProdCategory, err = s.productRepository.GetProductCategoryByName(ctx, strings.ToLower(prodCategory.Name))
-		if err != nil {
-			return err
-		}
-	default:
-		if prodCat, err := s.productRepository.GetProductCategoryById(ctx, prodCategory.ID); err != nil {
-			return status.Errorf(codes.Internal, "Error getting product category by id data")
-		} else if prodCat == nil {
-			return status.Errorf(codes.NotFound, "Product category id is not found")
-		}
+func (s *service) UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error {
+	existingProdCategory, err := s.productRepository.GetProductCategoryByName(ctx, strings.ToLower(prodCategory.Name))
+	if err != nil && !strings.Contains(err.Error(), ErrNotFound) {
+		return util.NewError(codes.Internal, string(ERR_INTERNAL_ERROR), err.Error())
 	}
 
-	if existingProdCategory != nil && existingProdCategory.ID != prodCategory.ID {
-		return status.Errorf(codes.AlreadyExists, "Name is already used by another product category")
+	if existingProdCategory != nil {
+		return util.NewError(codes.AlreadyExists, string(ERR_RECORD_IS_EXIST), "Name is already used by another product category")
+	}
+
+	return s.productRepository.UpsertProductCategory(ctx, prodCategory)
+}
+
+func (s *service) UpdateProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error {
+	if _, err := s.productRepository.GetProductCategoryById(ctx, prodCategory.ID); err != nil {
+		if strings.Contains(err.Error(), ErrNotFound) {
+			return util.NewError(codes.NotFound, string(ERR_RECORD_NOT_FOUND), err.Error())
+		}
+		return util.NewError(codes.Internal, string(ERR_INTERNAL_ERROR), err.Error())
 	}
 
 	return s.productRepository.UpsertProductCategory(ctx, prodCategory)
