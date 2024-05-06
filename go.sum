@@ -10,8 +10,6 @@ github.com/Microsoft/go-winio v0.6.0 h1:slsWYD/zyx7lCXoZVlvQrj0hPTM1HI4+v1sIda2y
 github.com/Microsoft/go-winio v0.6.0/go.mod h1:cTAf44im0RAYeL23bpB+fzCyDH2MJiz2BO69KH/soAE=
 github.com/Mitra-Apps/be-user-service v0.0.0-20240408050620-e3936e389476 h1:US4XOVKcDPsazeX1eQ8o8D7fjfIDG4zgGF9qoDZkcZA=
 github.com/Mitra-Apps/be-user-service v0.0.0-20240408050620-e3936e389476/go.mod h1:ZyurdWBFe5OmZYcWVplp/CwlJno8dXGC9SQKSzlAZo8=
-github.com/Mitra-Apps/be-utility-service v0.0.0-20240319082141-b4c292235e6f h1:ZVLYB2GZshBLZNk87GvAVNUND/Ilju3mcG3fAmgZ/PU=
-github.com/Mitra-Apps/be-utility-service v0.0.0-20240319082141-b4c292235e6f/go.mod h1:nnJySAZ2TBxl7SsTftFOb0M3nfQSQGL1x9ruvs4p98M=
 github.com/Mitra-Apps/be-utility-service v0.0.0-20240404090945-d7a0ee0c0e8f h1:Au7tcDgcOrpiLCAY4gA1RvPFmL+tImO3f5Rt5AsFmX0=
 github.com/Mitra-Apps/be-utility-service v0.0.0-20240404090945-d7a0ee0c0e8f/go.mod h1:nnJySAZ2TBxl7SsTftFOb0M3nfQSQGL1x9ruvs4p98M=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=

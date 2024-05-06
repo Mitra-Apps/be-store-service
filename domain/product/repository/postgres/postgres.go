@@ -74,9 +74,6 @@ func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Pr
 		Preload("ProductType.ProductCategory").
 		First(&prod, id)
 	if tx.Error != nil {
-		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		return nil, tx.Error
 	}
 	prod.ProductTypeName = prod.ProductType.Name

@@ -241,8 +241,17 @@ func (s *service) UpsertProducts(ctx context.Context, userID uuid.UUID, roleName
 	productTypeIds := []int64{}
 	prodTypeIdsMap := make(map[int64]bool)
 	for _, p := range products {
-		if isUpdate && p.ID == uuid.Nil {
-			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_IS_REQUIRED.String(), "Product id diperlukan")
+		if isUpdate {
+			if p.ID == uuid.Nil {
+				return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_IS_REQUIRED.String(), "Product id diperlukan")
+			}
+			_, err = s.productRepository.GetProductById(ctx, p.ID)
+			if err != nil {
+				if strings.Contains(err.Error(), ErrNotFound) {
+					return util.NewError(codes.NotFound, string(ERR_PRODUCT_NOT_FOUND), err.Error())
+				}
+				return util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_INSERTING_OR_UPDATING_PRODUCT.String(), err.Error())
+			}
 		} else if !isUpdate && p.ID != uuid.Nil {
 			return util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_ID_SHOULD_BE_EMPTY.String(), "Product id harus kosong")
 		}
@@ -548,9 +557,10 @@ func (s *service) GetProductTypes(ctx context.Context, productCategoryID int64, 
 
 func (s *service) GetProductById(ctx context.Context, id uuid.UUID) (p *prodEntity.Product, err error) {
 	if p, err = s.productRepository.GetProductById(ctx, id); err != nil {
+		if strings.Contains(err.Error(), ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, "Product id not found")
+		}
 		return nil, status.Errorf(codes.Internal, "Error when getting product by id :"+err.Error())
-	} else if p == nil && err == nil {
-		return nil, status.Errorf(codes.NotFound, "Product id not found")
 	}
 
 	if err := s.GetProductImagesInformation(ctx, p, nil); err != nil {
