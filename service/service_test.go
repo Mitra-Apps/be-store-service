@@ -607,6 +607,11 @@ func TestUpsertProducts(t *testing.T) {
 			Times(1).
 			Return(store, nil)
 
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, otherProductID2Uuid).
+			Times(1).
+			Return(updateProduct, nil)
+
 		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProductWithoutUOM...)
 
 		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan")
@@ -635,6 +640,11 @@ func TestUpsertProducts(t *testing.T) {
 			Times(1).
 			Return(store, nil)
 
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, otherProductID2Uuid).
+			Times(1).
+			Return(updateProductWithoutProductType, nil)
+
 		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProductWithoutProductType...)
 
 		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "Product type id diperlukan")
@@ -662,6 +672,11 @@ func TestUpsertProducts(t *testing.T) {
 			GetStore(gomock.Any(), storeID).
 			Times(1).
 			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, otherProductID2Uuid).
+			Times(1).
+			Return(updateProductWithNegativeStock, nil)
 
 		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProductWithNegativeStock...)
 
@@ -709,6 +724,11 @@ func TestUpsertProducts(t *testing.T) {
 			GetStore(gomock.Any(), storeID).
 			Times(1).
 			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, otherProductID2Uuid).
+			Times(1).
+			Return(updateProductWithInvalidUOM, nil)
 
 		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProductWithInvalidUOM...)
 
@@ -1568,7 +1588,7 @@ func TestGetProductById(t *testing.T) {
 		mockProdRepo.EXPECT().
 			GetProductById(ctx, otherProductIDUuid2).
 			Times(1).
-			Return(nil, nil)
+			Return(nil, "not found")
 
 		_, err := service.GetProductById(ctx, otherProductIDUuid2)
 
