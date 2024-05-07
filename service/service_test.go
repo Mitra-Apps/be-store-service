@@ -612,7 +612,7 @@ func TestUpsertProducts(t *testing.T) {
 			Return(store, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductById(ctx, otherProductID2Uuid).
+			GetProductById(ctx, productIdUuid).
 			Times(1).
 			Return(exampleProduct, nil)
 
@@ -645,7 +645,7 @@ func TestUpsertProducts(t *testing.T) {
 			Return(store, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductById(ctx, otherProductID2Uuid).
+			GetProductById(ctx, productIdUuid).
 			Times(1).
 			Return(exampleProduct, nil)
 
@@ -678,7 +678,7 @@ func TestUpsertProducts(t *testing.T) {
 			Return(store, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductById(ctx, otherProductID2Uuid).
+			GetProductById(ctx, productIdUuid).
 			Times(1).
 			Return(exampleProduct, nil)
 
@@ -730,7 +730,7 @@ func TestUpsertProducts(t *testing.T) {
 			Return(store, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductById(ctx, otherProductID2Uuid).
+			GetProductById(ctx, productIdUuid).
 			Times(1).
 			Return(exampleProduct, nil)
 
@@ -773,7 +773,7 @@ func TestUpsertProducts(t *testing.T) {
 			Return(store, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductById(ctx, otherProductID2Uuid).
+			GetProductById(ctx, productIdUuid).
 			Times(1).
 			Return(exampleProduct, nil)
 
@@ -833,7 +833,7 @@ func TestUpsertProducts(t *testing.T) {
 			Return(otherStore, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductById(ctx, otherProductID2Uuid).
+			GetProductById(ctx, productIdUuid).
 			Times(1).
 			Return(exampleProduct, nil)
 
