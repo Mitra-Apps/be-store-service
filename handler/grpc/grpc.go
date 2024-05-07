@@ -304,8 +304,11 @@ func validateProduct(products ...*prodEntity.Product) error {
 }
 
 func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
+	//TODO: refactor the validation to another function to minimize duplicate code
+	isUpdateCategory := false
 	if req.GetId() > 0 {
 		req.ProductCategory.Id = req.GetId()
+		isUpdateCategory = true
 	}
 
 	if err := req.ValidateAll(); err != nil {
@@ -338,8 +341,14 @@ func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertPro
 	prodCat.FromProto(req.ProductCategory)
 	prodCat.CreatedBy = claims.UserID
 
-	if err := g.service.UpsertProductCategory(ctx, prodCat); err != nil {
-		return nil, err
+	if !isUpdateCategory {
+		if err := g.service.UpsertProductCategory(ctx, prodCat); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := g.service.UpdateProductCategory(ctx, prodCat); err != nil {
+			return nil, err
+		}
 	}
 
 	return &pb.UpsertProductCategoryResponse{
