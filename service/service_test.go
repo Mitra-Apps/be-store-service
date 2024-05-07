@@ -774,7 +774,7 @@ func TestUpsertProducts(t *testing.T) {
 
 		mockProdRepo.EXPECT().
 			GetProductById(ctx, gomock.Any()).
-			Times(1).
+			Times(2).
 			Return(exampleProduct, nil)
 
 		mockProdRepo.EXPECT().
