@@ -394,6 +394,8 @@ message GetProductListRequest {
     bool is_include_deactivated = 3;
     int32 page = 4;
     int32 limit = 5;
+    string order_by = 6;
+    string order_asc_desc = 7;
 }
 
 message GetProductListResponse {
