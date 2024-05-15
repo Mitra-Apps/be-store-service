@@ -4427,6 +4427,8 @@ func (m *UpsertProductTypeRequest) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Id
+
 	if all {
 		switch v := interface{}(m.GetProductType()).(type) {
 		case interface{ ValidateAll() error }:

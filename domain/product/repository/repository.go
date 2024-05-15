@@ -34,4 +34,5 @@ type ProductRepository interface {
 	GetProductImagesByProductIds(ctx context.Context, productIds []uuid.UUID) ([]*entity.ProductImage, map[uuid.UUID][]*entity.ProductImage, error)
 	DeleteProductImages(ctx context.Context, productImages []*entity.ProductImage) error
 	DeleteProductById(ctx context.Context, id uuid.UUID) error
+	GetProductTypeById(ctx context.Context, id int64) (*entity.ProductType, error)
 }

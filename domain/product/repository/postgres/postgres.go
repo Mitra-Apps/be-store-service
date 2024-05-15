@@ -381,3 +381,11 @@ func (p *Postgres) paginate(value interface{}, pagination *base_model.Pagination
 		return db.Offset(int(pagination.GetOffset())).Limit(int(pagination.GetLimit()))
 	}
 }
+
+func (p *Postgres) GetProductTypeById(ctx context.Context, id int64) (*entity.ProductType, error) {
+	var productType *entity.ProductType
+	if err := p.db.WithContext(ctx).Where("id = ?", id).First(&productType).Error; err != nil {
+		return nil, err
+	}
+	return productType, nil
+}

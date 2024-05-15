@@ -40,6 +40,7 @@ const (
 	StoreService_UpdateProductCategory_FullMethodName = "/StoreService/UpdateProductCategory"
 	StoreService_GetProductTypes_FullMethodName       = "/StoreService/GetProductTypes"
 	StoreService_UpsertProductType_FullMethodName     = "/StoreService/UpsertProductType"
+	StoreService_UpdateProductType_FullMethodName     = "/StoreService/UpdateProductType"
 )
 
 // StoreServiceClient is the client API for StoreService service.
@@ -73,6 +74,7 @@ type StoreServiceClient interface {
 	UpdateProductCategory(ctx context.Context, in *UpsertProductCategoryRequest, opts ...grpc.CallOption) (*UpsertProductCategoryResponse, error)
 	GetProductTypes(ctx context.Context, in *GetProductTypesRequest, opts ...grpc.CallOption) (*GetProductTypesResponse, error)
 	UpsertProductType(ctx context.Context, in *UpsertProductTypeRequest, opts ...grpc.CallOption) (*UpsertProductTypeResponse, error)
+	UpdateProductType(ctx context.Context, in *UpsertProductTypeRequest, opts ...grpc.CallOption) (*UpsertProductTypeResponse, error)
 }
 
 type storeServiceClient struct {
@@ -263,6 +265,15 @@ func (c *storeServiceClient) UpsertProductType(ctx context.Context, in *UpsertPr
 	return out, nil
 }
 
+func (c *storeServiceClient) UpdateProductType(ctx context.Context, in *UpsertProductTypeRequest, opts ...grpc.CallOption) (*UpsertProductTypeResponse, error) {
+	out := new(UpsertProductTypeResponse)
+	err := c.cc.Invoke(ctx, StoreService_UpdateProductType_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StoreServiceServer is the server API for StoreService service.
 // All implementations must embed UnimplementedStoreServiceServer
 // for forward compatibility
@@ -294,6 +305,7 @@ type StoreServiceServer interface {
 	UpdateProductCategory(context.Context, *UpsertProductCategoryRequest) (*UpsertProductCategoryResponse, error)
 	GetProductTypes(context.Context, *GetProductTypesRequest) (*GetProductTypesResponse, error)
 	UpsertProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error)
+	UpdateProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error)
 	mustEmbedUnimplementedStoreServiceServer()
 }
 
@@ -360,6 +372,9 @@ func (UnimplementedStoreServiceServer) GetProductTypes(context.Context, *GetProd
 }
 func (UnimplementedStoreServiceServer) UpsertProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertProductType not implemented")
+}
+func (UnimplementedStoreServiceServer) UpdateProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProductType not implemented")
 }
 func (UnimplementedStoreServiceServer) mustEmbedUnimplementedStoreServiceServer() {}
 
@@ -734,6 +749,24 @@ func _StoreService_UpsertProductType_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_UpdateProductType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertProductTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).UpdateProductType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_UpdateProductType_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).UpdateProductType(ctx, req.(*UpsertProductTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StoreService_ServiceDesc is the grpc.ServiceDesc for StoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -820,6 +853,10 @@ var StoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertProductType",
 			Handler:    _StoreService_UpsertProductType_Handler,
+		},
+		{
+			MethodName: "UpdateProductType",
+			Handler:    _StoreService_UpdateProductType_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1236,6 +1236,14 @@ func TestUpsertProductType(t *testing.T) {
 		ProductCategoryID: komputer.BaseMasterDataModel.ID,
 	}
 
+	prodType1 := &prodEntity.ProductType{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 4,
+		},
+		Name:              "indomie",
+		ProductCategoryID: makanan.BaseMasterDataModel.ID,
+	}
+
 	t.Run("Should return error if name is already exist", func(t *testing.T) {
 		mockProdRepo.EXPECT().
 			GetProductCategoryById(ctx, kendaraan.BaseMasterDataModel.ID).
@@ -1247,7 +1255,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(sedan, nil)
 
-		err := service.UpsertProductType(ctx, sedan)
+		err := service.UpsertProductType(ctx, sedan, false)
 
 		errMsg := status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category")
 
@@ -1261,7 +1269,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(nil, nil)
 
-		err := service.UpsertProductType(ctx, sedan)
+		err := service.UpsertProductType(ctx, sedan, false)
 
 		errMsg := status.Errorf(codes.NotFound, "Related product category data is not found")
 
@@ -1286,7 +1294,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(errorMsg)
 
-		err := service.UpsertProductType(ctx, mouse)
+		err := service.UpsertProductType(ctx, mouse, false)
 
 		errMsg := status.Errorf(codes.Internal, "Error when inserting / updating product Type :"+errorMsg.Error())
 
@@ -1310,7 +1318,48 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(nil)
 
-		err := service.UpsertProductType(ctx, indomie)
+		err := service.UpsertProductType(ctx, indomie, false)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should return error if product type not found when updating product type", func(t *testing.T) {
+
+		mockProdRepo.EXPECT().
+			GetProductTypeById(ctx, prodType1.BaseMasterDataModel.ID).
+			Times(1).
+			Return(nil, fmt.Errorf("not found"))
+
+		err := service.UpsertProductType(ctx, prodType1, true)
+
+		errMsg := status.Errorf(codes.NotFound, "{\"code\":5,\"code_detail\":\"ERR_PRODUCT_TYPE_NOT_FOUND\",\"message\":\"not found\"}")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return success on update product type", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductTypeById(ctx, prodType1.BaseMasterDataModel.ID).
+			Times(1).
+			Return(prodType1, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, makanan.BaseMasterDataModel.ID).
+			Times(1).
+			Return(makanan, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypeByName(ctx, indomie.ProductCategoryID, indomie.Name).
+			Times(1).
+			Return(nil, nil)
+
+		mockProdRepo.EXPECT().
+			UpsertProductType(ctx, prodType1).
+			Times(1).
+			Return(nil)
+
+		err := service.UpsertProductType(ctx, prodType1, true)
 
 		assert.Nil(t, err)
 	})
@@ -2159,28 +2208,6 @@ func Test_service_UpdateProductCategory(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.s.UpdateProductCategory(tt.args.ctx, tt.args.prodCategory); (err != nil) != tt.wantErr {
 				t.Errorf("service.UpdateProductCategory() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_service_UpsertProductType(t *testing.T) {
-	type args struct {
-		ctx      context.Context
-		prodType *prodEntity.ProductType
-	}
-	tests := []struct {
-		name    string
-		s       *service
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.s.UpsertProductType(tt.args.ctx, tt.args.prodType); (err != nil) != tt.wantErr {
-				t.Errorf("service.UpsertProductType() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
