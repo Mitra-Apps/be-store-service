@@ -372,7 +372,7 @@ func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProduct
 		return nil, err
 	}
 
-	if err := g.service.UpsertProductType(ctx, prodType, false); err != nil {
+	if err := g.service.UpsertProductType(ctx, prodType); err != nil {
 		return nil, err
 	}
 
@@ -518,7 +518,7 @@ func (g *GrpcRoute) UpdateProductType(ctx context.Context, req *pb.UpsertProduct
 		return nil, err
 	}
 
-	if err := g.service.UpsertProductType(ctx, prodType, true); err != nil {
+	if err := g.service.UpsertProductType(ctx, prodType); err != nil {
 		return nil, err
 	}
 

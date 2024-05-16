@@ -33,7 +33,7 @@ type Service interface {
 	UpsertProducts(ctx context.Context, userID uuid.UUID, roleNames []string, storeID uuid.UUID, isUpdate bool, products ...*prodEntity.Product) error
 	UpsertProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
 	UpdateProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
-	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType, isUpdate bool) error
+	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
 	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
 	GetProductsByStoreId(ctx context.Context, page int32, limit int32, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, pagination base_model.Pagination, err error)
 	DeleteProductById(ctx context.Context, userId uuid.UUID, id uuid.UUID) error
@@ -442,8 +442,8 @@ func (s *service) UpdateProductCategory(ctx context.Context, prodCategory *prodE
 	return s.productRepository.UpsertProductCategory(ctx, prodCategory)
 }
 
-func (s *service) UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType, isUpdate bool) error {
-	if isUpdate {
+func (s *service) UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error {
+	if prodType.ID != 0 {
 		if _, err := s.productRepository.GetProductTypeById(ctx, prodType.ID); err != nil {
 			if strings.Contains(err.Error(), ErrNotFound) {
 				return util.NewError(codes.NotFound, string(ERR_PRODUCT_TYPE_NOT_FOUND), err.Error())

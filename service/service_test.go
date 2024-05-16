@@ -1255,7 +1255,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(sedan, nil)
 
-		err := service.UpsertProductType(ctx, sedan, false)
+		err := service.UpsertProductType(ctx, sedan)
 
 		errMsg := status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category")
 
@@ -1269,7 +1269,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(nil, nil)
 
-		err := service.UpsertProductType(ctx, sedan, false)
+		err := service.UpsertProductType(ctx, sedan)
 
 		errMsg := status.Errorf(codes.NotFound, "Related product category data is not found")
 
@@ -1294,7 +1294,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(errorMsg)
 
-		err := service.UpsertProductType(ctx, mouse, false)
+		err := service.UpsertProductType(ctx, mouse)
 
 		errMsg := status.Errorf(codes.Internal, "Error when inserting / updating product Type :"+errorMsg.Error())
 
@@ -1318,7 +1318,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(nil)
 
-		err := service.UpsertProductType(ctx, indomie, false)
+		err := service.UpsertProductType(ctx, indomie)
 
 		assert.Nil(t, err)
 	})
@@ -1330,7 +1330,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(nil, fmt.Errorf("not found"))
 
-		err := service.UpsertProductType(ctx, prodType1, true)
+		err := service.UpsertProductType(ctx, prodType1)
 
 		errMsg := status.Errorf(codes.NotFound, "{\"code\":5,\"code_detail\":\"ERR_PRODUCT_TYPE_NOT_FOUND\",\"message\":\"not found\"}")
 
@@ -1359,7 +1359,7 @@ func TestUpsertProductType(t *testing.T) {
 			Times(1).
 			Return(nil)
 
-		err := service.UpsertProductType(ctx, prodType1, true)
+		err := service.UpsertProductType(ctx, prodType1)
 
 		assert.Nil(t, err)
 	})

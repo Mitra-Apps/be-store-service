@@ -246,17 +246,17 @@ func (mr *MockServiceMockRecorder) UpsertProductCategory(ctx, prodCategory inter
 }
 
 // UpsertProductType mocks base method.
-func (m *MockService) UpsertProductType(ctx context.Context, prodType *entity.ProductType, isUpdate bool) error {
+func (m *MockService) UpsertProductType(ctx context.Context, prodType *entity.ProductType) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertProductType", ctx, prodType, isUpdate)
+	ret := m.ctrl.Call(m, "UpsertProductType", ctx, prodType)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpsertProductType indicates an expected call of UpsertProductType.
-func (mr *MockServiceMockRecorder) UpsertProductType(ctx, prodType, isUpdate interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) UpsertProductType(ctx, prodType interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductType", reflect.TypeOf((*MockService)(nil).UpsertProductType), ctx, prodType, isUpdate)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductType", reflect.TypeOf((*MockService)(nil).UpsertProductType), ctx, prodType)
 }
 
 // UpsertProducts mocks base method.
