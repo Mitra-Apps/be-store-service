@@ -12,7 +12,7 @@ type GetProductsByStoreIdParams struct {
 	ProductTypeId        *int64
 	IsIncludeDeactivated bool
 	OrderBy              string
-	OrderAscDesc         string
+	Direction            string
 }
 
 type GetProductsByStoreIdRepoParams struct {
@@ -21,5 +21,5 @@ type GetProductsByStoreIdRepoParams struct {
 	ProductTypeId        *int64
 	IsIncludeDeactivated bool
 	OrderBy              string
-	OrderAscDesc         string
+	Direction            string
 }

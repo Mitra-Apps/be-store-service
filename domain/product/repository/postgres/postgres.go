@@ -46,14 +46,17 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, params types.GetPro
 		tx = tx.Where("product_type_id = ?", *params.ProductTypeId)
 	}
 
-	tx = tx.Order(fmt.Sprintf("%s %s", params.OrderBy, params.OrderAscDesc))
+	tx = tx.Order(fmt.Sprintf("%s %s", params.OrderBy, params.Direction))
 	err := tx.
 		Scopes(p.paginate(prods, &paging, tx, int64(len(prods)))).
 		Find(&prods).
 		Error
 
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if strings.Contains(err.Error(), ErrIncorrectSqlSyntax) || strings.Contains(err.Error(), ErrInvalidColumnName) {
+			return nil, paging, fmt.Errorf("incorrect orderBy or direction value")
+		}
+		if errors.Is(err, gorm.ErrInvalidField) {
 			return nil, paging, nil
 		}
 		return nil, paging, err

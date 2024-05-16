@@ -520,13 +520,10 @@ func (s *service) GetProductsByStoreId(ctx context.Context, params types.GetProd
 		ProductTypeId:        params.ProductTypeId,
 		IsIncludeDeactivated: params.IsIncludeDeactivated,
 		OrderBy:              params.OrderBy,
-		OrderAscDesc:         params.OrderAscDesc,
+		Direction:            params.Direction,
 	}
 
 	if products, pagination, err = s.productRepository.GetProductsByStoreId(ctx, getProductsByStoreIdRepoParams); err != nil {
-		if strings.Contains(err.Error(), ErrIncorrectSqlSyntax) || strings.Contains(err.Error(), ErrInvalidColumnName) {
-			return nil, pagination, status.Errorf(codes.InvalidArgument, "Error when getting product list : incorrect orderBy or orderAscDesc value")
-		}
 		return nil, pagination, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
 	}
 

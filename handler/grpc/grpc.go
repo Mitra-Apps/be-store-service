@@ -430,8 +430,8 @@ func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRe
 		req.OrderBy = "created_at"
 	}
 
-	if strings.Trim(req.OrderAscDesc, " ") == "" {
-		req.OrderAscDesc = "asc"
+	if strings.Trim(req.Direction, " ") == "" {
+		req.Direction = "asc"
 	}
 
 	var productTypeId *int64
@@ -446,7 +446,7 @@ func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRe
 		ProductTypeId:        productTypeId,
 		IsIncludeDeactivated: req.IsIncludeDeactivated,
 		OrderBy:              req.OrderBy,
-		OrderAscDesc:         req.OrderAscDesc,
+		Direction:            req.Direction,
 	}
 
 	products, pagination, err := g.service.GetProductsByStoreId(ctx, getProductsByStoreIdParams)
