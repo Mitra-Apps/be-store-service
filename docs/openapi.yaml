@@ -160,6 +160,41 @@ paths:
             tags:
                 - StoreService
             operationId: StoreService_UpsertProductType
+            parameters:
+                - name: id
+                  in: query
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProductType'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpsertProductTypeResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/product-type/{id}:
+        put:
+            tags:
+                - StoreService
+            operationId: StoreService_UpdateProductType
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
             requestBody:
                 content:
                     application/json:

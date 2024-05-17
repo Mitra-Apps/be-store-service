@@ -261,6 +261,13 @@ service StoreService {
             body: "productType"
         };
     }
+
+    rpc UpdateProductType(UpsertProductTypeRequest) returns (UpsertProductTypeResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/product-type/{id}"
+            body: "productType"
+        };
+    }
 }
 
 // Request message to create a store
@@ -380,7 +387,8 @@ message UpsertProductCategoryResponse {
 }
 
 message UpsertProductTypeRequest {
-    ProductType productType = 1;
+    int64 id = 1;
+    ProductType productType = 2;
 }
 
 message UpsertProductTypeResponse {

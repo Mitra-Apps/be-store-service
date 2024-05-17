@@ -367,26 +367,13 @@ func (g *GrpcRoute) UpdateProductCategory(ctx context.Context, req *pb.UpsertPro
 }
 
 func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProductTypeRequest) (*pb.UpsertProductTypeResponse, error) {
-	if req.ProductType.Name == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "name is required")
-	}
 
-	if req.ProductType.ProductCategoryId == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "product category id is required")
-	}
-
-	prodType := prodEntity.ProductType{}
-	if err := prodType.FromProto(req.ProductType); err != nil {
+	prodType, err := g.validateUpdateProductTypeRequest(ctx, req)
+	if err != nil {
 		return nil, err
 	}
 
-	claims, err := middleware.GetClaimsFromContext(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
-	}
-	prodType.CreatedBy = claims.UserID
-
-	if err := g.service.UpsertProductType(ctx, &prodType); err != nil {
+	if err := g.service.UpsertProductType(ctx, prodType); err != nil {
 		return nil, err
 	}
 
@@ -534,4 +521,51 @@ func validateStoreHours(hours []*pb.StoreHour) error {
 	}
 
 	return nil
+}
+
+func (g *GrpcRoute) UpdateProductType(ctx context.Context, req *pb.UpsertProductTypeRequest) (*pb.UpsertProductTypeResponse, error) {
+
+	prodTypeId := req.GetId()
+	if prodTypeId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "id is required")
+	}
+
+	req.ProductType.Id = prodTypeId
+
+	prodType, err := g.validateUpdateProductTypeRequest(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := g.service.UpsertProductType(ctx, prodType); err != nil {
+		return nil, err
+	}
+
+	return &pb.UpsertProductTypeResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
+}
+
+func (g *GrpcRoute) validateUpdateProductTypeRequest(ctx context.Context, req *pb.UpsertProductTypeRequest) (*prodEntity.ProductType, error) {
+	if req.ProductType.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	}
+
+	if req.ProductType.ProductCategoryId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "product category id is required")
+	}
+
+	prodType := prodEntity.ProductType{}
+	if err := prodType.FromProto(req.ProductType); err != nil {
+		return nil, err
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+	prodType.CreatedBy = claims.UserID
+
+	return &prodType, nil
 }

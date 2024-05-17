@@ -444,6 +444,15 @@ func (s *service) UpdateProductCategory(ctx context.Context, prodCategory *prodE
 }
 
 func (s *service) UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error {
+	if prodType.ID != 0 {
+		if _, err := s.productRepository.GetProductTypeById(ctx, prodType.ID); err != nil {
+			if strings.Contains(err.Error(), ErrNotFound) {
+				return util.NewError(codes.NotFound, string(ERR_PRODUCT_TYPE_NOT_FOUND), err.Error())
+			}
+			return util.NewError(codes.Internal, string(ERR_UNKNOWN), err.Error())
+		}
+	}
+
 	if prodCat, err := s.productRepository.GetProductCategoryById(ctx, prodType.ProductCategoryID); err != nil {
 		return status.Errorf(codes.AlreadyExists, "Error getting product category by id data")
 	} else if prodCat == nil {

@@ -92,6 +92,9 @@ const (
 	// StoreServiceUpsertProductTypeProcedure is the fully-qualified name of the StoreService's
 	// UpsertProductType RPC.
 	StoreServiceUpsertProductTypeProcedure = "/StoreService/UpsertProductType"
+	// StoreServiceUpdateProductTypeProcedure is the fully-qualified name of the StoreService's
+	// UpdateProductType RPC.
+	StoreServiceUpdateProductTypeProcedure = "/StoreService/UpdateProductType"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -117,6 +120,7 @@ var (
 	storeServiceUpdateProductCategoryMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("UpdateProductCategory")
 	storeServiceGetProductTypesMethodDescriptor       = storeServiceServiceDescriptor.Methods().ByName("GetProductTypes")
 	storeServiceUpsertProductTypeMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("UpsertProductType")
+	storeServiceUpdateProductTypeMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("UpdateProductType")
 )
 
 // StoreServiceClient is a client for the StoreService service.
@@ -148,6 +152,7 @@ type StoreServiceClient interface {
 	UpdateProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
 	GetProductTypes(context.Context, *connect.Request[store.GetProductTypesRequest]) (*connect.Response[store.GetProductTypesResponse], error)
 	UpsertProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
+	UpdateProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
 }
 
 // NewStoreServiceClient constructs a client for the StoreService service. By default, it uses the
@@ -280,6 +285,12 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(storeServiceUpsertProductTypeMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		updateProductType: connect.NewClient[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse](
+			httpClient,
+			baseURL+StoreServiceUpdateProductTypeProcedure,
+			connect.WithSchema(storeServiceUpdateProductTypeMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -305,6 +316,7 @@ type storeServiceClient struct {
 	updateProductCategory *connect.Client[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse]
 	getProductTypes       *connect.Client[store.GetProductTypesRequest, store.GetProductTypesResponse]
 	upsertProductType     *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
+	updateProductType     *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
 }
 
 // CreateStore calls StoreService.CreateStore.
@@ -407,6 +419,11 @@ func (c *storeServiceClient) UpsertProductType(ctx context.Context, req *connect
 	return c.upsertProductType.CallUnary(ctx, req)
 }
 
+// UpdateProductType calls StoreService.UpdateProductType.
+func (c *storeServiceClient) UpdateProductType(ctx context.Context, req *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error) {
+	return c.updateProductType.CallUnary(ctx, req)
+}
+
 // StoreServiceHandler is an implementation of the StoreService service.
 type StoreServiceHandler interface {
 	// Create a new store
@@ -436,6 +453,7 @@ type StoreServiceHandler interface {
 	UpdateProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
 	GetProductTypes(context.Context, *connect.Request[store.GetProductTypesRequest]) (*connect.Response[store.GetProductTypesResponse], error)
 	UpsertProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
+	UpdateProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
 }
 
 // NewStoreServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -564,6 +582,12 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(storeServiceUpsertProductTypeMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	storeServiceUpdateProductTypeHandler := connect.NewUnaryHandler(
+		StoreServiceUpdateProductTypeProcedure,
+		svc.UpdateProductType,
+		connect.WithSchema(storeServiceUpdateProductTypeMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/StoreService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case StoreServiceCreateStoreProcedure:
@@ -606,6 +630,8 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 			storeServiceGetProductTypesHandler.ServeHTTP(w, r)
 		case StoreServiceUpsertProductTypeProcedure:
 			storeServiceUpsertProductTypeHandler.ServeHTTP(w, r)
+		case StoreServiceUpdateProductTypeProcedure:
+			storeServiceUpdateProductTypeHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -693,4 +719,8 @@ func (UnimplementedStoreServiceHandler) GetProductTypes(context.Context, *connec
 
 func (UnimplementedStoreServiceHandler) UpsertProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpsertProductType is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) UpdateProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpdateProductType is not implemented"))
 }
