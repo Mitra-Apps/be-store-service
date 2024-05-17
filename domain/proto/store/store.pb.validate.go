@@ -4676,6 +4676,10 @@ func (m *GetProductListRequest) validate(all bool) error {
 
 	// no validation rules for Limit
 
+	// no validation rules for OrderBy
+
+	// no validation rules for Direction
+
 	if len(errors) > 0 {
 		return GetProductListRequestMultiError(errors)
 	}

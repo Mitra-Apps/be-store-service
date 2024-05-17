@@ -20,6 +20,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
+	"github.com/Mitra-Apps/be-store-service/types"
 	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -1380,6 +1381,30 @@ func TestGetProductsByStoreId(t *testing.T) {
 	otherStoreIDUuid := uuid.MustParse(otherStoreID)
 	otherStoreID2Uuid := uuid.MustParse(otherStoreID2)
 
+	getProductsByStoreIdParams := types.GetProductsByStoreIdParams{
+		Page:                 page,
+		Limit:                limit,
+		StoreID:              otherStoreID2Uuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
+	}
+
+	getProductsByStoreIdParams2 := types.GetProductsByStoreIdParams{
+		Page:                 page,
+		Limit:                limit,
+		StoreID:              otherStoreIDUuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
+	}
+
+	getProductsByStoreIdParams3 := types.GetProductsByStoreIdParams{
+		Page:                 page,
+		Limit:                limit,
+		StoreID:              storeIDUuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
+	}
+
 	store := &entity.Store{
 		BaseModel: base_model.BaseModel{
 			ID: storeIDUuid,
@@ -1411,13 +1436,27 @@ func TestGetProductsByStoreId(t *testing.T) {
 		TotalPage:    2,
 	}
 
+	getProductsByStoreIdRepoParams := types.GetProductsByStoreIdRepoParams{
+		Pagination:           pagingReq,
+		StoreID:              otherStoreIDUuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
+	}
+
+	getProductsByStoreIdRepoParams2 := types.GetProductsByStoreIdRepoParams{
+		Pagination:           pagingReq,
+		StoreID:              storeIDUuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
+	}
+
 	t.Run("Should return error if store id not found", func(t *testing.T) {
 		mockStoreRepo.EXPECT().
 			GetStore(ctx, otherStoreID2).
 			Times(1).
 			Return(nil, status.Errorf(codes.NotFound, "Not Found"))
 
-		_, _, err := service.GetProductsByStoreId(ctx, page, limit, otherStoreID2Uuid, nil, false)
+		_, _, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams)
 
 		errMsg := status.Errorf(codes.NotFound, "Not Found")
 
@@ -1433,11 +1472,11 @@ func TestGetProductsByStoreId(t *testing.T) {
 			Return(otherStore2, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductsByStoreId(ctx, pagingReq, otherStoreIDUuid, gomock.Any(), false).
+			GetProductsByStoreId(ctx, getProductsByStoreIdRepoParams).
 			Times(1).
 			Return(nil, paging, errorMsg)
 
-		_, _, err := service.GetProductsByStoreId(ctx, page, limit, otherStoreIDUuid, nil, false)
+		_, _, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams2)
 
 		errMsg := status.Errorf(codes.Internal, "Error when getting product list :"+errorMsg.Error())
 
@@ -1452,11 +1491,11 @@ func TestGetProductsByStoreId(t *testing.T) {
 			Return(store, nil)
 
 		mockProdRepo.EXPECT().
-			GetProductsByStoreId(ctx, pagingReq, storeIDUuid, gomock.Any(), false).
+			GetProductsByStoreId(ctx, getProductsByStoreIdRepoParams2).
 			Times(1).
 			Return(products, paging, nil)
 
-		result, pagination, err := service.GetProductsByStoreId(ctx, page, limit, storeIDUuid, nil, false)
+		result, pagination, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams3)
 
 		assert.Nil(t, err)
 		assert.Equal(t, products, result)
@@ -2231,42 +2270,6 @@ func Test_service_DeleteProductById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.s.DeleteProductById(tt.args.ctx, tt.args.userId, tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("service.DeleteProductById() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_service_GetProductsByStoreId(t *testing.T) {
-	type args struct {
-		ctx                  context.Context
-		page                 int32
-		limit                int32
-		storeID              uuid.UUID
-		productTypeId        *int64
-		isIncludeDeactivated bool
-	}
-	tests := []struct {
-		name           string
-		s              *service
-		args           args
-		wantProducts   []*prodEntity.Product
-		wantPagination base_model.Pagination
-		wantErr        bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotProducts, gotPagination, err := tt.s.GetProductsByStoreId(tt.args.ctx, tt.args.page, tt.args.limit, tt.args.storeID, tt.args.productTypeId, tt.args.isIncludeDeactivated)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("service.GetProductsByStoreId() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(gotProducts, tt.wantProducts) {
-				t.Errorf("service.GetProductsByStoreId() gotProducts = %v, want %v", gotProducts, tt.wantProducts)
-			}
-			if !reflect.DeepEqual(gotPagination, tt.wantPagination) {
-				t.Errorf("service.GetProductsByStoreId() gotPagination = %v, want %v", gotPagination, tt.wantPagination)
 			}
 		})
 	}

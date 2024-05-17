@@ -10,6 +10,7 @@ import (
 
 	base_model "github.com/Mitra-Apps/be-store-service/domain/base_model"
 	entity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	types "github.com/Mitra-Apps/be-store-service/types"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -202,9 +203,9 @@ func (mr *MockProductRepositoryMockRecorder) GetProductTypesByIds(ctx, typeIds i
 }
 
 // GetProductsByStoreId mocks base method.
-func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, pagination base_model.Pagination, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, base_model.Pagination, error) {
+func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, params types.GetProductsByStoreIdRepoParams) ([]*entity.Product, base_model.Pagination, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, pagination, storeID, productTypeId, isIncludeDeactivated)
+	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, params)
 	ret0, _ := ret[0].([]*entity.Product)
 	ret1, _ := ret[1].(base_model.Pagination)
 	ret2, _ := ret[2].(error)
@@ -212,9 +213,9 @@ func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, pagina
 }
 
 // GetProductsByStoreId indicates an expected call of GetProductsByStoreId.
-func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreId(ctx, pagination, storeID, productTypeId, isIncludeDeactivated interface{}) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreId(ctx, params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreId), ctx, pagination, storeID, productTypeId, isIncludeDeactivated)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreId), ctx, params)
 }
 
 // GetProductsByStoreIdAndNames mocks base method.

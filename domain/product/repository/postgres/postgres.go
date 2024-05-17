@@ -3,11 +3,13 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"strings"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	"github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	"github.com/Mitra-Apps/be-store-service/types"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,35 +25,38 @@ func NewPostgres(db *gorm.DB) *Postgres {
 	return &Postgres{db, nil}
 }
 
-func (p *Postgres) GetProductsByStoreId(ctx context.Context, pagination base_model.Pagination, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, base_model.Pagination, error) {
+func (p *Postgres) GetProductsByStoreId(ctx context.Context, params types.GetProductsByStoreIdRepoParams) ([]*entity.Product, base_model.Pagination, error) {
 	prods := []*entity.Product{}
 
 	paging := base_model.Pagination{
-		Page:  pagination.Page,
-		Limit: pagination.Limit,
+		Page:  params.Pagination.Page,
+		Limit: params.Pagination.Limit,
 	}
 
 	tx := p.db.WithContext(ctx).
 		Preload("Images").
 		Preload("ProductType").
 		Preload("ProductType.ProductCategory").
-		Where("store_id = ?", storeID)
-	if !isIncludeDeactivated {
+		Where("store_id = ?", params.StoreID)
+	if !params.IsIncludeDeactivated {
 		tx = tx.Where("sale_status = ?", true)
 	}
 
-	if productTypeId != nil {
-		tx = tx.Where("product_type_id = ?", *productTypeId)
+	if params.ProductTypeId != nil {
+		tx = tx.Where("product_type_id = ?", *params.ProductTypeId)
 	}
 
-	tx = tx.Order("name ASC")
+	tx = tx.Order(fmt.Sprintf("%s %s", params.OrderBy, params.Direction))
 	err := tx.
 		Scopes(p.paginate(prods, &paging, tx, int64(len(prods)))).
 		Find(&prods).
 		Error
 
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if strings.Contains(err.Error(), ErrIncorrectSqlSyntax) || strings.Contains(err.Error(), ErrInvalidColumnName) {
+			return nil, paging, fmt.Errorf("incorrect orderBy or direction value")
+		}
+		if errors.Is(err, gorm.ErrInvalidField) {
 			return nil, paging, nil
 		}
 		return nil, paging, err

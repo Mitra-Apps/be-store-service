@@ -15,6 +15,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/lib"
+	"github.com/Mitra-Apps/be-store-service/types"
 	utilityPb "github.com/Mitra-Apps/be-utility-service/domain/proto/utility"
 	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/google/uuid"
@@ -35,7 +36,7 @@ type Service interface {
 	UpdateProductCategory(ctx context.Context, prodCategory *prodEntity.ProductCategory) error
 	UpsertProductType(ctx context.Context, prodType *prodEntity.ProductType) error
 	GetProductById(ctx context.Context, id uuid.UUID) (*prodEntity.Product, error)
-	GetProductsByStoreId(ctx context.Context, page int32, limit int32, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, pagination base_model.Pagination, err error)
+	GetProductsByStoreId(ctx context.Context, getProductsByStoreIdParams types.GetProductsByStoreIdParams) (products []*prodEntity.Product, pagination base_model.Pagination, err error)
 	DeleteProductById(ctx context.Context, userId uuid.UUID, id uuid.UUID) error
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
@@ -512,17 +513,26 @@ func (s *service) DeleteProductById(ctx context.Context, userId uuid.UUID, id uu
 	return err
 }
 
-func (s *service) GetProductsByStoreId(ctx context.Context, page int32, limit int32, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) (products []*prodEntity.Product, pagination base_model.Pagination, err error) {
+func (s *service) GetProductsByStoreId(ctx context.Context, params types.GetProductsByStoreIdParams) (products []*prodEntity.Product, pagination base_model.Pagination, err error) {
 	pagination = base_model.Pagination{
-		Page:  page,
-		Limit: limit,
+		Page:  params.Page,
+		Limit: params.Limit,
 	}
 
-	if _, err := s.storeRepository.GetStore(ctx, storeID.String()); err != nil {
+	if _, err := s.storeRepository.GetStore(ctx, params.StoreID.String()); err != nil {
 		return nil, pagination, err
 	}
 
-	if products, pagination, err = s.productRepository.GetProductsByStoreId(ctx, pagination, storeID, productTypeId, isIncludeDeactivated); err != nil {
+	getProductsByStoreIdRepoParams := types.GetProductsByStoreIdRepoParams{
+		Pagination:           pagination,
+		StoreID:              params.StoreID,
+		ProductTypeId:        params.ProductTypeId,
+		IsIncludeDeactivated: params.IsIncludeDeactivated,
+		OrderBy:              params.OrderBy,
+		Direction:            params.Direction,
+	}
+
+	if products, pagination, err = s.productRepository.GetProductsByStoreId(ctx, getProductsByStoreIdRepoParams); err != nil {
 		return nil, pagination, status.Errorf(codes.Internal, "Error when getting product list :"+err.Error())
 	}
 
