@@ -15,6 +15,7 @@ import (
 
 	base_model "github.com/Mitra-Apps/be-store-service/domain/base_model"
 	entity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	types "github.com/Mitra-Apps/be-store-service/types"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -51,7 +52,7 @@ func (m *MockProductRepository) DeleteProductById(ctx context.Context, id uuid.U
 }
 
 // DeleteProductById indicates an expected call of DeleteProductById.
-func (mr *MockProductRepositoryMockRecorder) DeleteProductById(ctx, id any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) DeleteProductById(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductById", reflect.TypeOf((*MockProductRepository)(nil).DeleteProductById), ctx, id)
 }
@@ -65,7 +66,7 @@ func (m *MockProductRepository) DeleteProductImages(ctx context.Context, product
 }
 
 // DeleteProductImages indicates an expected call of DeleteProductImages.
-func (mr *MockProductRepositoryMockRecorder) DeleteProductImages(ctx, productImages any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) DeleteProductImages(ctx, productImages interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductImages", reflect.TypeOf((*MockProductRepository)(nil).DeleteProductImages), ctx, productImages)
 }
@@ -80,7 +81,7 @@ func (m *MockProductRepository) GetProductById(ctx context.Context, id uuid.UUID
 }
 
 // GetProductById indicates an expected call of GetProductById.
-func (mr *MockProductRepositoryMockRecorder) GetProductById(ctx, id any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductById(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductById", reflect.TypeOf((*MockProductRepository)(nil).GetProductById), ctx, id)
 }
@@ -95,7 +96,7 @@ func (m *MockProductRepository) GetProductCategories(ctx context.Context, isIncl
 }
 
 // GetProductCategories indicates an expected call of GetProductCategories.
-func (mr *MockProductRepositoryMockRecorder) GetProductCategories(ctx, isIncludeDeactivated any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductCategories(ctx, isIncludeDeactivated interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategories", reflect.TypeOf((*MockProductRepository)(nil).GetProductCategories), ctx, isIncludeDeactivated)
 }
@@ -110,7 +111,7 @@ func (m *MockProductRepository) GetProductCategoryById(ctx context.Context, id i
 }
 
 // GetProductCategoryById indicates an expected call of GetProductCategoryById.
-func (mr *MockProductRepositoryMockRecorder) GetProductCategoryById(ctx, id any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductCategoryById(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategoryById", reflect.TypeOf((*MockProductRepository)(nil).GetProductCategoryById), ctx, id)
 }
@@ -125,7 +126,7 @@ func (m *MockProductRepository) GetProductCategoryByName(ctx context.Context, na
 }
 
 // GetProductCategoryByName indicates an expected call of GetProductCategoryByName.
-func (mr *MockProductRepositoryMockRecorder) GetProductCategoryByName(ctx, name any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductCategoryByName(ctx, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategoryByName", reflect.TypeOf((*MockProductRepository)(nil).GetProductCategoryByName), ctx, name)
 }
@@ -141,7 +142,7 @@ func (m *MockProductRepository) GetProductImagesByProductIds(ctx context.Context
 }
 
 // GetProductImagesByProductIds indicates an expected call of GetProductImagesByProductIds.
-func (mr *MockProductRepositoryMockRecorder) GetProductImagesByProductIds(ctx, productIds any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductImagesByProductIds(ctx, productIds interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductImagesByProductIds", reflect.TypeOf((*MockProductRepository)(nil).GetProductImagesByProductIds), ctx, productIds)
 }
@@ -156,7 +157,7 @@ func (m *MockProductRepository) GetProductTypeByName(ctx context.Context, produc
 }
 
 // GetProductTypeByName indicates an expected call of GetProductTypeByName.
-func (mr *MockProductRepositoryMockRecorder) GetProductTypeByName(ctx, productCategoryID, name any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductTypeByName(ctx, productCategoryID, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductTypeByName", reflect.TypeOf((*MockProductRepository)(nil).GetProductTypeByName), ctx, productCategoryID, name)
 }
@@ -171,7 +172,7 @@ func (m *MockProductRepository) GetProductTypes(ctx context.Context, productCate
 }
 
 // GetProductTypes indicates an expected call of GetProductTypes.
-func (mr *MockProductRepositoryMockRecorder) GetProductTypes(ctx, productCategoryID, isIncludeDeactivated any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductTypes(ctx, productCategoryID, isIncludeDeactivated interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductTypes", reflect.TypeOf((*MockProductRepository)(nil).GetProductTypes), ctx, productCategoryID, isIncludeDeactivated)
 }
@@ -186,15 +187,15 @@ func (m *MockProductRepository) GetProductTypesByIds(ctx context.Context, typeId
 }
 
 // GetProductTypesByIds indicates an expected call of GetProductTypesByIds.
-func (mr *MockProductRepositoryMockRecorder) GetProductTypesByIds(ctx, typeIds any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductTypesByIds(ctx, typeIds interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductTypesByIds", reflect.TypeOf((*MockProductRepository)(nil).GetProductTypesByIds), ctx, typeIds)
 }
 
 // GetProductsByStoreId mocks base method.
-func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, pagination base_model.Pagination, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, base_model.Pagination, error) {
+func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, params types.GetProductsByStoreIdRepoParams) ([]*entity.Product, base_model.Pagination, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, pagination, storeID, productTypeId, isIncludeDeactivated)
+	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, params)
 	ret0, _ := ret[0].([]*entity.Product)
 	ret1, _ := ret[1].(base_model.Pagination)
 	ret2, _ := ret[2].(error)
@@ -202,9 +203,9 @@ func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, pagina
 }
 
 // GetProductsByStoreId indicates an expected call of GetProductsByStoreId.
-func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreId(ctx, pagination, storeID, productTypeId, isIncludeDeactivated any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreId(ctx, params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreId), ctx, pagination, storeID, productTypeId, isIncludeDeactivated)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreId), ctx, params)
 }
 
 // GetProductsByStoreIdAndNames mocks base method.
@@ -217,7 +218,7 @@ func (m *MockProductRepository) GetProductsByStoreIdAndNames(ctx context.Context
 }
 
 // GetProductsByStoreIdAndNames indicates an expected call of GetProductsByStoreIdAndNames.
-func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreIdAndNames(ctx, storeID, names any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreIdAndNames(ctx, storeID, names interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreIdAndNames", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreIdAndNames), ctx, storeID, names)
 }
@@ -232,7 +233,7 @@ func (m *MockProductRepository) GetUnitOfMeasureById(ctx context.Context, uomId 
 }
 
 // GetUnitOfMeasureById indicates an expected call of GetUnitOfMeasureById.
-func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasureById(ctx, uomId any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasureById(ctx, uomId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasureById", reflect.TypeOf((*MockProductRepository)(nil).GetUnitOfMeasureById), ctx, uomId)
 }
@@ -247,7 +248,7 @@ func (m *MockProductRepository) GetUnitOfMeasureByName(ctx context.Context, name
 }
 
 // GetUnitOfMeasureByName indicates an expected call of GetUnitOfMeasureByName.
-func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasureByName(ctx, name any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasureByName(ctx, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasureByName", reflect.TypeOf((*MockProductRepository)(nil).GetUnitOfMeasureByName), ctx, name)
 }
@@ -262,7 +263,7 @@ func (m *MockProductRepository) GetUnitOfMeasureBySymbol(ctx context.Context, sy
 }
 
 // GetUnitOfMeasureBySymbol indicates an expected call of GetUnitOfMeasureBySymbol.
-func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasureBySymbol(ctx, symbol any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasureBySymbol(ctx, symbol interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasureBySymbol", reflect.TypeOf((*MockProductRepository)(nil).GetUnitOfMeasureBySymbol), ctx, symbol)
 }
@@ -277,7 +278,7 @@ func (m *MockProductRepository) GetUnitOfMeasures(ctx context.Context, isInclude
 }
 
 // GetUnitOfMeasures indicates an expected call of GetUnitOfMeasures.
-func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasures(ctx, isIncludeDeactivated any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasures(ctx, isIncludeDeactivated interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasures", reflect.TypeOf((*MockProductRepository)(nil).GetUnitOfMeasures), ctx, isIncludeDeactivated)
 }
@@ -292,7 +293,7 @@ func (m *MockProductRepository) GetUnitOfMeasuresByIds(ctx context.Context, uomI
 }
 
 // GetUnitOfMeasuresByIds indicates an expected call of GetUnitOfMeasuresByIds.
-func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasuresByIds(ctx, uomIds any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetUnitOfMeasuresByIds(ctx, uomIds interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasuresByIds", reflect.TypeOf((*MockProductRepository)(nil).GetUnitOfMeasuresByIds), ctx, uomIds)
 }
@@ -306,7 +307,7 @@ func (m *MockProductRepository) InitiateTransaction(ctx context.Context) bool {
 }
 
 // InitiateTransaction indicates an expected call of InitiateTransaction.
-func (mr *MockProductRepositoryMockRecorder) InitiateTransaction(ctx any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) InitiateTransaction(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitiateTransaction", reflect.TypeOf((*MockProductRepository)(nil).InitiateTransaction), ctx)
 }
@@ -346,7 +347,7 @@ func (m *MockProductRepository) UpsertProductCategory(ctx context.Context, prodC
 }
 
 // UpsertProductCategory indicates an expected call of UpsertProductCategory.
-func (mr *MockProductRepositoryMockRecorder) UpsertProductCategory(ctx, prodCategory any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) UpsertProductCategory(ctx, prodCategory interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductCategory", reflect.TypeOf((*MockProductRepository)(nil).UpsertProductCategory), ctx, prodCategory)
 }
@@ -360,7 +361,7 @@ func (m *MockProductRepository) UpsertProductImages(ctx context.Context, product
 }
 
 // UpsertProductImages indicates an expected call of UpsertProductImages.
-func (mr *MockProductRepositoryMockRecorder) UpsertProductImages(ctx, productImages any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) UpsertProductImages(ctx, productImages interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductImages", reflect.TypeOf((*MockProductRepository)(nil).UpsertProductImages), ctx, productImages)
 }
@@ -374,7 +375,7 @@ func (m *MockProductRepository) UpsertProductType(ctx context.Context, prodType 
 }
 
 // UpsertProductType indicates an expected call of UpsertProductType.
-func (mr *MockProductRepositoryMockRecorder) UpsertProductType(ctx, prodType any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) UpsertProductType(ctx, prodType interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductType", reflect.TypeOf((*MockProductRepository)(nil).UpsertProductType), ctx, prodType)
 }
@@ -388,7 +389,7 @@ func (m *MockProductRepository) UpsertProducts(ctx context.Context, product []*e
 }
 
 // UpsertProducts indicates an expected call of UpsertProducts.
-func (mr *MockProductRepositoryMockRecorder) UpsertProducts(ctx, product any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) UpsertProducts(ctx, product interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProducts", reflect.TypeOf((*MockProductRepository)(nil).UpsertProducts), ctx, product)
 }
@@ -402,7 +403,7 @@ func (m *MockProductRepository) UpsertUnitOfMeasure(ctx context.Context, uom *en
 }
 
 // UpsertUnitOfMeasure indicates an expected call of UpsertUnitOfMeasure.
-func (mr *MockProductRepositoryMockRecorder) UpsertUnitOfMeasure(ctx, uom any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) UpsertUnitOfMeasure(ctx, uom interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertUnitOfMeasure", reflect.TypeOf((*MockProductRepository)(nil).UpsertUnitOfMeasure), ctx, uom)
 }

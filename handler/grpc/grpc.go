@@ -11,6 +11,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
+	"github.com/Mitra-Apps/be-store-service/types"
 	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
@@ -425,12 +426,30 @@ func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRe
 		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
 	}
 
+	if strings.Trim(req.OrderBy, " ") == "" {
+		req.OrderBy = "created_at"
+	}
+
+	if strings.Trim(req.Direction, " ") == "" {
+		req.Direction = "asc"
+	}
+
 	var productTypeId *int64
 	if req.ProductTypeId != 0 {
 		productTypeId = &req.ProductTypeId
 	}
 
-	products, pagination, err := g.service.GetProductsByStoreId(ctx, req.Page, req.Limit, storeId, productTypeId, req.IsIncludeDeactivated)
+	getProductsByStoreIdParams := types.GetProductsByStoreIdParams{
+		Page:                 req.Page,
+		Limit:                req.Limit,
+		StoreID:              storeId,
+		ProductTypeId:        productTypeId,
+		IsIncludeDeactivated: req.IsIncludeDeactivated,
+		OrderBy:              req.OrderBy,
+		Direction:            req.Direction,
+	}
+
+	products, pagination, err := g.service.GetProductsByStoreId(ctx, getProductsByStoreIdParams)
 	if err != nil {
 		return nil, err
 	}
