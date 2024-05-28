@@ -124,24 +124,20 @@ paths:
                   in: query
                   schema:
                     type: string
-                  examples:
-                    created_at:
-                      summary: Order by created_at
-                      value: created_at
-                    name:
-                      summary: Order by name
-                      value: name
                 - name: direction
                   in: query
                   schema:
                     type: string
-                  examples:
-                    asc:
-                      summary: Ascending direction
-                      value: asc
-                    desc:
-                      summary: Descending direction
-                      value: desc
+                - name: search
+                  in: query
+                  schema:
+                    type: string
+                - name: productCategoryId
+                  in: query
+                  schema:
+                    type: array
+                    items:
+                        type: string
             responses:
                 "200":
                     description: OK

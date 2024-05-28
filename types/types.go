@@ -10,16 +10,20 @@ type GetProductsByStoreIdParams struct {
 	Limit                int32
 	StoreID              uuid.UUID
 	ProductTypeId        *int64
+	ProductCategoryId    []int64
 	IsIncludeDeactivated bool
 	OrderBy              string
 	Direction            string
+	Search				 *string
 }
 
 type GetProductsByStoreIdRepoParams struct {
 	Pagination           base_model.Pagination
 	StoreID              uuid.UUID
 	ProductTypeId        *int64
+	ProductCategoryId    []int64
 	IsIncludeDeactivated bool
 	OrderBy              string
 	Direction            string
+	Search				 *string
 }
