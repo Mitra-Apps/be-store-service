@@ -124,13 +124,6 @@ paths:
                   in: query
                   schema:
                     type: string
-                  examples:
-                    created_at:
-                      summary: Order by created_at
-                      value: created_at
-                    name:
-                      summary: Order by name
-                      value: name
                 - name: direction
                   in: query
                   schema:
