@@ -142,6 +142,19 @@ paths:
                     desc:
                       summary: Descending direction
                       value: desc
+                - name: search
+                  in: query
+                  description: Field to filter products name
+                  schema:
+                    type: string
+                  example: Hexos
+                - name: productCategoryId
+                  in: query
+                  schema:
+                    type: array
+                    items:
+                        type: string
+                    example: [1,2,3]
             responses:
                 "200":
                     description: OK

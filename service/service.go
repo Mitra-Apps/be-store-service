@@ -530,6 +530,8 @@ func (s *service) GetProductsByStoreId(ctx context.Context, params types.GetProd
 		IsIncludeDeactivated: params.IsIncludeDeactivated,
 		OrderBy:              params.OrderBy,
 		Direction:            params.Direction,
+		Search: 			  params.Search,
+		ProductCategoryId: 	  params.ProductCategoryId,
 	}
 
 	if products, pagination, err = s.productRepository.GetProductsByStoreId(ctx, getProductsByStoreIdRepoParams); err != nil {
