@@ -235,6 +235,12 @@ service StoreService {
         };
     }
 
+    rpc GetProductCategoriesByStoreId(GetProductCategoriesByStoreIdRequest) returns (GetProductCategoriesByStoreIdResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/product-category/{store_id}/{is_include_deactivated}"
+        };
+    }
+
     rpc UpsertProductCategory(UpsertProductCategoryRequest) returns (UpsertProductCategoryResponse) {
         option (google.api.http) = {
             post: "/api/v1/product-category"
@@ -433,6 +439,17 @@ message GetUnitOfMeasuresResponse {
     int32 code = 1;
     string message = 2;
     repeated UnitOfMeasure data = 3;
+}
+
+message GetProductCategoriesByStoreIdRequest {
+    bool is_include_deactivated = 1;
+    string store_id = 2;
+}
+
+message GetProductCategoriesByStoreIdResponse {
+    int32 code = 1;
+    string message = 2;
+    GetProductCategoriesResponseItem data = 3;
 }
 
 message GetProductCategoriesRequest {

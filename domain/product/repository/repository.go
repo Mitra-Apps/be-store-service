@@ -21,6 +21,7 @@ type ProductRepository interface {
 	GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error)
 	GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error)
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) ([]*entity.ProductCategory, error)
+	GetProductCategoriesByStoreId(ctx context.Context, params types.GetProductCategoriesByStoreIdParams) ([]*entity.ProductCategory, error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) ([]*entity.ProductType, error)
 	GetProductTypeByName(ctx context.Context, productCategoryID int64, name string) (*entity.ProductType, error)
 	GetProductTypesByIds(ctx context.Context, typeIds []int64) ([]*entity.ProductType, error)

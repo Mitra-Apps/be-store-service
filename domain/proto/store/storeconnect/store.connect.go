@@ -80,6 +80,9 @@ const (
 	// StoreServiceGetProductCategoriesProcedure is the fully-qualified name of the StoreService's
 	// GetProductCategories RPC.
 	StoreServiceGetProductCategoriesProcedure = "/StoreService/GetProductCategories"
+	// StoreServiceGetProductCategoriesByStoreIdProcedure is the fully-qualified name of the
+	// StoreService's GetProductCategoriesByStoreId RPC.
+	StoreServiceGetProductCategoriesByStoreIdProcedure = "/StoreService/GetProductCategoriesByStoreId"
 	// StoreServiceUpsertProductCategoryProcedure is the fully-qualified name of the StoreService's
 	// UpsertProductCategory RPC.
 	StoreServiceUpsertProductCategoryProcedure = "/StoreService/UpsertProductCategory"
@@ -99,28 +102,29 @@ const (
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	storeServiceServiceDescriptor                     = store.File_proto_store_store_proto.Services().ByName("StoreService")
-	storeServiceCreateStoreMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("CreateStore")
-	storeServiceGetStoreMethodDescriptor              = storeServiceServiceDescriptor.Methods().ByName("GetStore")
-	storeServiceUpdateStoreMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("UpdateStore")
-	storeServiceDeleteStoreMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("DeleteStore")
-	storeServiceListStoresMethodDescriptor            = storeServiceServiceDescriptor.Methods().ByName("ListStores")
-	storeServiceGetStoreByUserIDMethodDescriptor      = storeServiceServiceDescriptor.Methods().ByName("GetStoreByUserID")
-	storeServiceOpenCloseStoreMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("OpenCloseStore")
-	storeServiceGetProductByIdMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("GetProductById")
-	storeServiceGetProductListMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("GetProductList")
-	storeServiceInsertProductsMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("InsertProducts")
-	storeServiceUpdateProductMethodDescriptor         = storeServiceServiceDescriptor.Methods().ByName("UpdateProduct")
-	storeServiceDeleteProductMethodDescriptor         = storeServiceServiceDescriptor.Methods().ByName("DeleteProduct")
-	storeServiceGetUnitOfMeasuresMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("GetUnitOfMeasures")
-	storeServiceUpsertUnitOfMeasureMethodDescriptor   = storeServiceServiceDescriptor.Methods().ByName("UpsertUnitOfMeasure")
-	storeServiceUpdateUnitOfMeasureMethodDescriptor   = storeServiceServiceDescriptor.Methods().ByName("UpdateUnitOfMeasure")
-	storeServiceGetProductCategoriesMethodDescriptor  = storeServiceServiceDescriptor.Methods().ByName("GetProductCategories")
-	storeServiceUpsertProductCategoryMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("UpsertProductCategory")
-	storeServiceUpdateProductCategoryMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("UpdateProductCategory")
-	storeServiceGetProductTypesMethodDescriptor       = storeServiceServiceDescriptor.Methods().ByName("GetProductTypes")
-	storeServiceUpsertProductTypeMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("UpsertProductType")
-	storeServiceUpdateProductTypeMethodDescriptor     = storeServiceServiceDescriptor.Methods().ByName("UpdateProductType")
+	storeServiceServiceDescriptor                             = store.File_proto_store_store_proto.Services().ByName("StoreService")
+	storeServiceCreateStoreMethodDescriptor                   = storeServiceServiceDescriptor.Methods().ByName("CreateStore")
+	storeServiceGetStoreMethodDescriptor                      = storeServiceServiceDescriptor.Methods().ByName("GetStore")
+	storeServiceUpdateStoreMethodDescriptor                   = storeServiceServiceDescriptor.Methods().ByName("UpdateStore")
+	storeServiceDeleteStoreMethodDescriptor                   = storeServiceServiceDescriptor.Methods().ByName("DeleteStore")
+	storeServiceListStoresMethodDescriptor                    = storeServiceServiceDescriptor.Methods().ByName("ListStores")
+	storeServiceGetStoreByUserIDMethodDescriptor              = storeServiceServiceDescriptor.Methods().ByName("GetStoreByUserID")
+	storeServiceOpenCloseStoreMethodDescriptor                = storeServiceServiceDescriptor.Methods().ByName("OpenCloseStore")
+	storeServiceGetProductByIdMethodDescriptor                = storeServiceServiceDescriptor.Methods().ByName("GetProductById")
+	storeServiceGetProductListMethodDescriptor                = storeServiceServiceDescriptor.Methods().ByName("GetProductList")
+	storeServiceInsertProductsMethodDescriptor                = storeServiceServiceDescriptor.Methods().ByName("InsertProducts")
+	storeServiceUpdateProductMethodDescriptor                 = storeServiceServiceDescriptor.Methods().ByName("UpdateProduct")
+	storeServiceDeleteProductMethodDescriptor                 = storeServiceServiceDescriptor.Methods().ByName("DeleteProduct")
+	storeServiceGetUnitOfMeasuresMethodDescriptor             = storeServiceServiceDescriptor.Methods().ByName("GetUnitOfMeasures")
+	storeServiceUpsertUnitOfMeasureMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("UpsertUnitOfMeasure")
+	storeServiceUpdateUnitOfMeasureMethodDescriptor           = storeServiceServiceDescriptor.Methods().ByName("UpdateUnitOfMeasure")
+	storeServiceGetProductCategoriesMethodDescriptor          = storeServiceServiceDescriptor.Methods().ByName("GetProductCategories")
+	storeServiceGetProductCategoriesByStoreIdMethodDescriptor = storeServiceServiceDescriptor.Methods().ByName("GetProductCategoriesByStoreId")
+	storeServiceUpsertProductCategoryMethodDescriptor         = storeServiceServiceDescriptor.Methods().ByName("UpsertProductCategory")
+	storeServiceUpdateProductCategoryMethodDescriptor         = storeServiceServiceDescriptor.Methods().ByName("UpdateProductCategory")
+	storeServiceGetProductTypesMethodDescriptor               = storeServiceServiceDescriptor.Methods().ByName("GetProductTypes")
+	storeServiceUpsertProductTypeMethodDescriptor             = storeServiceServiceDescriptor.Methods().ByName("UpsertProductType")
+	storeServiceUpdateProductTypeMethodDescriptor             = storeServiceServiceDescriptor.Methods().ByName("UpdateProductType")
 )
 
 // StoreServiceClient is a client for the StoreService service.
@@ -148,6 +152,7 @@ type StoreServiceClient interface {
 	UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error)
 	UpdateUnitOfMeasure(context.Context, *connect.Request[store.UpdateUnitOfMeasureRequest]) (*connect.Response[store.UpdateUnitOfMeasureResponse], error)
 	GetProductCategories(context.Context, *connect.Request[store.GetProductCategoriesRequest]) (*connect.Response[store.GetProductCategoriesResponse], error)
+	GetProductCategoriesByStoreId(context.Context, *connect.Request[store.GetProductCategoriesByStoreIdRequest]) (*connect.Response[store.GetProductCategoriesByStoreIdResponse], error)
 	UpsertProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
 	UpdateProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
 	GetProductTypes(context.Context, *connect.Request[store.GetProductTypesRequest]) (*connect.Response[store.GetProductTypesResponse], error)
@@ -261,6 +266,12 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(storeServiceGetProductCategoriesMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		getProductCategoriesByStoreId: connect.NewClient[store.GetProductCategoriesByStoreIdRequest, store.GetProductCategoriesByStoreIdResponse](
+			httpClient,
+			baseURL+StoreServiceGetProductCategoriesByStoreIdProcedure,
+			connect.WithSchema(storeServiceGetProductCategoriesByStoreIdMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 		upsertProductCategory: connect.NewClient[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse](
 			httpClient,
 			baseURL+StoreServiceUpsertProductCategoryProcedure,
@@ -296,27 +307,28 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // storeServiceClient implements StoreServiceClient.
 type storeServiceClient struct {
-	createStore           *connect.Client[store.CreateStoreRequest, store.CreateStoreResponse]
-	getStore              *connect.Client[store.GetStoreRequest, store.GetStoreResponse]
-	updateStore           *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
-	deleteStore           *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
-	listStores            *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
-	getStoreByUserID      *connect.Client[store.GetStoreByUserIDRequest, store.GetStoreByUserIDResponse]
-	openCloseStore        *connect.Client[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse]
-	getProductById        *connect.Client[store.GetProductByIdRequest, store.GetProductByIdResponse]
-	getProductList        *connect.Client[store.GetProductListRequest, store.GetProductListResponse]
-	insertProducts        *connect.Client[store.InsertProductsRequest, store.GenericResponse]
-	updateProduct         *connect.Client[store.UpdateProductRequest, store.GenericResponse]
-	deleteProduct         *connect.Client[store.DeleteProductRequest, emptypb.Empty]
-	getUnitOfMeasures     *connect.Client[store.GetUnitOfMeasuresRequest, store.GetUnitOfMeasuresResponse]
-	upsertUnitOfMeasure   *connect.Client[store.UpsertUnitOfMeasureRequest, store.UpsertUnitOfMeasureResponse]
-	updateUnitOfMeasure   *connect.Client[store.UpdateUnitOfMeasureRequest, store.UpdateUnitOfMeasureResponse]
-	getProductCategories  *connect.Client[store.GetProductCategoriesRequest, store.GetProductCategoriesResponse]
-	upsertProductCategory *connect.Client[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse]
-	updateProductCategory *connect.Client[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse]
-	getProductTypes       *connect.Client[store.GetProductTypesRequest, store.GetProductTypesResponse]
-	upsertProductType     *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
-	updateProductType     *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
+	createStore                   *connect.Client[store.CreateStoreRequest, store.CreateStoreResponse]
+	getStore                      *connect.Client[store.GetStoreRequest, store.GetStoreResponse]
+	updateStore                   *connect.Client[store.UpdateStoreRequest, store.UpdateStoreResponse]
+	deleteStore                   *connect.Client[store.DeleteStoreRequest, emptypb.Empty]
+	listStores                    *connect.Client[store.ListStoresRequest, store.ListStoresResponse]
+	getStoreByUserID              *connect.Client[store.GetStoreByUserIDRequest, store.GetStoreByUserIDResponse]
+	openCloseStore                *connect.Client[store.OpenCloseStoreRequest, store.OpenCloseStoreResponse]
+	getProductById                *connect.Client[store.GetProductByIdRequest, store.GetProductByIdResponse]
+	getProductList                *connect.Client[store.GetProductListRequest, store.GetProductListResponse]
+	insertProducts                *connect.Client[store.InsertProductsRequest, store.GenericResponse]
+	updateProduct                 *connect.Client[store.UpdateProductRequest, store.GenericResponse]
+	deleteProduct                 *connect.Client[store.DeleteProductRequest, emptypb.Empty]
+	getUnitOfMeasures             *connect.Client[store.GetUnitOfMeasuresRequest, store.GetUnitOfMeasuresResponse]
+	upsertUnitOfMeasure           *connect.Client[store.UpsertUnitOfMeasureRequest, store.UpsertUnitOfMeasureResponse]
+	updateUnitOfMeasure           *connect.Client[store.UpdateUnitOfMeasureRequest, store.UpdateUnitOfMeasureResponse]
+	getProductCategories          *connect.Client[store.GetProductCategoriesRequest, store.GetProductCategoriesResponse]
+	getProductCategoriesByStoreId *connect.Client[store.GetProductCategoriesByStoreIdRequest, store.GetProductCategoriesByStoreIdResponse]
+	upsertProductCategory         *connect.Client[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse]
+	updateProductCategory         *connect.Client[store.UpsertProductCategoryRequest, store.UpsertProductCategoryResponse]
+	getProductTypes               *connect.Client[store.GetProductTypesRequest, store.GetProductTypesResponse]
+	upsertProductType             *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
+	updateProductType             *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
 }
 
 // CreateStore calls StoreService.CreateStore.
@@ -399,6 +411,11 @@ func (c *storeServiceClient) GetProductCategories(ctx context.Context, req *conn
 	return c.getProductCategories.CallUnary(ctx, req)
 }
 
+// GetProductCategoriesByStoreId calls StoreService.GetProductCategoriesByStoreId.
+func (c *storeServiceClient) GetProductCategoriesByStoreId(ctx context.Context, req *connect.Request[store.GetProductCategoriesByStoreIdRequest]) (*connect.Response[store.GetProductCategoriesByStoreIdResponse], error) {
+	return c.getProductCategoriesByStoreId.CallUnary(ctx, req)
+}
+
 // UpsertProductCategory calls StoreService.UpsertProductCategory.
 func (c *storeServiceClient) UpsertProductCategory(ctx context.Context, req *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error) {
 	return c.upsertProductCategory.CallUnary(ctx, req)
@@ -449,6 +466,7 @@ type StoreServiceHandler interface {
 	UpsertUnitOfMeasure(context.Context, *connect.Request[store.UpsertUnitOfMeasureRequest]) (*connect.Response[store.UpsertUnitOfMeasureResponse], error)
 	UpdateUnitOfMeasure(context.Context, *connect.Request[store.UpdateUnitOfMeasureRequest]) (*connect.Response[store.UpdateUnitOfMeasureResponse], error)
 	GetProductCategories(context.Context, *connect.Request[store.GetProductCategoriesRequest]) (*connect.Response[store.GetProductCategoriesResponse], error)
+	GetProductCategoriesByStoreId(context.Context, *connect.Request[store.GetProductCategoriesByStoreIdRequest]) (*connect.Response[store.GetProductCategoriesByStoreIdResponse], error)
 	UpsertProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
 	UpdateProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error)
 	GetProductTypes(context.Context, *connect.Request[store.GetProductTypesRequest]) (*connect.Response[store.GetProductTypesResponse], error)
@@ -558,6 +576,12 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(storeServiceGetProductCategoriesMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	storeServiceGetProductCategoriesByStoreIdHandler := connect.NewUnaryHandler(
+		StoreServiceGetProductCategoriesByStoreIdProcedure,
+		svc.GetProductCategoriesByStoreId,
+		connect.WithSchema(storeServiceGetProductCategoriesByStoreIdMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	storeServiceUpsertProductCategoryHandler := connect.NewUnaryHandler(
 		StoreServiceUpsertProductCategoryProcedure,
 		svc.UpsertProductCategory,
@@ -622,6 +646,8 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 			storeServiceUpdateUnitOfMeasureHandler.ServeHTTP(w, r)
 		case StoreServiceGetProductCategoriesProcedure:
 			storeServiceGetProductCategoriesHandler.ServeHTTP(w, r)
+		case StoreServiceGetProductCategoriesByStoreIdProcedure:
+			storeServiceGetProductCategoriesByStoreIdHandler.ServeHTTP(w, r)
 		case StoreServiceUpsertProductCategoryProcedure:
 			storeServiceUpsertProductCategoryHandler.ServeHTTP(w, r)
 		case StoreServiceUpdateProductCategoryProcedure:
@@ -703,6 +729,10 @@ func (UnimplementedStoreServiceHandler) UpdateUnitOfMeasure(context.Context, *co
 
 func (UnimplementedStoreServiceHandler) GetProductCategories(context.Context, *connect.Request[store.GetProductCategoriesRequest]) (*connect.Response[store.GetProductCategoriesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.GetProductCategories is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) GetProductCategoriesByStoreId(context.Context, *connect.Request[store.GetProductCategoriesByStoreIdRequest]) (*connect.Response[store.GetProductCategoriesByStoreIdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.GetProductCategoriesByStoreId is not implemented"))
 }
 
 func (UnimplementedStoreServiceHandler) UpsertProductCategory(context.Context, *connect.Request[store.UpsertProductCategoryRequest]) (*connect.Response[store.UpsertProductCategoryResponse], error) {

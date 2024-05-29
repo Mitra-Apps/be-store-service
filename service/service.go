@@ -39,6 +39,7 @@ type Service interface {
 	GetProductsByStoreId(ctx context.Context, getProductsByStoreIdParams types.GetProductsByStoreIdParams) (products []*prodEntity.Product, pagination base_model.Pagination, err error)
 	DeleteProductById(ctx context.Context, userId uuid.UUID, id uuid.UUID) error
 	GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error)
+	GetProductCategoriesByStoreId(ctx context.Context, getProductCategoriesByStoreIdParams types.GetProductCategoriesByStoreIdParams) (cat []*prodEntity.ProductCategory, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
 	GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error)
 }
@@ -543,6 +544,20 @@ func (s *service) GetProductsByStoreId(ctx context.Context, params types.GetProd
 	}
 
 	return products, pagination, nil
+}
+
+func (s *service) GetProductCategoriesByStoreId(ctx context.Context, params types.GetProductCategoriesByStoreIdParams) (cat []*prodEntity.ProductCategory, err error) {
+	
+	args := types.GetProductCategoriesByStoreIdParams{
+		IsIncludeDeactivated: params.IsIncludeDeactivated,
+		StoreID: params.StoreID,
+	}
+
+	if cat, err = s.productRepository.GetProductCategoriesByStoreId(ctx, args); err != nil {
+		return nil, status.Errorf(codes.Internal, "Error when getting product categories :"+err.Error())
+	}
+
+	return cat, nil
 }
 
 func (s *service) GetProductCategories(ctx context.Context, isIncludeDeactivated bool) (cat []*prodEntity.ProductCategory, uom []string, err error) {
