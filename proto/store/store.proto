@@ -404,6 +404,8 @@ message GetProductListRequest {
     int32 limit = 5;
     string order_by = 6;
     string direction = 7;
+    optional string search = 8;
+    repeated int64 product_category_id = 9;
 }
 
 message GetProductListResponse {

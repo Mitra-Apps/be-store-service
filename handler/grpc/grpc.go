@@ -431,9 +431,11 @@ func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRe
 		Limit:                req.Limit,
 		StoreID:              storeId,
 		ProductTypeId:        productTypeId,
+		ProductCategoryId:    req.ProductCategoryId,
 		IsIncludeDeactivated: req.IsIncludeDeactivated,
 		OrderBy:              req.OrderBy,
 		Direction:            req.Direction,
+		Search: 			  req.Search,
 	}
 
 	products, pagination, err := g.service.GetProductsByStoreId(ctx, getProductsByStoreIdParams)

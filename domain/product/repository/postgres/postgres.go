@@ -34,16 +34,26 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, params types.GetPro
 	}
 
 	tx := p.db.WithContext(ctx).
+		InnerJoins("ProductType").
+		InnerJoins("ProductType.ProductCategory").
 		Preload("Images").
 		Preload("ProductType").
-		Preload("ProductType.ProductCategory").
 		Where("store_id = ?", params.StoreID)
+
 	if !params.IsIncludeDeactivated {
 		tx = tx.Where("sale_status = ?", true)
 	}
 
 	if params.ProductTypeId != nil {
 		tx = tx.Where("product_type_id = ?", *params.ProductTypeId)
+	}
+	
+	if params.Search != nil {
+		tx = tx.Where("\"products\".name ILIKE ?", "%" + *params.Search + "%")
+	}
+
+	if len(params.ProductCategoryId) > 0 {
+		tx = tx.Where("\"ProductType__ProductCategory\".id IN ? ", params.ProductCategoryId)
 	}
 
 	tx = tx.Order(fmt.Sprintf("%s %s", params.OrderBy, params.Direction))

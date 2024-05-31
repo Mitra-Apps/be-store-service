@@ -4680,6 +4680,10 @@ func (m *GetProductListRequest) validate(all bool) error {
 
 	// no validation rules for Direction
 
+	if m.Search != nil {
+		// no validation rules for Search
+	}
+
 	if len(errors) > 0 {
 		return GetProductListRequestMultiError(errors)
 	}
