@@ -159,15 +159,7 @@ func (m *MockService) GetProductsByStoreId(ctx context.Context, getProductsBySto
 }
 
 // GetProductsByStoreId indicates an expected call of GetProductsByStoreId.
-<<<<<<< HEAD
-func (mr *MockServiceMockRecorder) GetProductsByStoreId(ctx, getProductsByStoreIdParams interface{}) *gomock.Call {
-=======
-<<<<<<< HEAD
-func (mr *MockServiceMockRecorder) GetProductsByStoreId(ctx, page, limit, storeID, productTypeId, isIncludeDeactivated interface{}) *gomock.Call {
-=======
 func (mr *MockServiceMockRecorder) GetProductsByStoreId(ctx, getProductsByStoreIdParams any) *gomock.Call {
->>>>>>> 2b5bc54 (create product category list API)
->>>>>>> f6dbf09 (create product category list API)
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockService)(nil).GetProductsByStoreId), ctx, getProductsByStoreIdParams)
 }
