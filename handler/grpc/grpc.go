@@ -483,6 +483,36 @@ func (g *GrpcRoute) GetProductCategories(ctx context.Context, req *pb.GetProduct
 	}, nil
 }
 
+func (g *GrpcRoute) GetProductCategoriesByStoreId(ctx context.Context, req *pb.GetProductCategoriesByStoreIdRequest) (*pb.GetProductCategoriesByStoreIdResponse, error) {
+	
+	storeId, err := uuid.Parse(req.StoreId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
+	}
+
+	args := types.GetProductCategoriesByStoreIdParams{
+		StoreID: storeId,
+		IsIncludeDeactivated: req.IsIncludeDeactivated,
+	}
+	
+	cat, err := g.service.GetProductCategoriesByStoreId(ctx, args)
+	
+	if err != nil {
+		return nil, err
+	}
+	cats := []*pb.ProductCategory{}
+	for _, u := range cat {
+		cats = append(cats, u.ToProto())
+	}
+	return &pb.GetProductCategoriesByStoreIdResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data: &pb.GetProductCategoriesResponseItem{
+			ProductCategory: cats,
+		},
+	}, nil
+}
+
 func (g *GrpcRoute) GetProductTypes(ctx context.Context, req *pb.GetProductTypesRequest) (*pb.GetProductTypesResponse, error) {
 	prodType, err := g.service.GetProductTypes(ctx, req.ProductCategoryId, req.IsIncludeDeactivated)
 	if err != nil {

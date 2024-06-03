@@ -90,6 +90,35 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/product-category/{storeId}/{isIncludeDeactivated}:
+        get:
+            tags:
+                - StoreService
+            operationId: StoreService_GetProductCategoriesByStoreId
+            parameters:
+                - name: storeId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: isIncludeDeactivated
+                  in: path
+                  required: true
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetProductCategoriesByStoreIdResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/product-list/{storeId}/{isIncludeDeactivated}:
         get:
             tags:
@@ -124,13 +153,6 @@ paths:
                   in: query
                   schema:
                     type: string
-                  examples:
-                    created_at:
-                      summary: Order by created_at
-                      value: created_at
-                    name:
-                      summary: Order by name
-                      value: name
                 - name: direction
                   in: query
                   schema:
@@ -637,6 +659,16 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/Product'
+        GetProductCategoriesByStoreIdResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/GetProductCategoriesResponseItem'
         GetProductCategoriesResponse:
             type: object
             properties:

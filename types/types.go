@@ -27,3 +27,8 @@ type GetProductsByStoreIdRepoParams struct {
 	Direction            string
 	Search				 *string
 }
+
+type GetProductCategoriesByStoreIdParams struct {
+	IsIncludeDeactivated bool
+	StoreID              uuid.UUID
+}

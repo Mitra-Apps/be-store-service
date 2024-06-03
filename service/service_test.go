@@ -2973,3 +2973,93 @@ func Test_service_GetStoreByUserID(t *testing.T) {
 		})
 	}
 }
+
+func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockProductRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	svc := New(nil, mockProductRepo, nil, nil)
+
+	ctx := context.Background()
+
+	storeIdUuid, _ := uuid.Parse(storeID)
+	params := types.GetProductCategoriesByStoreIdParams{
+		StoreID: storeIdUuid,
+	}
+
+	result := []*prodEntity.ProductCategory{
+		{
+			BaseMasterDataModel: base_model.BaseMasterDataModel{
+				ID: 1,
+			},
+			Name: "Food",
+			IsActive: true,
+		},
+	}
+
+	type args struct {
+		ctx    context.Context
+		params types.GetProductCategoriesByStoreIdParams
+	}
+	tests := []struct {
+		name    string
+		args    args
+		mocks   []*gomock.Call
+		wantCat []*prodEntity.ProductCategory
+		wantErr bool
+	}{
+		{
+			name: "Should return empty list when data not found",
+			args: args{
+				ctx:    ctx,
+				params: params,
+			},
+			mocks: []*gomock.Call{
+				mockProductRepo.EXPECT().
+					GetProductCategoriesByStoreId(ctx, params).
+					Return(nil, nil),
+			},
+			wantCat: nil,
+			wantErr: false,
+		},
+		{
+			name: "Should return error when repo got error",
+			args: args{
+				ctx:    ctx,
+				params: params,
+			},
+			mocks: []*gomock.Call{
+				mockProductRepo.EXPECT().
+					GetProductCategoriesByStoreId(ctx, params).
+					Return(nil, errors.New("error")),
+			},
+			wantCat: nil,
+			wantErr: true,
+		},
+		{
+			name: "Should return success",
+			args: args{
+				ctx:    ctx,
+				params: params,
+			},
+			mocks: []*gomock.Call{
+				mockProductRepo.EXPECT().
+					GetProductCategoriesByStoreId(ctx, params).
+					Return(result, nil),
+			},
+			wantCat: result,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCat, err := svc.GetProductCategoriesByStoreId(tt.args.ctx, tt.args.params)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductCategoriesByStoreId() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotCat, tt.wantCat) {
+				t.Errorf("service.GetProductCategoriesByStoreId() gotCat = %v, want %v", gotCat, tt.wantCat)
+			}
+		})
+	}
+}

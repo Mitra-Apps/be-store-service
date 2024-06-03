@@ -304,6 +304,33 @@ func (p *Postgres) GetProductCategories(ctx context.Context, includeDeactivated 
 	return categories, nil
 }
 
+func (p *Postgres) GetProductCategoriesByStoreId(ctx context.Context, params types.GetProductCategoriesByStoreIdParams) ([]*entity.ProductCategory, error) {
+	categories := []*entity.ProductCategory{}
+	
+	productTable := "products"
+	productTypeTable := "product_types"
+	aliasCategoryTable := "\"product_categories\""
+	selectCategoryColumn := fmt.Sprintf("%s.id, %s.name, %s.is_active", aliasCategoryTable, aliasCategoryTable, aliasCategoryTable)
+
+	tx := p.db.WithContext(ctx).
+		Select(selectCategoryColumn).
+		Joins(fmt.Sprintf(" INNER JOIN %s pt on pt.product_category_id = %s.id ", productTypeTable, aliasCategoryTable)).
+		Joins(fmt.Sprintf(" INNER JOIN %s p on p.product_type_id = pt.id ", productTable)).
+		Where("p.store_id = ?", params.StoreID).
+		Where(fmt.Sprintf("%s.is_active = ?", aliasCategoryTable), !params.IsIncludeDeactivated).
+		Group(selectCategoryColumn).
+		Order(fmt.Sprintf("%s.name ASC", aliasCategoryTable))
+	
+	if err := tx.Find(&categories).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	
+	return categories, nil
+}
+
 func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
 	var category *entity.ProductCategory
 	if err := p.db.WithContext(ctx).Where("LOWER(name) = ?", strings.ToLower(name)).First(&category).Error; err != nil {
