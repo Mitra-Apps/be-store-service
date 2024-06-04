@@ -49,7 +49,8 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, params types.GetPro
 	}
 	
 	if params.Search != nil {
-		tx = tx.Where("\"products\".name ILIKE ?", "%" + *params.Search + "%")
+		search := strings.ReplaceAll(*params.Search, "%", "\\%");
+		tx = tx.Where("\"products\".name ILIKE ?", "%" + search + "%")
 	}
 
 	if len(params.ProductCategoryId) > 0 {
