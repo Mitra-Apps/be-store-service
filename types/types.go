@@ -15,6 +15,7 @@ type GetProductsByStoreIdParams struct {
 	OrderBy              string
 	Direction            string
 	Search				 *string
+	UserID				 uuid.UUID
 }
 
 type GetProductsByStoreIdRepoParams struct {
@@ -31,4 +32,5 @@ type GetProductsByStoreIdRepoParams struct {
 type GetProductCategoriesByStoreIdParams struct {
 	IsIncludeDeactivated bool
 	StoreID              uuid.UUID
+	UserID				 uuid.UUID
 }
