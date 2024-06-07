@@ -17,7 +17,7 @@
 # Checklist
 These are the checklists to make sure your PR is ready to be reviewed.
 - [ ] Unit testing
-- [ ] DB changes is migrated on staging
+- [ ] DB changes is successfully migrated
 
 # Issue Ticket
 Related jira ticket: 
