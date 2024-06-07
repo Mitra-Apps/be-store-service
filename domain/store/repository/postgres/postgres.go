@@ -42,7 +42,6 @@ func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store,
 		Model(&store).
 		Preload("Hours").
 		Preload("Images").
-		Preload("Tags").
 		Where("id = ?", storeID).
 		First(&store).
 		Error
@@ -130,10 +129,6 @@ func (p *postgres) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID u
 
 func (p *postgres) DeleteStores(ctx context.Context, storeIds []string) error {
 	return p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Exec("DELETE FROM store_store_tags WHERE store_id IN (?)", storeIds).Error; err != nil {
-			return err
-		}
-
 		if err := tx.Exec("DELETE FROM store_hours WHERE store_id IN (?)", storeIds).Error; err != nil {
 			return err
 		}
@@ -153,7 +148,7 @@ func (p *postgres) DeleteStores(ctx context.Context, storeIds []string) error {
 func (p *postgres) ListStores(ctx context.Context, page, pageSize int) ([]*entity.Store, error) {
 	var stores []*entity.Store
 	offset := (page - 1) * pageSize
-	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Preload("Tags").Offset(offset).Limit(pageSize).Find(&stores).Error; err != nil {
+	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Offset(offset).Limit(pageSize).Find(&stores).Error; err != nil {
 		return nil, err
 	}
 	return stores, nil
@@ -174,7 +169,6 @@ func (p *postgres) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (*ent
 	if err := p.db.WithContext(ctx).
 		Preload("Hours").
 		Preload("Images").
-		Preload("Tags").
 		First(&store, "stores.user_id = ?", userID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
