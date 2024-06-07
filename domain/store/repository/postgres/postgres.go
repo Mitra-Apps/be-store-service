@@ -85,10 +85,6 @@ func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*enti
 			return status.Errorf(codes.Internal, "failed to update store: %v", err)
 		}
 
-		if err := p.updateStoreTags(ctx, tx, update.ID, update.Tags); err != nil {
-			return err
-		}
-
 		if err := p.updateStoreHours(ctx, tx, update.ID, update.Hours); err != nil {
 			return err
 		}
@@ -104,36 +100,6 @@ func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*enti
 	}
 
 	return p.GetStore(ctx, update.ID.String())
-}
-
-// updateStoreTags is a helper function to update the store tags.
-func (p *postgres) updateStoreTags(ctx context.Context, tx *gorm.DB, storeID uuid.UUID, tags []*entity.StoreTag) error {
-	exist, err := p.GetStore(ctx, storeID.String())
-	if err != nil {
-		return err
-	}
-
-	if err := tx.Model(exist).Association("Tags").Unscoped().Clear(); err != nil {
-		return err
-	}
-
-	for _, tag := range tags {
-		if err := tx.First(tag, "tag_name = ?", tag.TagName).Error; err != nil && err != gorm.ErrRecordNotFound {
-			return err
-		}
-
-		if tag.ID == uuid.Nil {
-			if err := tx.Create(tag).Error; err != nil {
-				return err
-			}
-		}
-
-		if err := tx.Model(exist).Association("Tags").Append(tag); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // updateStoreHours is a helper function to update the store hours.

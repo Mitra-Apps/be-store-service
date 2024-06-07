@@ -45,6 +45,20 @@ type Product struct {
 	ProductTypeName     string          `gorm:"-"`
 	ProductCategoryID   int64           `gorm:"-"`
 	ProductCategoryName string          `gorm:"-"`
+	Categories          []*Category     `gorm:"many2many:product_category_relations;"`
+}
+
+type Category struct {
+	base_model.BaseMasterDataModel
+	Name     string    `gorm:"type:varchar(255);not null;unique"`
+	ParentID int64     `gorm:"type:int;null"`
+	IsActive bool      `gorm:"type:bool;not null"`
+	Products []Product `gorm:"many2many:product_category_relations;"`
+}
+
+type ProductCategoryRelation struct {
+	ProductID  uuid.UUID
+	CategoryID int64
 }
 
 type ProductImage struct {
@@ -147,6 +161,12 @@ func (p *Product) ToProto() *pb.Product {
 	if p == nil {
 		return nil
 	}
+
+	categories := []*pb.Category{}
+	for _, category := range p.Categories {
+		categories = append(categories, category.ToProto())
+	}
+
 	images := []*pb.ProductImage{}
 	for _, i := range p.Images {
 		images = append(images, &pb.ProductImage{
@@ -168,6 +188,7 @@ func (p *Product) ToProto() *pb.Product {
 		ProductCategoryId:   p.ProductCategoryID,
 		ProductCategoryName: p.ProductCategoryName,
 		Images:              images,
+		Categories:          categories,
 	}
 }
 
@@ -204,4 +225,25 @@ func (t *ProductType) ToProto() *pb.ProductType {
 		IsActive:          t.IsActive,
 		ProductCategoryId: t.ProductCategoryID,
 	}
+}
+
+func (t *Category) ToProto() *pb.Category {
+	if t == nil {
+		return nil
+	}
+	return &pb.Category{
+		Id:       t.ID,
+		Name:     t.Name,
+		ParentId: t.ParentID,
+		IsActive: t.IsActive,
+	}
+}
+
+func (p *Category) FromProto(prodType *pb.Category) error {
+	p.ID = prodType.Id
+	p.Name = prodType.Name
+	p.ParentID = prodType.ParentId
+	p.IsActive = prodType.IsActive
+
+	return nil
 }

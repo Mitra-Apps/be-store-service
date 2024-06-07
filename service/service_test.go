@@ -1460,11 +1460,6 @@ func TestUpdateStore(t *testing.T) {
 				ImageURL:    imgURL,
 			},
 		},
-		Tags: []*entity.StoreTag{
-			{
-				TagName: "aaa",
-			},
-		},
 		Hours: []*entity.StoreHour{
 			{
 				Open:  "00:00",
@@ -1483,11 +1478,6 @@ func TestUpdateStore(t *testing.T) {
 			{
 				ImageBase64: imgBase64,
 				ImageURL:    imgURL,
-			},
-		},
-		Tags: []*entity.StoreTag{
-			{
-				TagName: "aaa",
 			},
 		},
 		Hours: []*entity.StoreHour{
@@ -3033,7 +3023,7 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 			BaseMasterDataModel: base_model.BaseMasterDataModel{
 				ID: 1,
 			},
-			Name: "Food",
+			Name:     "Food",
 			IsActive: true,
 		},
 	}
