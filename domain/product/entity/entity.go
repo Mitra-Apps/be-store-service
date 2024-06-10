@@ -49,9 +49,9 @@ type Product struct {
 }
 
 type Category struct {
-	base_model.BaseMasterDataModel
+	base_model.BaseModel
 	Name     string    `gorm:"type:varchar(255);not null;unique"`
-	ParentID int64     `gorm:"type:int;null"`
+	ParentID string    `gorm:"type:varchar(255);null"`
 	IsActive bool      `gorm:"type:bool;not null"`
 	Products []Product `gorm:"many2many:product_category_relations;"`
 }
@@ -59,7 +59,7 @@ type Category struct {
 type ProductCategoryRelation struct {
 	ProductID  uuid.UUID `gorm:"type:uuid;not null"`
 	Product    Product   `gorm:"foreignKey:ProductID;references:ID"`
-	CategoryID int64     `gorm:"type:int;not null"`
+	CategoryID uuid.UUID `gorm:"type:uuid;not null"`
 	Category   Category  `gorm:"foreignKey:CategoryID;references:ID"`
 }
 
@@ -234,18 +234,25 @@ func (t *Category) ToProto() *pb.Category {
 		return nil
 	}
 	return &pb.Category{
-		Id:       t.ID,
+		Id:       t.ID.String(),
 		Name:     t.Name,
 		ParentId: t.ParentID,
 		IsActive: t.IsActive,
 	}
 }
 
-func (p *Category) FromProto(prodType *pb.Category) error {
-	p.ID = prodType.Id
-	p.Name = prodType.Name
-	p.ParentID = prodType.ParentId
-	p.IsActive = prodType.IsActive
+func (p *Category) FromProto(cat *pb.Category) error {
+	if cat.Id != "" {
+		id, err := uuid.Parse(cat.Id)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "Invalid uuid for category id")
+		}
+		p.ID = id
+	}
+
+	p.Name = cat.Name
+	p.ParentID = cat.ParentId
+	p.IsActive = cat.IsActive
 
 	return nil
 }
