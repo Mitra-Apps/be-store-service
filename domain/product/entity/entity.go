@@ -57,8 +57,10 @@ type Category struct {
 }
 
 type ProductCategoryRelation struct {
-	ProductID  uuid.UUID
-	CategoryID int64
+	ProductID  uuid.UUID `gorm:"type:uuid;not null"`
+	Product    Product   `gorm:"foreignKey:ProductID;references:ID"`
+	CategoryID int64     `gorm:"type:int;not null"`
+	Category   Category  `gorm:"foreignKey:CategoryID;references:ID"`
 }
 
 type ProductImage struct {
