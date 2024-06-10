@@ -34,12 +34,6 @@ message StoreImage {
     string image_base64 = 5;
 }
 
-// Store tag message
-message StoreTag {
-    string id = 1;
-    string tag_name = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
-}
-
 // Store hour message
 message StoreHour {
     string id = 1;
@@ -68,7 +62,6 @@ message Store {
     bool is_active = 13;
     double location_lat = 14;
     double location_lng = 15;
-    repeated StoreTag tags = 16;
     repeated StoreHour hours = 17;
     repeated StoreImage images = 18;
 }
@@ -84,6 +77,13 @@ message ProductType {
     string name = 2;
 	bool is_active = 3;
 	int64 product_category_id = 4;
+}
+
+message Category {
+    string id = 1;
+    string parent_id = 2;
+    string name = 3;
+	bool is_active = 4;
 }
 
 message UnitOfMeasure {
@@ -106,6 +106,7 @@ message Product {
     int64 product_category_id = 10;
     string product_category_name = 11;
     repeated ProductImage images = 12;
+    repeated Category categories = 13;
 }
 
 message ProductImage {

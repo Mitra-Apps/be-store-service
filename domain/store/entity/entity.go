@@ -28,17 +28,12 @@ type Store struct {
 	LocationLng      float64
 	Status           string
 	IsActive         bool
-	Tags             []*StoreTag           `gorm:"many2many:store_store_tags"`
 	Hours            []*StoreHour          `gorm:"foreignKey:StoreID"`
 	Images           []*StoreImage         `gorm:"foreignKey:StoreID"`
 	Products         []*prodEntity.Product `gorm:"foreignKey:StoreID"`
 }
 
 func (s *Store) ToProto() *pb.Store {
-	tags := []*pb.StoreTag{}
-	for _, tag := range s.Tags {
-		tags = append(tags, tag.ToProto())
-	}
 
 	hours := []*pb.StoreHour{}
 	for _, hour := range s.Hours {
@@ -71,7 +66,6 @@ func (s *Store) ToProto() *pb.Store {
 		LocationLng:      s.LocationLng,
 		Status:           s.Status,
 		IsActive:         s.IsActive,
-		Tags:             tags,
 		Hours:            hours,
 		Images:           images,
 	}
@@ -117,14 +111,6 @@ func (s *Store) FromProto(store *pb.Store) error {
 	s.LocationLng = store.LocationLng
 	s.Status = store.Status
 	s.IsActive = store.IsActive
-
-	for _, tag := range store.Tags {
-		storeTag := &StoreTag{}
-		if err := storeTag.FromProto(tag); err != nil {
-			return err
-		}
-		s.Tags = append(s.Tags, storeTag)
-	}
 
 	for _, hour := range store.Hours {
 		storeHour := &StoreHour{}
@@ -184,33 +170,6 @@ func (s *StoreImage) FromProto(storeImage *pb.StoreImage) error {
 	s.ImageType = storeImage.ImageType
 	s.ImageURL = storeImage.ImageUrl
 	s.ImageBase64 = storeImage.ImageBase64
-
-	return nil
-}
-
-// StoreTag represents a tag associated with a store.
-type StoreTag struct {
-	base_model.BaseModel
-	TagName string
-}
-
-func (s *StoreTag) ToProto() *pb.StoreTag {
-	return &pb.StoreTag{
-		Id:      s.ID.String(),
-		TagName: s.TagName,
-	}
-}
-
-func (s *StoreTag) FromProto(storeTag *pb.StoreTag) error {
-	if storeTag.Id != "" {
-		id, err := uuid.Parse(storeTag.Id)
-		if err != nil {
-			return err
-		}
-		s.ID = id
-	}
-
-	s.TagName = storeTag.TagName
 
 	return nil
 }

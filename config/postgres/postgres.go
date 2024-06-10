@@ -38,12 +38,13 @@ func Connection() *gorm.DB {
 	err = db.AutoMigrate(
 		&entity.Store{},
 		&entity.StoreImage{},
-		&entity.StoreTag{},
 		&entity.StoreHour{},
 		&prodEntity.ProductCategory{},
 		&prodEntity.ProductType{},
 		&prodEntity.UnitOfMeasure{},
 		&prodEntity.Product{},
+		&prodEntity.Category{},
+		&prodEntity.ProductCategoryRelation{},
 		&prodEntity.ProductImage{},
 	)
 	if err != nil {
