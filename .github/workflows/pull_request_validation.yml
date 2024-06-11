@@ -1,7 +1,7 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Go
+name: Pull Request Validation
 
 on:
   pull_request:
@@ -10,14 +10,29 @@ on:
 jobs:
 
   test:
+    name: Run Unit Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GH_PAT }}
+
+    - name: Configure Git and Authentication
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        git config --global credential.helper store
+        echo "https://${{ secrets.GH_PAT }}@github.com" > ~/.git-credentials
+        git config --global url."https://".insteadOf git://
+        echo "machine github.com login x-access-token password ${{ secrets.GH_PAT }}" > ~/.netrc
+        chmod 600 ~/.netrc
 
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.21.3'
+      env:
+        GOPRIVATE: "github.com/Mitra-Apps/*"
 
     - name: Install Dependencies
       run: |
@@ -26,11 +41,8 @@ jobs:
     - name: Run Unit Test
       run: go test -v -coverprofile=coverage.out  ./service/
 
-    - name: Convert Coverage File
-      run: gocov convert coverage.out > coverage.json
-
     - name: Show Coverage
-      run: gocov report coverage.out
+      run: go tool cover -func=coverage.out | grep total | awk '{print $3}'
 
   check_coverage:
     name: Check Coverage Percentage
@@ -40,7 +52,7 @@ jobs:
     - name: Check coverage
       run: |
         threshold=60
-        coverage=$(gocov convert coverage.out | gocov report | grep -oP '(?<=coverage: )[^%]+')
+        coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
         if (( $(echo "$coverage < $threshold" | bc -l) )); then
           echo "Coverage is below the threshold of $threshold%"
           exit 1

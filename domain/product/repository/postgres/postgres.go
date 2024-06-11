@@ -3,9 +3,13 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
+	"math"
 	"strings"
 
+	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	"github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	"github.com/Mitra-Apps/be-store-service/types"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,26 +25,52 @@ func NewPostgres(db *gorm.DB) *Postgres {
 	return &Postgres{db, nil}
 }
 
-func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
+func (p *Postgres) GetProductsByStoreId(ctx context.Context, params types.GetProductsByStoreIdRepoParams) ([]*entity.Product, base_model.Pagination, error) {
 	prods := []*entity.Product{}
+
+	paging := base_model.Pagination{
+		Page:  params.Pagination.Page,
+		Limit: params.Pagination.Limit,
+	}
+
 	tx := p.db.WithContext(ctx).
+		InnerJoins("ProductType").
+		InnerJoins("ProductType.ProductCategory").
 		Preload("Images").
 		Preload("ProductType").
-		Preload("ProductType.ProductCategory").
-		Where("store_id = ?", storeID)
-	if !isIncludeDeactivated {
+		Where("store_id = ?", params.StoreID)
+
+	if !params.IsIncludeDeactivated {
 		tx = tx.Where("sale_status = ?", true)
 	}
-	if productTypeId != nil {
-		tx = tx.Where("product_type_id = ?", *productTypeId)
+
+	if params.ProductTypeId != nil {
+		tx = tx.Where("product_type_id = ?", *params.ProductTypeId)
 	}
-	tx = tx.Order("name ASC")
-	err := tx.Find(&prods).Error
+	
+	if params.Search != nil {
+		search := strings.ReplaceAll(*params.Search, "%", "\\%");
+		tx = tx.Where("\"products\".name ILIKE ?", "%" + search + "%")
+	}
+
+	if len(params.ProductCategoryId) > 0 {
+		tx = tx.Where("\"ProductType__ProductCategory\".id IN ? ", params.ProductCategoryId)
+	}
+
+	tx = tx.Order(fmt.Sprintf("%s %s", params.OrderBy, params.Direction))
+	err := tx.
+		Scopes(p.paginate(prods, &paging, tx, int64(len(prods)))).
+		Find(&prods).
+		Error
+
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+		if strings.Contains(err.Error(), ErrIncorrectSqlSyntax) || strings.Contains(err.Error(), ErrInvalidColumnName) {
+			return nil, paging, fmt.Errorf("incorrect orderBy or direction value")
 		}
-		return nil, err
+		if errors.Is(err, gorm.ErrInvalidField) {
+			return nil, paging, nil
+		}
+		return nil, paging, err
 	}
 
 	for _, p := range prods {
@@ -49,7 +79,7 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, 
 		p.ProductCategoryName = p.ProductType.ProductCategory.Name
 	}
 
-	return prods, nil
+	return prods, paging, nil
 }
 
 func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
@@ -60,9 +90,6 @@ func (p *Postgres) GetProductById(ctx context.Context, id uuid.UUID) (*entity.Pr
 		Preload("ProductType.ProductCategory").
 		First(&prod, id)
 	if tx.Error != nil {
-		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		return nil, tx.Error
 	}
 	prod.ProductTypeName = prod.ProductType.Name
@@ -278,28 +305,47 @@ func (p *Postgres) GetProductCategories(ctx context.Context, includeDeactivated 
 	return categories, nil
 }
 
-func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
-	category := &entity.ProductCategory{}
-	if err := p.db.WithContext(ctx).
-		Where("LOWER(name) = ?", strings.ToLower(name)).
-		First(category).Error; err != nil {
+func (p *Postgres) GetProductCategoriesByStoreId(ctx context.Context, params types.GetProductCategoriesByStoreIdParams) ([]*entity.ProductCategory, error) {
+	categories := []*entity.ProductCategory{}
+	
+	productTable := "products"
+	productTypeTable := "product_types"
+	aliasCategoryTable := "\"product_categories\""
+	selectCategoryColumn := fmt.Sprintf("%s.id, %s.name, %s.is_active", aliasCategoryTable, aliasCategoryTable, aliasCategoryTable)
+
+	tx := p.db.WithContext(ctx).
+		Select(selectCategoryColumn).
+		Joins(fmt.Sprintf(" INNER JOIN %s pt on pt.product_category_id = %s.id ", productTypeTable, aliasCategoryTable)).
+		Joins(fmt.Sprintf(" INNER JOIN %s p on p.product_type_id = pt.id ", productTable)).
+		Where("p.store_id = ?", params.StoreID).
+		Where(fmt.Sprintf("%s.is_active = ?", aliasCategoryTable), !params.IsIncludeDeactivated).
+		Group(selectCategoryColumn).
+		Order(fmt.Sprintf("%s.name ASC", aliasCategoryTable))
+	
+	if err := tx.Find(&categories).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
+		return nil, err
+	}
+	
+	return categories, nil
+}
+
+func (p *Postgres) GetProductCategoryByName(ctx context.Context, name string) (*entity.ProductCategory, error) {
+	var category *entity.ProductCategory
+	if err := p.db.WithContext(ctx).Where("LOWER(name) = ?", strings.ToLower(name)).First(&category).Error; err != nil {
 		return nil, err
 	}
 	return category, nil
 }
 
 func (p *Postgres) GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error) {
-	category := entity.ProductCategory{}
+	var category *entity.ProductCategory
 	if err := p.db.WithContext(ctx).Where("id = ?", id).First(&category).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		return nil, err
 	}
-	return &category, nil
+	return category, nil
 }
 
 func (p *Postgres) UpsertProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
@@ -364,4 +410,25 @@ func (p *Postgres) UpsertProductType(ctx context.Context, prodType *entity.Produ
 	}
 
 	return nil
+}
+
+func (p *Postgres) paginate(value interface{}, pagination *base_model.Pagination, db *gorm.DB, currRecord int64) func(db *gorm.DB) *gorm.DB {
+	var totalRecords int64
+	db.Model(value).Count(&totalRecords)
+
+	pagination.TotalRecords = int32(totalRecords)
+	pagination.TotalPage = int32(math.Ceil(float64(totalRecords) / float64(pagination.GetLimit())))
+	pagination.Records = int32(pagination.Limit*(pagination.Page-1)) + int32(currRecord)
+
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Offset(int(pagination.GetOffset())).Limit(int(pagination.GetLimit()))
+	}
+}
+
+func (p *Postgres) GetProductTypeById(ctx context.Context, id int64) (*entity.ProductType, error) {
+	var productType *entity.ProductType
+	if err := p.db.WithContext(ctx).Where("id = ?", id).First(&productType).Error; err != nil {
+		return nil, err
+	}
+	return productType, nil
 }

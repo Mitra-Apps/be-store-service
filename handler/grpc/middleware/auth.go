@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Mitra-Apps/be-user-service/external/redis"
 	userService "github.com/Mitra-Apps/be-user-service/service"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -65,7 +66,8 @@ func getTokenValue(headers metadata.MD) string {
 }
 
 func verifyToken(ctx context.Context, tokenString string) (string, []string, error) {
-	authClient := userService.NewAuthClient(os.Getenv("JWT_SECRET"))
+	redis := redis.Connection()
+	authClient := userService.NewAuthClient(os.Getenv("JWT_SECRET"), redis)
 	claims, err := authClient.ValidateToken(ctx, tokenString)
 	if err != nil {
 		return "", nil, err

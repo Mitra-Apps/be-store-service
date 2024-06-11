@@ -11,6 +11,7 @@ import (
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
+	"github.com/Mitra-Apps/be-store-service/types"
 	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
@@ -303,64 +304,12 @@ func validateProduct(products ...*prodEntity.Product) error {
 	return nil
 }
 
-func (g *GrpcRoute) UpsertUnitOfMeasure(ctx context.Context, req *pb.UpsertUnitOfMeasureRequest) (*pb.UpsertUnitOfMeasureResponse, error) {
-	if req.Uom.Name == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "name is required")
-	}
-	if req.Uom.Symbol == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "symbol is required")
-	}
-
-	uom := prodEntity.UnitOfMeasure{}
-	if err := uom.FromProto(req.Uom); err != nil {
-		return nil, err
-	}
-
-	claims, err := middleware.GetClaimsFromContext(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
-	}
-	uom.CreatedBy = claims.UserID
-
-	if err := g.service.UpsertUnitOfMeasure(ctx, &uom); err != nil {
-		return nil, err
-	}
-
-	return &pb.UpsertUnitOfMeasureResponse{
-		Code:    int32(codes.OK),
-		Message: codes.OK.String(),
-	}, nil
-}
-
-func (g *GrpcRoute) UpdateUnitOfMeasure(ctx context.Context, req *pb.UpdateUnitOfMeasureRequest) (*pb.UpdateUnitOfMeasureResponse, error) {
-	if err := req.Validate(); err != nil {
-		return nil, err
-	}
-
-	uom := prodEntity.UnitOfMeasure{}
-	if err := uom.FromProto(req.Uom); err != nil {
-		return nil, err
-	}
-
-	claims, err := middleware.GetClaimsFromContext(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
-	}
-	uom.UpdatedBy = claims.UserID
-
-	if err := g.service.UpdateUnitOfMeasure(ctx, req.UomId, &uom); err != nil {
-		return nil, err
-	}
-
-	return &pb.UpdateUnitOfMeasureResponse{
-		Code:    int32(codes.OK),
-		Message: codes.OK.String(),
-	}, nil
-}
-
 func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertProductCategoryRequest) (*pb.UpsertProductCategoryResponse, error) {
+	//TODO: refactor the validation to another function to minimize duplicate code
+	isUpdateCategory := false
 	if req.GetId() > 0 {
 		req.ProductCategory.Id = req.GetId()
+		isUpdateCategory = true
 	}
 
 	if err := req.ValidateAll(); err != nil {
@@ -393,8 +342,14 @@ func (g *GrpcRoute) UpsertProductCategory(ctx context.Context, req *pb.UpsertPro
 	prodCat.FromProto(req.ProductCategory)
 	prodCat.CreatedBy = claims.UserID
 
-	if err := g.service.UpsertProductCategory(ctx, prodCat); err != nil {
-		return nil, err
+	if !isUpdateCategory {
+		if err := g.service.UpsertProductCategory(ctx, prodCat); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := g.service.UpdateProductCategory(ctx, prodCat); err != nil {
+			return nil, err
+		}
 	}
 
 	return &pb.UpsertProductCategoryResponse{
@@ -412,48 +367,19 @@ func (g *GrpcRoute) UpdateProductCategory(ctx context.Context, req *pb.UpsertPro
 }
 
 func (g *GrpcRoute) UpsertProductType(ctx context.Context, req *pb.UpsertProductTypeRequest) (*pb.UpsertProductTypeResponse, error) {
-	if req.ProductType.Name == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "name is required")
-	}
 
-	if req.ProductType.ProductCategoryId == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "product category id is required")
-	}
-
-	prodType := prodEntity.ProductType{}
-	if err := prodType.FromProto(req.ProductType); err != nil {
+	prodType, err := g.validateUpdateProductTypeRequest(ctx, req)
+	if err != nil {
 		return nil, err
 	}
 
-	claims, err := middleware.GetClaimsFromContext(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
-	}
-	prodType.CreatedBy = claims.UserID
-
-	if err := g.service.UpsertProductType(ctx, &prodType); err != nil {
+	if err := g.service.UpsertProductType(ctx, prodType); err != nil {
 		return nil, err
 	}
 
 	return &pb.UpsertProductTypeResponse{
 		Code:    int32(codes.OK),
 		Message: codes.OK.String(),
-	}, nil
-}
-
-func (g *GrpcRoute) GetUnitOfMeasures(ctx context.Context, req *pb.GetUnitOfMeasuresRequest) (*pb.GetUnitOfMeasuresResponse, error) {
-	uom, err := g.service.GetUnitOfMeasures(ctx, req.IsIncludeDeactivated)
-	if err != nil {
-		return nil, err
-	}
-	uoms := []*pb.UnitOfMeasure{}
-	for _, u := range uom {
-		uoms = append(uoms, u.ToProto())
-	}
-	return &pb.GetUnitOfMeasuresResponse{
-		Code:    int32(codes.OK),
-		Message: codes.OK.String(),
-		Data:    uoms,
 	}, nil
 }
 
@@ -474,29 +400,73 @@ func (g *GrpcRoute) GetProductById(ctx context.Context, req *pb.GetProductByIdRe
 }
 
 func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRequest) (*pb.GetProductListResponse, error) {
+	if req.Page == 0 || req.Limit == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "Page and Limit is required")
+	}
+
 	if strings.Trim(req.StoreId, " ") == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Store id is required")
 	}
+
 	storeId, err := uuid.Parse(req.StoreId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
 	}
+
+	if strings.Trim(req.OrderBy, " ") == "" {
+		req.OrderBy = "created_at"
+	}
+
+	if strings.Trim(req.Direction, " ") == "" {
+		req.Direction = "asc"
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+
 	var productTypeId *int64
 	if req.ProductTypeId != 0 {
 		productTypeId = &req.ProductTypeId
 	}
-	products, err := g.service.GetProductsByStoreId(ctx, storeId, productTypeId, req.IsIncludeDeactivated)
+
+	getProductsByStoreIdParams := types.GetProductsByStoreIdParams{
+		Page:                 req.Page,
+		Limit:                req.Limit,
+		StoreID:              storeId,
+		ProductTypeId:        productTypeId,
+		ProductCategoryId:    req.ProductCategoryId,
+		IsIncludeDeactivated: req.IsIncludeDeactivated,
+		OrderBy:              req.OrderBy,
+		Direction:            req.Direction,
+		Search: 			  req.Search,
+		UserID: 			  claims.UserID,	
+	}
+
+	products, pagination, err := g.service.GetProductsByStoreId(ctx, getProductsByStoreIdParams)
 	if err != nil {
 		return nil, err
 	}
+
 	data := []*pb.Product{}
 	for _, p := range products {
 		data = append(data, p.ToProto())
 	}
+
+	paging := pb.Pagination{
+		Page:        pagination.Page,
+		Limit:       pagination.Limit,
+		TotalRecord: pagination.TotalRecords,
+		Records:     pagination.Records,
+		TotalPage:   pagination.TotalPage,
+	}
+
 	return &pb.GetProductListResponse{
-		Code:    int32(codes.OK),
-		Message: codes.OK.String(),
-		Data:    data,
+		Code:       int32(codes.OK),
+		Message:    codes.OK.String(),
+		Data:       data,
+		Pagination: &paging,
 	}, nil
 }
 
@@ -515,6 +485,42 @@ func (g *GrpcRoute) GetProductCategories(ctx context.Context, req *pb.GetProduct
 		Data: &pb.GetProductCategoriesResponseItem{
 			ProductCategory: cats,
 			Uom:             uom,
+		},
+	}, nil
+}
+
+func (g *GrpcRoute) GetProductCategoriesByStoreId(ctx context.Context, req *pb.GetProductCategoriesByStoreIdRequest) (*pb.GetProductCategoriesByStoreIdResponse, error) {
+	
+	storeId, err := uuid.Parse(req.StoreId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+
+	args := types.GetProductCategoriesByStoreIdParams{
+		StoreID: storeId,
+		IsIncludeDeactivated: req.IsIncludeDeactivated,
+		UserID: claims.UserID,
+	}
+	
+	cat, err := g.service.GetProductCategoriesByStoreId(ctx, args)
+	
+	if err != nil {
+		return nil, err
+	}
+	cats := []*pb.ProductCategory{}
+	for _, u := range cat {
+		cats = append(cats, u.ToProto())
+	}
+	return &pb.GetProductCategoriesByStoreIdResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data: &pb.GetProductCategoriesResponseItem{
+			ProductCategory: cats,
 		},
 	}, nil
 }
@@ -559,4 +565,51 @@ func validateStoreHours(hours []*pb.StoreHour) error {
 	}
 
 	return nil
+}
+
+func (g *GrpcRoute) UpdateProductType(ctx context.Context, req *pb.UpsertProductTypeRequest) (*pb.UpsertProductTypeResponse, error) {
+
+	prodTypeId := req.GetId()
+	if prodTypeId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "id is required")
+	}
+
+	req.ProductType.Id = prodTypeId
+
+	prodType, err := g.validateUpdateProductTypeRequest(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := g.service.UpsertProductType(ctx, prodType); err != nil {
+		return nil, err
+	}
+
+	return &pb.UpsertProductTypeResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+	}, nil
+}
+
+func (g *GrpcRoute) validateUpdateProductTypeRequest(ctx context.Context, req *pb.UpsertProductTypeRequest) (*prodEntity.ProductType, error) {
+	if req.ProductType.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	}
+
+	if req.ProductType.ProductCategoryId == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "product category id is required")
+	}
+
+	prodType := prodEntity.ProductType{}
+	if err := prodType.FromProto(req.ProductType); err != nil {
+		return nil, err
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+	prodType.CreatedBy = claims.UserID
+
+	return &prodType, nil
 }

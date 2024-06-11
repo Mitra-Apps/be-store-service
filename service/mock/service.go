@@ -13,8 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
+	base_model "github.com/Mitra-Apps/be-store-service/domain/base_model"
 	entity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	entity0 "github.com/Mitra-Apps/be-store-service/domain/store/entity"
+	types "github.com/Mitra-Apps/be-store-service/types"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -116,6 +118,21 @@ func (mr *MockServiceMockRecorder) GetProductCategories(ctx, isIncludeDeactivate
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategories", reflect.TypeOf((*MockService)(nil).GetProductCategories), ctx, isIncludeDeactivated)
 }
 
+// GetProductCategoriesByStoreId mocks base method.
+func (m *MockService) GetProductCategoriesByStoreId(ctx context.Context, getProductCategoriesByStoreIdParams types.GetProductCategoriesByStoreIdParams) ([]*entity.ProductCategory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductCategoriesByStoreId", ctx, getProductCategoriesByStoreIdParams)
+	ret0, _ := ret[0].([]*entity.ProductCategory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductCategoriesByStoreId indicates an expected call of GetProductCategoriesByStoreId.
+func (mr *MockServiceMockRecorder) GetProductCategoriesByStoreId(ctx, getProductCategoriesByStoreIdParams any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategoriesByStoreId", reflect.TypeOf((*MockService)(nil).GetProductCategoriesByStoreId), ctx, getProductCategoriesByStoreIdParams)
+}
+
 // GetProductTypes mocks base method.
 func (m *MockService) GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) ([]*entity.ProductType, error) {
 	m.ctrl.T.Helper()
@@ -132,18 +149,19 @@ func (mr *MockServiceMockRecorder) GetProductTypes(ctx, productCategoryID, isInc
 }
 
 // GetProductsByStoreId mocks base method.
-func (m *MockService) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
+func (m *MockService) GetProductsByStoreId(ctx context.Context, getProductsByStoreIdParams types.GetProductsByStoreIdParams) ([]*entity.Product, base_model.Pagination, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, storeID, productTypeId, isIncludeDeactivated)
+	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, getProductsByStoreIdParams)
 	ret0, _ := ret[0].([]*entity.Product)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(base_model.Pagination)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetProductsByStoreId indicates an expected call of GetProductsByStoreId.
-func (mr *MockServiceMockRecorder) GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated any) *gomock.Call {
+func (mr *MockServiceMockRecorder) GetProductsByStoreId(ctx, getProductsByStoreIdParams any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockService)(nil).GetProductsByStoreId), ctx, storeID, productTypeId, isIncludeDeactivated)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockService)(nil).GetProductsByStoreId), ctx, getProductsByStoreIdParams)
 }
 
 // GetStore mocks base method.
@@ -176,21 +194,6 @@ func (mr *MockServiceMockRecorder) GetStoreByUserID(ctx, userID any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStoreByUserID", reflect.TypeOf((*MockService)(nil).GetStoreByUserID), ctx, userID)
 }
 
-// GetUnitOfMeasures mocks base method.
-func (m *MockService) GetUnitOfMeasures(ctx context.Context, isIncludeDeactivated bool) ([]*entity.UnitOfMeasure, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUnitOfMeasures", ctx, isIncludeDeactivated)
-	ret0, _ := ret[0].([]*entity.UnitOfMeasure)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUnitOfMeasures indicates an expected call of GetUnitOfMeasures.
-func (mr *MockServiceMockRecorder) GetUnitOfMeasures(ctx, isIncludeDeactivated any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitOfMeasures", reflect.TypeOf((*MockService)(nil).GetUnitOfMeasures), ctx, isIncludeDeactivated)
-}
-
 // ListStores mocks base method.
 func (m *MockService) ListStores(ctx context.Context, page, limit int32) ([]*entity0.Store, error) {
 	m.ctrl.T.Helper()
@@ -220,6 +223,20 @@ func (mr *MockServiceMockRecorder) OpenCloseStore(ctx, userID, roleNames, storeI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenCloseStore", reflect.TypeOf((*MockService)(nil).OpenCloseStore), ctx, userID, roleNames, storeID, isActive)
 }
 
+// UpdateProductCategory mocks base method.
+func (m *MockService) UpdateProductCategory(ctx context.Context, prodCategory *entity.ProductCategory) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateProductCategory", ctx, prodCategory)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateProductCategory indicates an expected call of UpdateProductCategory.
+func (mr *MockServiceMockRecorder) UpdateProductCategory(ctx, prodCategory any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProductCategory", reflect.TypeOf((*MockService)(nil).UpdateProductCategory), ctx, prodCategory)
+}
+
 // UpdateStore mocks base method.
 func (m *MockService) UpdateStore(ctx context.Context, storeID string, update *entity0.Store) (*entity0.Store, error) {
 	m.ctrl.T.Helper()
@@ -233,20 +250,6 @@ func (m *MockService) UpdateStore(ctx context.Context, storeID string, update *e
 func (mr *MockServiceMockRecorder) UpdateStore(ctx, storeID, update any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStore", reflect.TypeOf((*MockService)(nil).UpdateStore), ctx, storeID, update)
-}
-
-// UpdateUnitOfMeasure mocks base method.
-func (m *MockService) UpdateUnitOfMeasure(ctx context.Context, uomId int64, uom *entity.UnitOfMeasure) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUnitOfMeasure", ctx, uomId, uom)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateUnitOfMeasure indicates an expected call of UpdateUnitOfMeasure.
-func (mr *MockServiceMockRecorder) UpdateUnitOfMeasure(ctx, uomId, uom any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUnitOfMeasure", reflect.TypeOf((*MockService)(nil).UpdateUnitOfMeasure), ctx, uomId, uom)
 }
 
 // UpsertProductCategory mocks base method.
@@ -294,18 +297,4 @@ func (mr *MockServiceMockRecorder) UpsertProducts(ctx, userID, roleNames, storeI
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, userID, roleNames, storeID, isUpdate}, products...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProducts", reflect.TypeOf((*MockService)(nil).UpsertProducts), varargs...)
-}
-
-// UpsertUnitOfMeasure mocks base method.
-func (m *MockService) UpsertUnitOfMeasure(ctx context.Context, uom *entity.UnitOfMeasure) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertUnitOfMeasure", ctx, uom)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpsertUnitOfMeasure indicates an expected call of UpsertUnitOfMeasure.
-func (mr *MockServiceMockRecorder) UpsertUnitOfMeasure(ctx, uom any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertUnitOfMeasure", reflect.TypeOf((*MockService)(nil).UpsertUnitOfMeasure), ctx, uom)
 }

@@ -34,12 +34,6 @@ message StoreImage {
     string image_base64 = 5;
 }
 
-// Store tag message
-message StoreTag {
-    string id = 1;
-    string tag_name = 2 [(validate.rules).string = {min_len: 1, max_len: 255}];
-}
-
 // Store hour message
 message StoreHour {
     string id = 1;
@@ -68,7 +62,6 @@ message Store {
     bool is_active = 13;
     double location_lat = 14;
     double location_lng = 15;
-    repeated StoreTag tags = 16;
     repeated StoreHour hours = 17;
     repeated StoreImage images = 18;
 }
@@ -84,6 +77,13 @@ message ProductType {
     string name = 2;
 	bool is_active = 3;
 	int64 product_category_id = 4;
+}
+
+message Category {
+    string id = 1;
+    string parent_id = 2;
+    string name = 3;
+	bool is_active = 4;
 }
 
 message UnitOfMeasure {
@@ -106,6 +106,7 @@ message Product {
     int64 product_category_id = 10;
     string product_category_name = 11;
     repeated ProductImage images = 12;
+    repeated Category categories = 13;
 }
 
 message ProductImage {
@@ -113,6 +114,14 @@ message ProductImage {
     string image_id = 2;
     string image_base64_str = 3;
     string image_url = 4;
+}
+
+message Pagination {
+    int32 page = 1;
+    int32 limit = 2;
+    int32 total_record = 3;
+    int32 records = 4;
+    int32 total_page = 5;
 }
 
 // Store service definition
@@ -227,6 +236,12 @@ service StoreService {
         };
     }
 
+    rpc GetProductCategoriesByStoreId(GetProductCategoriesByStoreIdRequest) returns (GetProductCategoriesByStoreIdResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/product-category/{store_id}/{is_include_deactivated}"
+        };
+    }
+
     rpc UpsertProductCategory(UpsertProductCategoryRequest) returns (UpsertProductCategoryResponse) {
         option (google.api.http) = {
             post: "/api/v1/product-category"
@@ -250,6 +265,13 @@ service StoreService {
     rpc UpsertProductType(UpsertProductTypeRequest) returns (UpsertProductTypeResponse) {
         option (google.api.http) = {
             post: "/api/v1/product-type"
+            body: "productType"
+        };
+    }
+
+    rpc UpdateProductType(UpsertProductTypeRequest) returns (UpsertProductTypeResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/product-type/{id}"
             body: "productType"
         };
     }
@@ -372,7 +394,8 @@ message UpsertProductCategoryResponse {
 }
 
 message UpsertProductTypeRequest {
-    ProductType productType = 1;
+    int64 id = 1;
+    ProductType productType = 2;
 }
 
 message UpsertProductTypeResponse {
@@ -384,12 +407,19 @@ message GetProductListRequest {
     string store_id = 1;
     int64 product_type_id = 2;
     bool is_include_deactivated = 3;
+    int32 page = 4;
+    int32 limit = 5;
+    string order_by = 6;
+    string direction = 7;
+    optional string search = 8;
+    repeated int64 product_category_id = 9;
 }
 
 message GetProductListResponse {
     int32 code = 1;
     string message = 2;
     repeated Product data = 3;
+    Pagination pagination = 4;
 }
 
 message GetProductByIdRequest {
@@ -410,6 +440,17 @@ message GetUnitOfMeasuresResponse {
     int32 code = 1;
     string message = 2;
     repeated UnitOfMeasure data = 3;
+}
+
+message GetProductCategoriesByStoreIdRequest {
+    bool is_include_deactivated = 1;
+    string store_id = 2;
+}
+
+message GetProductCategoriesByStoreIdResponse {
+    int32 code = 1;
+    string message = 2;
+    GetProductCategoriesResponseItem data = 3;
 }
 
 message GetProductCategoriesRequest {

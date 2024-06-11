@@ -13,7 +13,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	base_model "github.com/Mitra-Apps/be-store-service/domain/base_model"
 	entity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	types "github.com/Mitra-Apps/be-store-service/types"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -99,6 +101,21 @@ func (mr *MockProductRepositoryMockRecorder) GetProductCategories(ctx, isInclude
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategories", reflect.TypeOf((*MockProductRepository)(nil).GetProductCategories), ctx, isIncludeDeactivated)
 }
 
+// GetProductCategoriesByStoreId mocks base method.
+func (m *MockProductRepository) GetProductCategoriesByStoreId(ctx context.Context, params types.GetProductCategoriesByStoreIdParams) ([]*entity.ProductCategory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductCategoriesByStoreId", ctx, params)
+	ret0, _ := ret[0].([]*entity.ProductCategory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductCategoriesByStoreId indicates an expected call of GetProductCategoriesByStoreId.
+func (mr *MockProductRepositoryMockRecorder) GetProductCategoriesByStoreId(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCategoriesByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductCategoriesByStoreId), ctx, params)
+}
+
 // GetProductCategoryById mocks base method.
 func (m *MockProductRepository) GetProductCategoryById(ctx context.Context, id int64) (*entity.ProductCategory, error) {
 	m.ctrl.T.Helper()
@@ -143,6 +160,21 @@ func (m *MockProductRepository) GetProductImagesByProductIds(ctx context.Context
 func (mr *MockProductRepositoryMockRecorder) GetProductImagesByProductIds(ctx, productIds any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductImagesByProductIds", reflect.TypeOf((*MockProductRepository)(nil).GetProductImagesByProductIds), ctx, productIds)
+}
+
+// GetProductTypeById mocks base method.
+func (m *MockProductRepository) GetProductTypeById(ctx context.Context, id int64) (*entity.ProductType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductTypeById", ctx, id)
+	ret0, _ := ret[0].(*entity.ProductType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductTypeById indicates an expected call of GetProductTypeById.
+func (mr *MockProductRepositoryMockRecorder) GetProductTypeById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductTypeById", reflect.TypeOf((*MockProductRepository)(nil).GetProductTypeById), ctx, id)
 }
 
 // GetProductTypeByName mocks base method.
@@ -191,18 +223,19 @@ func (mr *MockProductRepositoryMockRecorder) GetProductTypesByIds(ctx, typeIds a
 }
 
 // GetProductsByStoreId mocks base method.
-func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, storeID uuid.UUID, productTypeId *int64, isIncludeDeactivated bool) ([]*entity.Product, error) {
+func (m *MockProductRepository) GetProductsByStoreId(ctx context.Context, params types.GetProductsByStoreIdRepoParams) ([]*entity.Product, base_model.Pagination, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, storeID, productTypeId, isIncludeDeactivated)
+	ret := m.ctrl.Call(m, "GetProductsByStoreId", ctx, params)
 	ret0, _ := ret[0].([]*entity.Product)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(base_model.Pagination)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetProductsByStoreId indicates an expected call of GetProductsByStoreId.
-func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreId(ctx, storeID, productTypeId, isIncludeDeactivated any) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProductsByStoreId(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreId), ctx, storeID, productTypeId, isIncludeDeactivated)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByStoreId", reflect.TypeOf((*MockProductRepository)(nil).GetProductsByStoreId), ctx, params)
 }
 
 // GetProductsByStoreIdAndNames mocks base method.

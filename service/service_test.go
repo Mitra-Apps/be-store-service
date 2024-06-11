@@ -6,18 +6,21 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
+	imageRepository "github.com/Mitra-Apps/be-store-service/domain/image/repository"
 	imageRepoMock "github.com/Mitra-Apps/be-store-service/domain/image/repository/mock"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
+	prodRepository "github.com/Mitra-Apps/be-store-service/domain/product/repository"
 	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
-	prodRepo "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
 	errPb "github.com/Mitra-Apps/be-store-service/domain/proto"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
+	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
+	"github.com/Mitra-Apps/be-store-service/types"
 	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -25,8 +28,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 const (
@@ -42,10 +43,14 @@ const (
 	otherproductImageID2 = "7d56be32-70a2-4f49-b66b-63e6f8e719e9"
 )
 
-func Test_service_OpenCloseStore(t *testing.T) {
+func TestOpenCloseStore(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+
 	ctx := context.Background()
+
+	service := New(mockStoreRepo, nil, nil, nil)
+
 	userIdUuid, _ := uuid.Parse(userID)
 	otherUserIdUuid, _ := uuid.Parse(otherUserID)
 	storeIdUuid, _ := uuid.Parse(storeID)
@@ -53,115 +58,110 @@ func Test_service_OpenCloseStore(t *testing.T) {
 	roleNames = append(roleNames, "merchant")
 	adminRole := []string{}
 	adminRole = append(adminRole, "admin")
-	mockStoreRepo.EXPECT().GetStore(gomock.Any(), gomock.Any()).Return(&entity.Store{
+	store := &entity.Store{
 		UserID: userIdUuid,
-	}, nil).AnyTimes()
-	mockStoreRepo.EXPECT().OpenCloseStore(ctx, storeIdUuid, false).Return(nil).AnyTimes()
+	}
 
-	type fields struct {
-		storeRepository *storeRepoMock.MockStoreServiceRepository
-	}
-	type args struct {
-		ctx       context.Context
-		userID    uuid.UUID
-		roleNames []string
-		storeID   string
-		isActive  bool
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "OpenCloseStore_NoStoreIdProvided_ReturnValidationError",
-			fields: fields{
-				storeRepository: mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				storeID:   "",
-				isActive:  false,
-				roleNames: roleNames,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "store id is required"),
-		},
-		{
-			name: "OpenCloseStore_StoreIdIsNotUUID_ReturnValidationError",
-			fields: fields{
-				storeRepository: mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   "aaa",
-				isActive:  false,
-				roleNames: roleNames,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.InvalidArgument, "store id should be uuid"),
-		},
-		{
-			name: "OpenCloseStore_DifferentUserIDNotAdmin_DontHavePermission",
-			fields: fields{
-				storeRepository: mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    otherUserIdUuid,
-				storeID:   storeID,
-				isActive:  false,
-				roleNames: roleNames,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.PermissionDenied, "You do not have permission to open / close this store"),
-		},
-		{
-			name: "OpenCloseStore_DifferentUserIDAdmin_DontHavePermission",
-			fields: fields{
-				storeRepository: mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    otherUserIdUuid,
-				storeID:   storeID,
-				isActive:  false,
-				roleNames: adminRole,
-			},
-			wantErr: false,
-		},
-		{
-			name: "OpenCloseStore_NoError_Success",
-			fields: fields{
-				storeRepository: mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeID,
-				isActive:  false,
-				roleNames: roleNames,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository, nil, nil, nil)
-			if err := s.OpenCloseStore(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isActive); tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.Nil(t, err)
-			}
-		})
-	}
+	t.Run("Should return success", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockStoreRepo.EXPECT().
+			OpenCloseStore(gomock.Any(), storeIdUuid, false).
+			Times(1).
+			Return(nil)
+
+		err := service.OpenCloseStore(ctx, userIdUuid, roleNames, storeID, false)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should return error if failed to get store", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(nil, errors.New("error"))
+
+		err := service.OpenCloseStore(ctx, userIdUuid, roleNames, storeID, false)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if store is nill", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(nil, nil)
+
+		err := service.OpenCloseStore(ctx, userIdUuid, roleNames, storeID, false)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if admin user id is different", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockStoreRepo.EXPECT().
+			OpenCloseStore(gomock.Any(), storeIdUuid, false).
+			Times(1).
+			Return(nil)
+
+		err := service.OpenCloseStore(ctx, otherUserIdUuid, adminRole, storeID, false)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should return error if user id is not admin", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		err := service.OpenCloseStore(ctx, otherUserIdUuid, roleNames, storeID, false)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if store id invalid", func(t *testing.T) {
+		err := service.OpenCloseStore(ctx, userIdUuid, roleNames, "aaa", false)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if store id not provided", func(t *testing.T) {
+		err := service.OpenCloseStore(ctx, userIdUuid, roleNames, "", false)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error to open and close the store", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockStoreRepo.EXPECT().
+			OpenCloseStore(gomock.Any(), storeIdUuid, false).
+			Times(1).
+			Return(errors.New("error"))
+
+		err := service.OpenCloseStore(ctx, userIdUuid, roleNames, storeID, false)
+
+		assert.Error(t, err)
+	})
 }
 
 func TestCreateStore(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	storage := storeRepoMock.NewMockStorage(ctrl)
+	service := New(storeRepository, nil, storage, nil)
+
 	ctx := context.Background()
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -173,117 +173,159 @@ func TestCreateStore(t *testing.T) {
 	md.Set("x-user-id", sessionUserID.String())
 	ctx = metadata.NewIncomingContext(ctx, md)
 
-	testCases := []struct {
-		name          string
-		setupMocks    func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage)
-		inputStore    *entity.Store
-		expectedStore *entity.Store
-		expectedError error
-	}{
-		{
-			name: "Successful store creation",
-			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
-				storeRepository.EXPECT().GetStoreByUserID(ctx, gomock.Any()).Return(nil, nil)
-				storage.EXPECT().UploadImage(ctx, "SampleImageBase64", sessionUserID.String()).Return("http://example.com/image.jpg", nil)
-				storeRepository.EXPECT().CreateStore(ctx, gomock.Any()).Return(&entity.Store{
-					BaseModel: base_model.BaseModel{CreatedBy: sessionUserID},
-					UserID:    sessionUserID,
-					StoreName: "TestStore",
-					Images: []*entity.StoreImage{
-						{
-							ImageURL:    "http://example.com/image.jpg",
-							ImageBase64: "",
-						},
-					},
-				}, nil)
+	imgBase64 := "SampleImageBase64"
+	imgURL := "http://example.com/image.jpg"
+	store := &entity.Store{
+		BaseModel: base_model.BaseModel{CreatedBy: sessionUserID},
+		UserID:    sessionUserID,
+		StoreName: "TestStore",
+		Hours: []*entity.StoreHour{
+			{
+				Open:  "00:00",
+				Close: "00:00",
 			},
-			inputStore: &entity.Store{
-				UserID:    sessionUserID,
-				StoreName: "TestStore",
-				Images: []*entity.StoreImage{
-					{
-						ImageBase64: "SampleImageBase64",
-					},
-				},
-			},
-			expectedStore: &entity.Store{
-				BaseModel: base_model.BaseModel{CreatedBy: sessionUserID},
-				UserID:    sessionUserID,
-				StoreName: "TestStore",
-				Images: []*entity.StoreImage{
-					{
-						ImageURL:    "http://example.com/image.jpg",
-						ImageBase64: "",
-					},
-				},
-			},
-			expectedError: nil,
 		},
-		{
-			name: "Error uploading image",
-			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
-				storeRepository.EXPECT().GetStoreByUserID(ctx, gomock.Any()).Return(nil, nil)
-				storage.EXPECT().
-					UploadImage(ctx, "SampleImageBase64_failed", sessionUserID.String()).
-					Return("", errors.New("failed to upload image"))
+		Images: []*entity.StoreImage{
+			{
+				ImageURL:    imgURL,
+				ImageBase64: imgBase64,
 			},
-			inputStore: &entity.Store{
-				StoreName: "TestStore",
-				Images: []*entity.StoreImage{
-					{
-						ImageBase64: "SampleImageBase64_failed",
-					},
-				},
-			},
-			expectedStore: nil,
-			expectedError: errors.New("failed to upload image"),
-		},
-		{
-			name: "User already has store",
-			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
-				storeRepository.EXPECT().GetStoreByUserID(ctx, gomock.Any()).Return(&entity.Store{
-					StoreName: "TestStore",
-				}, nil)
-			},
-			inputStore: &entity.Store{
-				StoreName: "TestStore",
-			},
-			expectedStore: nil,
-			expectedError: status.Errorf(codes.AlreadyExists, "User already has a store"),
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
-			storage := storeRepoMock.NewMockStorage(ctrl)
-			service := New(storeRepository, nil, storage, nil)
-
-			tc.setupMocks(storeRepository, storage)
-			resultStore, err := service.CreateStore(ctx, tc.inputStore)
-			assert.Equal(t, tc.expectedStore, resultStore)
-			assert.Equal(t, tc.expectedError, err)
-		})
+	store24Hours := &entity.Store{
+		BaseModel: base_model.BaseModel{CreatedBy: sessionUserID},
+		UserID:    sessionUserID,
+		StoreName: "TestStore",
+		Hours: []*entity.StoreHour{
+			{
+				IsOpen: true,
+				Is24Hr: true,
+				Open:   "00:00",
+				Close:  "23:59",
+			},
+		},
+		Images: []*entity.StoreImage{
+			{
+				ImageURL:    imgURL,
+				ImageBase64: imgBase64,
+			},
+		},
 	}
+
+	t.Run("Should return success", func(t *testing.T) {
+		storeRepository.EXPECT().
+			GetStoreByUserID(ctx, gomock.Any()).
+			Times(1).
+			Return(nil, nil)
+
+		storage.EXPECT().
+			UploadImage(ctx, imgBase64, sessionUserID.String()).
+			Return(imgURL, nil)
+
+		storeRepository.EXPECT().
+			CreateStore(ctx, gomock.Any()).
+			Return(store, nil)
+
+		result, err := service.CreateStore(ctx, store)
+
+		assert.Nil(t, err)
+		assert.Equal(t, sessionUserID.String(), result.BaseModel.CreatedBy.String())
+		assert.Equal(t, sessionUserID.String(), result.UserID.String())
+		assert.Equal(t, store.StoreName, result.StoreName)
+		assert.Equal(t, store.Images[0].ImageURL, result.Images[0].ImageURL)
+		assert.Equal(t, store.Images[0].ImageBase64, result.Images[0].ImageBase64)
+	})
+
+	t.Run("Should return success 24 Hours", func(t *testing.T) {
+		storeRepository.EXPECT().
+			GetStoreByUserID(ctx, gomock.Any()).
+			Times(1).
+			Return(nil, nil)
+
+		storage.EXPECT().
+			UploadImage(ctx, imgBase64, sessionUserID.String()).
+			Return(imgURL, nil)
+
+		storeRepository.EXPECT().
+			CreateStore(ctx, gomock.Any()).
+			Return(store24Hours, nil)
+
+		result, err := service.CreateStore(ctx, store24Hours)
+
+		assert.Nil(t, err)
+		assert.Equal(t, sessionUserID.String(), result.BaseModel.CreatedBy.String())
+		assert.Equal(t, sessionUserID.String(), result.UserID.String())
+		assert.Equal(t, store24Hours.StoreName, result.StoreName)
+		assert.Equal(t, store24Hours.Images[0].ImageURL, result.Images[0].ImageURL)
+		assert.Equal(t, store24Hours.Images[0].ImageBase64, result.Images[0].ImageBase64)
+	})
+
+	t.Run("Should return error if failed to get store", func(t *testing.T) {
+		storeRepository.EXPECT().
+			GetStoreByUserID(ctx, gomock.Any()).
+			Times(1).
+			Return(nil, errors.New("error"))
+
+		_, err := service.CreateStore(ctx, store)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if failed to upload image", func(t *testing.T) {
+		storeRepository.EXPECT().
+			GetStoreByUserID(ctx, gomock.Any()).
+			Times(1).
+			Return(nil, nil)
+
+		storage.EXPECT().
+			UploadImage(ctx, imgBase64, sessionUserID.String()).
+			Times(1).
+			Return("", errors.New("failed to upload image"))
+
+		_, err := service.CreateStore(ctx, store)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if user has a store", func(t *testing.T) {
+		storeRepository.EXPECT().
+			GetStoreByUserID(ctx, gomock.Any()).
+			Times(1).
+			Return(store, nil)
+
+		_, err := service.CreateStore(ctx, store)
+
+		assert.Error(t, err)
+	})
 }
 
-func Test_service_UpsertProducts(t *testing.T) {
+func TestUpsertProducts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
 	mockImageRepo := imageRepoMock.NewMockImageRepository(ctrl)
 	ctx := context.Background()
+
+	service := New(mockStoreRepo, mockProdRepo, nil, mockImageRepo)
+
+	storeIdUuid, _ := uuid.Parse(storeID)
 	userIdUuid, _ := uuid.Parse(userID)
 	otherUserIdUuid, _ := uuid.Parse(otherUserID)
-	storeIdUuid, _ := uuid.Parse(storeID)
 	otherStoreIdUuid, _ := uuid.Parse(otherStoreID)
 	productIdUuid, _ := uuid.Parse(productID)
 	otherProductID2Uuid, _ := uuid.Parse(otherProductID2)
-	productImageIDUuid, _ := uuid.Parse(productImageID)
-	products := []*prodEntity.Product{}
+	roleNames := []string{"merchant"}
+	adminRoleNames := []string{"merchant", "admin"}
+	var emptyProduct []*prodEntity.Product = nil
+	existedProdNames := []string{"bakso aci", "keju"}
+	invalidProdNames := []string{"keju", "sepatu"}
+	productNames := []string{"indomie", "beras"}
+
+	exampleProduct := &prodEntity.Product{
+		Name: "example product",
+	}
+
 	indomie := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "indomie",
@@ -291,6 +333,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		ProductTypeID: 1,
 		Stock:         1,
 	}
+
 	beras := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "beras",
@@ -298,6 +341,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		ProductTypeID: 1,
 		Stock:         1,
 	}
+
 	baksoAci := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "bakso aci",
@@ -305,6 +349,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		ProductTypeID: 1,
 		Stock:         0,
 	}
+
 	keju := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "keju",
@@ -312,6 +357,7 @@ func Test_service_UpsertProducts(t *testing.T) {
 		ProductTypeID: 1,
 		Stock:         1,
 	}
+
 	tas := &prodEntity.Product{
 		StoreID:       storeIdUuid,
 		Name:          "tas",
@@ -327,11 +373,160 @@ func Test_service_UpsertProducts(t *testing.T) {
 		ProductTypeID: 2,
 		Stock:         1,
 	}
-	products = append(products, indomie)
-	products = append(products, beras)
-	existedProducts := []*prodEntity.Product{}
-	existedProducts = append(existedProducts, baksoAci)
-	existedProducts = append(existedProducts, keju)
+
+	productWithEmptyImage1 := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "product 1",
+		Uom:           "pasang",
+		ProductTypeID: 2,
+		Stock:         1,
+		Images: []*prodEntity.ProductImage{
+			{
+				ProductId:      productIdUuid,
+				ImageBase64Str: "",
+			},
+		},
+	}
+
+	productWithImage1 := &prodEntity.Product{
+		StoreID:       storeIdUuid,
+		Name:          "product 1",
+		Uom:           "pasang",
+		ProductTypeID: 2,
+		Stock:         1,
+		Images: []*prodEntity.ProductImage{
+			{
+				ProductId:      productIdUuid,
+				ImageBase64Str: "aaa",
+			},
+		},
+	}
+
+	emptyImageProducts := []*prodEntity.Product{
+		productWithEmptyImage1,
+	}
+
+	productsWithImage := []*prodEntity.Product{
+		productWithImage1,
+	}
+
+	products := []*prodEntity.Product{
+		indomie,
+		beras,
+	}
+
+	updateProduct := []*prodEntity.Product{
+		{
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
+			},
+			StoreID:       storeIdUuid,
+			Name:          "indomie",
+			Uom:           "bungkus",
+			ProductTypeID: 1,
+			Stock:         1,
+		},
+	}
+
+	productWithoutUOM := []*prodEntity.Product{
+		{
+			StoreID: storeIdUuid,
+			Name:    "keju",
+			Stock:   1,
+		},
+	}
+
+	productWithoutProductType := []*prodEntity.Product{
+		{
+			StoreID: storeIdUuid,
+			Name:    "keju",
+			Uom:     "kg",
+		},
+	}
+
+	productWithNegativeStock := []*prodEntity.Product{
+		{
+			StoreID:       storeIdUuid,
+			Name:          "bantal",
+			Uom:           "kg",
+			ProductTypeID: 2,
+			Stock:         -1,
+		},
+	}
+
+	updateProductWithoutUOM := []*prodEntity.Product{
+		{
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
+			},
+			StoreID: storeIdUuid,
+			Name:    "keju",
+			Stock:   1,
+		},
+	}
+
+	updateProductWithoutProductType := []*prodEntity.Product{
+		{
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
+			},
+			StoreID: storeIdUuid,
+			Name:    "keju",
+			Uom:     "kg",
+			Stock:   1,
+		},
+	}
+
+	updateProductWithNegativeStock := []*prodEntity.Product{
+		{
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
+			},
+			StoreID:       storeIdUuid,
+			Name:          "bantal",
+			Uom:           "kg",
+			ProductTypeID: 2,
+			Stock:         -1,
+		},
+	}
+
+	updateProductWithInvalidUOM := []*prodEntity.Product{
+		{
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
+			},
+			StoreID:       storeIdUuid,
+			Name:          "keju",
+			Uom:           "kg",
+			ProductTypeID: 1,
+			Stock:         1,
+		},
+		{
+			BaseModel: base_model.BaseModel{
+				ID: otherProductID2Uuid,
+			},
+			StoreID:       storeIdUuid,
+			Name:          "tas",
+			Uom:           "",
+			ProductTypeID: 2,
+			Stock:         1,
+		},
+	}
+
+	prodTypes := []*prodEntity.ProductType{
+		{
+			BaseMasterDataModel: base_model.BaseMasterDataModel{
+				ID: 1,
+			},
+			Name: "Snack",
+		},
+	}
+
+	existedProducts := []*prodEntity.Product{
+		baksoAci,
+		keju,
+	}
+
 	invalidUomProduct := []*prodEntity.Product{
 		keju,
 		tas,
@@ -341,67 +536,30 @@ func Test_service_UpsertProducts(t *testing.T) {
 		keju,
 		sepatu,
 	}
-	noProductId := []*prodEntity.Product{
-		&prodEntity.Product{
-			StoreID: storeIdUuid,
-			Name:    "keju",
-			Stock:   1,
-		},
-	}
-	noUOM := []*prodEntity.Product{
-		&prodEntity.Product{
-			StoreID: storeIdUuid,
-			Name:    "keju",
-			Stock:   1,
-		},
-	}
-	noUOMForUpdate := []*prodEntity.Product{
-		&prodEntity.Product{
+
+	updateInvalidProdTypeProduct := []*prodEntity.Product{
+		{
 			BaseModel: base_model.BaseModel{
 				ID: productIdUuid,
 			},
-			StoreID: storeIdUuid,
-			Name:    "keju",
-			Stock:   1,
+			StoreID:       storeIdUuid,
+			Name:          "keju",
+			Uom:           "kg",
+			ProductTypeID: 1,
+			Stock:         1,
 		},
-	}
-	noProdType := []*prodEntity.Product{
-		&prodEntity.Product{
-			StoreID: storeIdUuid,
-			Name:    "keju",
-			Uom:     "kg",
-		},
-	}
-	noProdTypeForUpdate := []*prodEntity.Product{
-		&prodEntity.Product{
+		{
 			BaseModel: base_model.BaseModel{
-				ID: productIdUuid,
+				ID: otherProductID2Uuid,
 			},
-			StoreID: storeIdUuid,
-			Name:    "keju",
-			Uom:     "kg",
-			Stock:   1,
+			StoreID:       storeIdUuid,
+			Name:          "sepatu",
+			Uom:           "kg",
+			ProductTypeID: 2,
+			Stock:         1,
 		},
 	}
-	roleNames := []string{"merchant"}
-	adminRoleNames := []string{"merchant", "admin"}
-	existedProdNames := []string{"bakso aci", "keju"}
-	prodTypes := []*prodEntity.ProductType{
-		&prodEntity.ProductType{
-			BaseMasterDataModel: base_model.BaseMasterDataModel{
-				ID: 1,
-			},
-			Name: "Snack",
-		},
-	}
-	addProdImage1 := &prodEntity.ProductImage{
-		ProductId:      productIdUuid,
-		ImageBase64Str: "aaa",
-	}
-	addProdImage2 := &prodEntity.ProductImage{
-		ProductId:      productIdUuid,
-		ImageBase64Str: "aaa",
-	}
+
 	removeProdImage1 := &prodEntity.ProductImage{
 		ProductId:      productIdUuid,
 		ImageBase64Str: "aaa",
@@ -410,501 +568,863 @@ func Test_service_UpsertProducts(t *testing.T) {
 		ProductId:      productIdUuid,
 		ImageBase64Str: "aaa",
 	}
-	productImagesToBeAdded := []*prodEntity.ProductImage{addProdImage1, addProdImage2}
-	productImagesToBeRemoved := []*prodEntity.ProductImage{removeProdImage1, removeProdImage2}
+
+	productImagesToBeRemoved := []*prodEntity.ProductImage{
+		removeProdImage1,
+		removeProdImage2,
+	}
 
 	existingProdImagesMap := make(map[uuid.UUID][]*prodEntity.ProductImage)
 	existingProdImagesMap[productIdUuid] = append(existingProdImagesMap[productIdUuid], productImagesToBeRemoved...)
 
-	mockProdRepo.EXPECT().InitiateTransaction(gomock.Any()).Return(true).AnyTimes()
-	mockProdRepo.EXPECT().TransactionCommit().Return(nil).AnyTimes()
-	mockProdRepo.EXPECT().TransactionRollback().AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1}).Return(prodTypes, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{1, 2}).Return(prodTypes, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypesByIds(gomock.Any(), []int64{2}).Return(prodTypes, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, existedProdNames).Return(existedProducts, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"keju", "tas"}).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"keju", "sepatu"}).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"indomie", "beras"}).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, []string{"bantal"}).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, []string{"indomie", "beras"}).Return(nil, nil).AnyTimes()
-
-	mockProdRepo.EXPECT().UpsertProducts(ctx, gomock.Any()).Return(nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductImagesByProductIds(ctx, []uuid.UUID{productIdUuid}).Return(productImagesToBeRemoved, existingProdImagesMap, nil).AnyTimes()
-
-	var imageIdres *uuid.UUID
-	imageIdres = &productImageIDUuid
-	mockImageRepo.EXPECT().UploadImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).Return(imageIdres, nil).AnyTimes()
-	mockImageRepo.EXPECT().RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-
-	mockProdRepo.EXPECT().UpsertProductImages(ctx, gomock.Any()).Return(nil).AnyTimes()
-	mockProdRepo.EXPECT().DeleteProductImages(ctx, productImagesToBeRemoved).Return(nil).AnyTimes()
-
-	mockStoreRepo.EXPECT().GetStore(gomock.Any(), otherStoreID).Return(&entity.Store{
-		BaseModel: base_model.BaseModel{
-			ID: otherStoreIdUuid,
-		},
-		UserID: otherUserIdUuid,
-	}, nil).AnyTimes()
-	mockStoreRepo.EXPECT().GetStore(gomock.Any(), storeID).Return(&entity.Store{
+	store := &entity.Store{
 		BaseModel: base_model.BaseModel{
 			ID: storeIdUuid,
 		},
 		UserID: userIdUuid,
-	}, nil).AnyTimes()
+	}
 
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-		storeRepository   *storeRepoMock.MockStoreServiceRepository
-		imageRepository   *imageRepoMock.MockImageRepository
+	otherStore := &entity.Store{
+		BaseModel: base_model.BaseModel{
+			ID: otherStoreIdUuid,
+		},
+		UserID: otherUserIdUuid,
 	}
-	type args struct {
-		ctx       context.Context
-		userID    uuid.UUID
-		roleNames []string
-		storeID   uuid.UUID
-		products  []*prodEntity.Product
-		isUpdate  bool
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
+
+	updateProductWithEmptyImage := []*prodEntity.Product{
 		{
-			name: "CreateProduct_NoProductProvided_ReturnValidationError",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
 			},
-			args: args{
-				ctx:       ctx,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  nil,
-				isUpdate:  false,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_NO_PRODUCT_INSERTED.String(), "tidak ada produk yang disimpan"),
-		},
-		{
-			name: "UpdateProduct_NoProductProvided_ReturnValidationError",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  nil,
-				isUpdate:  true,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_NO_PRODUCT_INSERTED.String(), "tidak ada produk yang disimpan"),
-		},
-		{
-			name: "CreateProduct_DifferenStoreIDNotAdmin_DontHavePermission",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   otherStoreIdUuid,
-				roleNames: roleNames,
-				products:  products,
-				isUpdate:  false,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.PermissionDenied, errPb.StoreErrorCode_DONT_HAVE_PERMISSION_TO_CREATE_OR_UPDATE_STORE.String(), "Anda tidak memiliki izin untuk membuat/memperbarui produk untuk toko ini"),
-		},
-		{
-			name: "UpdateProduct_DifferenStoreIDNotAdmin_DontHavePermission",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   otherStoreIdUuid,
-				roleNames: roleNames,
-				products:  products,
-				isUpdate:  true,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.PermissionDenied, errPb.StoreErrorCode_DONT_HAVE_PERMISSION_TO_CREATE_OR_UPDATE_STORE.String(), "Anda tidak memiliki izin untuk membuat/memperbarui produk untuk toko ini"),
-		},
-		{
-			name: "CreateProduct_UomNotProvided_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  noUOM,
-				isUpdate:  false,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan"),
-		},
-		{
-			name: "UpdateProduct_ProductIdNotProvided_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  noProductId,
-				isUpdate:  true,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_IS_REQUIRED.String(), "Product id diperlukan"),
-		},
-		{
-			name: "UpdateProduct_UomNotProvided_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  noUOMForUpdate,
-				isUpdate:  true,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan"),
-		},
-		{
-			name: "CreateProduct_ProdTypeNotProvided_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  noProdType,
-				isUpdate:  false,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "Product type id diperlukan"),
-		},
-		{
-			name: "UpdateProduct_ProdTypeNotProvided_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  noProdTypeForUpdate,
-				isUpdate:  true,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "Product type id diperlukan"),
-		},
-		{
-			name: "CreateProduct_StockIsNegative_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products: []*prodEntity.Product{
-					&prodEntity.Product{
-						StoreID:       storeIdUuid,
-						Name:          "bantal",
-						Uom:           "kg",
-						ProductTypeID: 2,
-						Stock:         -1,
-					},
+			StoreID:       storeIdUuid,
+			Name:          "indomie",
+			Uom:           "bungkus",
+			ProductTypeID: 1,
+			Stock:         1,
+			Images: []*prodEntity.ProductImage{
+				{
+					ProductId:      productIdUuid,
+					ImageBase64Str: "",
 				},
 			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STOCK_SHOULD_BE_POSITIVE.String(), "Stock harus positif"),
-		},
-		{
-			name: "UpdateProduct_StockIsNegative_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products: []*prodEntity.Product{
-					&prodEntity.Product{
-						BaseModel: base_model.BaseModel{
-							ID: productIdUuid,
-						},
-						StoreID:       storeIdUuid,
-						Name:          "bantal",
-						Uom:           "kg",
-						ProductTypeID: 2,
-						Stock:         -1,
-					},
-				},
-				isUpdate: true,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STOCK_SHOULD_BE_POSITIVE.String(), "Stock harus positif"),
-		},
-		{
-			name: "CreateProduct_ProductAlreadyExisted_ReturnValidationError",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  existedProducts,
-				userID:    userIdUuid,
-			},
-			wantErr: true,
-			expectedError: util.NewError(codes.AlreadyExists, errPb.StoreErrorCode_PRODUCTS_ARE_ALREADY_REGISTERED.String(),
-				fmt.Sprintf("Produk sudah terdaftar : %s", strings.Join(existedProdNames, ","))),
-		},
-		{
-			name: "CreateProduct_InvalidUOM_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  invalidUomProduct,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan"),
-		},
-		{
-			name: "UpdateProduct_InvalidUOM_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products: []*prodEntity.Product{
-					&prodEntity.Product{
-						BaseModel: base_model.BaseModel{
-							ID: productIdUuid,
-						},
-						StoreID:       storeIdUuid,
-						Name:          "keju",
-						Uom:           "kg",
-						ProductTypeID: 1,
-						Stock:         1,
-					},
-					&prodEntity.Product{
-						BaseModel: base_model.BaseModel{
-							ID: otherProductID2Uuid,
-						},
-						StoreID:       storeIdUuid,
-						Name:          "tas",
-						Uom:           "",
-						ProductTypeID: 2,
-						Stock:         1,
-					},
-				},
-				isUpdate: true,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan"),
-		},
-		{
-			name: "CreateProduct_InvalidProductType_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  invalidProdTypeProduct,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.NotFound, errPb.StoreErrorCode_PRODUCT_TYPE_ID_IS_NOT_FOUND.String(), "Product type id tidak ditemukan"),
-		},
-		{
-			name: "UpdateProduct_InvalidProductType_Error",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products: []*prodEntity.Product{
-					&prodEntity.Product{
-						BaseModel: base_model.BaseModel{
-							ID: productIdUuid,
-						},
-						StoreID:       storeIdUuid,
-						Name:          "keju",
-						Uom:           "kg",
-						ProductTypeID: 1,
-						Stock:         1,
-					},
-					&prodEntity.Product{
-						BaseModel: base_model.BaseModel{
-							ID: otherProductID2Uuid,
-						},
-						StoreID:       storeIdUuid,
-						Name:          "sepatu",
-						Uom:           "kg",
-						ProductTypeID: 2,
-						Stock:         1,
-					},
-				},
-				isUpdate: true,
-			},
-			wantErr:       true,
-			expectedError: util.NewError(codes.NotFound, errPb.StoreErrorCode_PRODUCT_TYPE_ID_IS_NOT_FOUND.String(), "Product type id tidak ditemukan"),
-		},
-		{
-			name: "CreateProduct_DifferenStoreIDButAdmin_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   otherStoreIdUuid,
-				roleNames: adminRoleNames,
-				products:  products,
-			},
-			wantErr: false,
-		},
-		{
-			name: "UpdateProduct_DifferenStoreIDButAdmin_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-				imageRepository:   mockImageRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   otherStoreIdUuid,
-				roleNames: adminRoleNames,
-				products: []*prodEntity.Product{
-					&prodEntity.Product{
-						BaseModel: base_model.BaseModel{
-							ID: productIdUuid,
-						},
-						StoreID:       storeIdUuid,
-						Name:          "indomie",
-						Uom:           "kg",
-						ProductTypeID: 1,
-						Stock:         1,
-						Images:        productImagesToBeAdded,
-					},
-				},
-				isUpdate: true,
-			},
-			wantErr: false,
-		},
-		{
-			name: "CreateProduct_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-				imageRepository:   mockImageRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products:  products,
-			},
-			wantErr: false,
-		},
-		{
-			name: "UpdateProduct_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-				imageRepository:   mockImageRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				userID:    userIdUuid,
-				storeID:   storeIdUuid,
-				roleNames: roleNames,
-				products: []*prodEntity.Product{
-					&prodEntity.Product{
-						BaseModel: base_model.BaseModel{
-							ID: productIdUuid,
-						},
-						StoreID:       storeIdUuid,
-						Name:          "indomie",
-						Uom:           "kg",
-						ProductTypeID: 1,
-						Stock:         1,
-						Images:        productImagesToBeAdded,
-					},
-				},
-				isUpdate: true,
-			},
-			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil, tt.fields.imageRepository)
-			if err := s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isUpdate, tt.args.products...); tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.Nil(t, err)
-			}
-		})
+
+	updateProductWithImage := []*prodEntity.Product{
+		{
+			BaseModel: base_model.BaseModel{
+				ID: productIdUuid,
+			},
+			StoreID:       storeIdUuid,
+			Name:          "indomie",
+			Uom:           "bungkus",
+			ProductTypeID: 1,
+			Stock:         1,
+			Images: []*prodEntity.ProductImage{
+				{
+					ProductId:      productIdUuid,
+					ImageBase64Str: "aaa",
+				},
+			},
+		},
 	}
+
+	t.Run("Should return error if no product provided", func(t *testing.T) {
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, emptyProduct...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_NO_PRODUCT_INSERTED.String(), "tidak ada produk yang disimpan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if store id is null", func(t *testing.T) {
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, uuid.Nil, false, products...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STORE_ID_IS_REQUIRED.String(), "Store id diperlukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if GetStore return error", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(nil, fmt.Errorf("error"))
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, products...)
+
+		errMsg := fmt.Errorf("error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error id not admin", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(&entity.Store{}, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, products...)
+
+		errMsg := util.NewError(codes.PermissionDenied, errPb.StoreErrorCode_DONT_HAVE_PERMISSION_TO_CREATE_OR_UPDATE_STORE.String(), "Anda tidak memiliki izin untuk membuat/memperbarui produk untuk toko ini")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if UOM not provided when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, productWithoutUOM...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product id not provided when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, productWithoutUOM...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_IS_REQUIRED.String(), "Product id diperlukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if UOM not provided when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProductWithoutUOM...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product type not provided when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, productWithoutProductType...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "Product type id diperlukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product type not provided when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProductWithoutProductType...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_TYPE_IS_REQUIRED.String(), "Product type id diperlukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if stock negative when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, productWithNegativeStock...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STOCK_SHOULD_BE_POSITIVE.String(), "Stock harus positif")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if stock negative when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProductWithNegativeStock...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_STOCK_SHOULD_BE_POSITIVE.String(), "Stock harus positif")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product already exist when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, existedProdNames).
+			Times(1).
+			Return(existedProducts, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, existedProducts...)
+
+		errMsg := util.NewError(codes.AlreadyExists, errPb.StoreErrorCode_PRODUCTS_ARE_ALREADY_REGISTERED.String(), fmt.Sprintf("Produk sudah terdaftar : %s", strings.Join(existedProdNames, ",")))
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if UOM is invalid when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, invalidUomProduct...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if UOM is invalid when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(2).
+			Return(exampleProduct, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProductWithInvalidUOM...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_UOM_IS_REQUIRED.String(), "Satuan unit diperlukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product type invalid when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreIdAndNames(gomock.Any(), storeIdUuid, invalidProdNames).
+			Times(1).
+			Return([]*prodEntity.Product{}, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1, 2}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, invalidProdTypeProduct...)
+
+		errMsg := util.NewError(codes.NotFound, errPb.StoreErrorCode_PRODUCT_TYPE_ID_IS_NOT_FOUND.String(), "Product type id tidak ditemukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error product type invalid when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(2).
+			Return(exampleProduct, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1, 2}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateInvalidProdTypeProduct...)
+
+		errMsg := util.NewError(codes.NotFound, errPb.StoreErrorCode_PRODUCT_TYPE_ID_IS_NOT_FOUND.String(), "Product type id tidak ditemukan")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return success if different store id but admin when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, productNames).
+			Times(1).
+			Return([]*prodEntity.Product{}, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			TransactionCommit().
+			Times(1).
+			Return(nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, false, products...)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should return success if different store id but admin when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIdUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockImageRepo.EXPECT().
+			RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			DeleteProductImages(ctx, productImagesToBeRemoved).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			TransactionCommit().
+			Times(1).
+			Return(nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, true, updateProduct...)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should return error product not found if product not found when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(nil, fmt.Errorf("not found"))
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProduct...)
+
+		errMsg := util.NewError(codes.NotFound, string(ERR_PRODUCT_NOT_FOUND), "not found")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if get product return error when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(nil, fmt.Errorf("error"))
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, true, updateProduct...)
+
+		errMsg := util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_INSERTING_OR_UPDATING_PRODUCT.String(), "error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if uuid is not null when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, updateProduct...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_PRODUCT_ID_SHOULD_BE_EMPTY.String(), "Product id harus kosong")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if GetProductsByStoreIdAndNames return error when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreIdAndNames(gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil, fmt.Errorf("error"))
+
+		err := service.UpsertProducts(ctx, userIdUuid, roleNames, storeIdUuid, false, products...)
+
+		errMsg := fmt.Errorf("error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if GetProductTypesByIds return error when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, productNames).
+			Times(1).
+			Return([]*prodEntity.Product{}, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil, fmt.Errorf("error"))
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, false, products...)
+
+		errMsg := util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_GETTING_RELATED_PRODUCT_TYPE.String(), "Error saat mencari data product type")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if UpsertProducts return error when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, productNames).
+			Times(1).
+			Return([]*prodEntity.Product{}, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(fmt.Errorf("error"))
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, false, products...)
+
+		errMsg := util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_INSERTING_OR_UPDATING_PRODUCT.String(), "Error saat membuat / memperbarui data produk : error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if GetProductImagesByProductIds return error when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIdUuid}).
+			Times(1).
+			Return(nil, nil, fmt.Errorf("error"))
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, true, updateProduct...)
+
+		errMsg := util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_GETTING_PRODUCT_IMAGE.String(), "Error saat melakukan pencarian gambar produk : error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if update with empty base64 image when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIdUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockProdRepo.EXPECT().
+			TransactionRollback().
+			Times(1)
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, true, updateProductWithEmptyImage...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_IMAGE_SHOULD_BE_IN_BASE_64_FORMAT.String(), "Gambar produk harus dalam format base 64")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if UploadImage return error when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIdUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockImageRepo.EXPECT().
+			UploadImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil, fmt.Errorf("error"))
+
+		mockProdRepo.EXPECT().
+			TransactionRollback().
+			Times(2)
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, true, updateProductWithImage...)
+
+		errMsg := fmt.Errorf("error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if RemoveImage return error when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIdUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockImageRepo.EXPECT().
+			RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(fmt.Errorf("error"))
+
+		mockProdRepo.EXPECT().
+			TransactionRollback().
+			Times(1)
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, true, updateProduct...)
+
+		errMsg := util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_REMOVING_IMAGE_FROM_STORAGE.String(), "Error saat menghapus gambar dari penyimpanan : error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if RemoveImage return error when update product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, gomock.Any()).
+			Times(1).
+			Return(exampleProduct, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), []int64{1}).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			GetProductImagesByProductIds(ctx, []uuid.UUID{productIdUuid}).
+			Times(1).
+			Return(productImagesToBeRemoved, existingProdImagesMap, nil)
+
+		mockImageRepo.EXPECT().
+			RemoveImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockProdRepo.EXPECT().
+			DeleteProductImages(ctx, productImagesToBeRemoved).
+			Times(1).
+			Return(fmt.Errorf("error"))
+
+		mockProdRepo.EXPECT().
+			TransactionRollback().
+			Times(1)
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, true, updateProduct...)
+
+		errMsg := util.NewError(codes.Internal, errPb.StoreErrorCode_ERROR_WHEN_DELETING_PRODUCT_IMAGE.String(), "Error saat menghapus gambar produk : error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if image is invalid base 64 when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, gomock.Any()).
+			Times(1).
+			Return([]*prodEntity.Product{}, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, false, emptyImageProducts...)
+
+		errMsg := util.NewError(codes.InvalidArgument, errPb.StoreErrorCode_IMAGE_SHOULD_BE_IN_BASE_64_FORMAT.String(), "Gambar produk harus dalam format base 64")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if UpsertProductImages return error when create product", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(gomock.Any(), otherStoreID).
+			Times(1).
+			Return(otherStore, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreIdAndNames(gomock.Any(), otherStoreIdUuid, gomock.Any()).
+			Times(1).
+			Return([]*prodEntity.Product{}, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypesByIds(gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(prodTypes, nil)
+
+		mockProdRepo.EXPECT().
+			InitiateTransaction(gomock.Any()).
+			Times(1).
+			Return(true)
+
+		mockProdRepo.EXPECT().
+			UpsertProducts(ctx, gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		mockImageRepo.EXPECT().
+			UploadImage(ctx, gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(&productIdUuid, nil)
+
+		mockProdRepo.EXPECT().
+			UpsertProductImages(ctx, gomock.Any()).
+			Times(1).
+			Return(fmt.Errorf("error"))
+
+		mockProdRepo.EXPECT().
+			TransactionRollback().
+			Times(1)
+
+		err := service.UpsertProducts(ctx, userIdUuid, adminRoleNames, otherStoreIdUuid, false, productsWithImage...)
+
+		errMsg := fmt.Errorf("error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
 }
 
 func TestUpdateStore(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	mockImageRepo := imageRepoMock.NewMockImageRepository(ctrl)
+	mockStorage := storeRepoMock.NewMockStorage(ctrl)
+	service := New(mockStoreRepo, nil, mockStorage, mockImageRepo)
+
 	ctx := context.Background()
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -917,7 +1437,8 @@ func TestUpdateStore(t *testing.T) {
 	ctx = metadata.NewIncomingContext(ctx, md)
 
 	storeIDUuid := uuid.MustParse(storeID)
-	otherStoreIDUuid := uuid.MustParse(otherStoreID)
+	imgBase64 := "SampleImageBase64"
+	imgURL := "http://www.example.com"
 
 	existingStore := &entity.Store{
 		BaseModel: base_model.BaseModel{
@@ -933,983 +1454,868 @@ func TestUpdateStore(t *testing.T) {
 		},
 		UserID:    sessionUserID,
 		StoreName: "Toko Sebelah",
+		Images: []*entity.StoreImage{
+			{
+				ImageBase64: imgBase64,
+				ImageURL:    imgURL,
+			},
+		},
+		Hours: []*entity.StoreHour{
+			{
+				Open:  "00:00",
+				Close: "00:00",
+			},
+		},
 	}
 
-	updatedStore1 := &entity.Store{
+	updatedStore24Hours := &entity.Store{
 		BaseModel: base_model.BaseModel{
-			ID: otherStoreIDUuid,
+			ID: storeIDUuid,
 		},
 		UserID:    sessionUserID,
-		StoreName: "Toko Maju 1",
-	}
-
-	testCases := []struct {
-		name       string
-		setupMocks func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage)
-		inputStore struct {
-			storeID string
-			store   *entity.Store
-		}
-		expectedStore *entity.Store
-		expectedError error
-	}{
-		{
-			name: "Success",
-			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
-				storeRepository.EXPECT().GetStore(ctx, storeID).Return(existingStore, nil).AnyTimes()
-				storeRepository.EXPECT().UpdateStore(ctx, gomock.Any()).Return(updatedStore, nil)
+		StoreName: "Toko Sebelah",
+		Images: []*entity.StoreImage{
+			{
+				ImageBase64: imgBase64,
+				ImageURL:    imgURL,
 			},
-			inputStore: struct {
-				storeID string
-				store   *entity.Store
-			}{
-				storeID: storeID,
-				store:   updatedStore,
-			},
-			expectedStore: updatedStore,
-			expectedError: nil,
 		},
-		{
-			name: "Error_StoreNotFound",
-			setupMocks: func(storeRepository *storeRepoMock.MockStoreServiceRepository, storage *storeRepoMock.MockStorage) {
-				storeRepository.EXPECT().GetStore(ctx, otherStoreID).Return(nil, status.Errorf(codes.NotFound, "Store is not found")).AnyTimes()
+		Hours: []*entity.StoreHour{
+			{
+				IsOpen: true,
+				Is24Hr: true,
+				Open:   "00:00",
+				Close:  "23:59",
 			},
-			inputStore: struct {
-				storeID string
-				store   *entity.Store
-			}{
-				storeID: otherStoreID,
-				store:   updatedStore1,
-			},
-			expectedStore: nil,
-			expectedError: status.Errorf(codes.NotFound, "Store is not found"),
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+	t.Run("Should return success", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(existingStore, nil)
 
-			storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
-			storage := storeRepoMock.NewMockStorage(ctrl)
-			service := New(storeRepository, nil, storage, nil)
+		mockStorage.EXPECT().
+			UploadImage(ctx, imgBase64, storeID).
+			Times(1).
+			Return(imgURL, nil)
 
-			tc.setupMocks(storeRepository, storage)
-			result, err := service.UpdateStore(ctx, tc.inputStore.storeID, tc.inputStore.store)
-			assert.Equal(t, tc.expectedStore, result)
-			assert.Equal(t, tc.expectedError, err)
-		})
-	}
-}
+		mockStoreRepo.EXPECT().
+			UpdateStore(ctx, gomock.Any()).
+			Times(1).
+			Return(updatedStore, nil)
 
-func Test_service_UpsertUnitOfMeasure(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	ctx := context.Background()
-	pcs := &prodEntity.UnitOfMeasure{
-		Name:   "pieces",
-		Symbol: "pcs",
-	}
-	gram := &prodEntity.UnitOfMeasure{
-		Name:   "gram",
-		Symbol: "g",
-	}
-	kg := &prodEntity.UnitOfMeasure{
-		Name:   "kilogram",
-		Symbol: "kg",
-	}
-	ton := &prodEntity.UnitOfMeasure{
-		Name:   "ton",
-		Symbol: "ton",
-	}
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
-	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, pcs.Name).Return(pcs, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, gram.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, kg.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, ton.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, gram.Symbol).Return(gram, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, kg.Symbol).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, ton.Symbol).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, kg).Return(err).AnyTimes()
-	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, ton).Return(nil).AnyTimes()
+		result, err := service.UpdateStore(ctx, storeID, updatedStore)
 
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-	}
-	type args struct {
-		ctx context.Context
-		uom *prodEntity.UnitOfMeasure
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "UpsertUnitOfMeasure_NameIsExist_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx: ctx,
-				uom: pcs,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.AlreadyExists, "Uom name is already exist in database"),
-		},
-		{
-			name: "UpsertUnitOfMeasure_SymbolIsExist_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx: ctx,
-				uom: gram,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.AlreadyExists, "Uom symbol is already exist in database"),
-		},
-		{
-			name: "UpsertUnitOfMeasure_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx: ctx,
-				uom: kg,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when inserting / updating unit of measure :"+errMsg),
-		},
-		{
-			name: "UpsertUnitOfMeasure_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx: ctx,
-				uom: ton,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if err := s.UpsertUnitOfMeasure(tt.args.ctx, tt.args.uom); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.Nil(t, err)
-			}
-		})
-	}
-}
-
-func Test_service_UpsertProductCategory(t *testing.T) {
-	// ctrl := gomock.NewController(t)
-	// mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	// ctx := context.Background()
-	// pakaian := &prodEntity.ProductCategory{
-	// 	Name: "Pakaian",
-	// }
-	// komputer := &prodEntity.ProductCategory{
-	// 	Name: "Komputer",
-	// }
-	// makanan := &prodEntity.ProductCategory{
-	// 	Name: "Makanan",
-	// }
-	// errMsg := "ERROR"
-	// err := errors.New(errMsg)
-	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, pakaian.Name).Return(pakaian, nil).AnyTimes()
-	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, komputer.Name).Return(nil, nil).AnyTimes()
-	// mockProdRepo.EXPECT().GetProductCategoryByName(ctx, makanan.Name).Return(nil, nil).AnyTimes()
-	// mockProdRepo.EXPECT().UpsertProductCategory(ctx, komputer).Return(err).AnyTimes()
-	// mockProdRepo.EXPECT().UpsertProductCategory(ctx, makanan).Return(nil).AnyTimes()
-
-	// type fields struct {
-	// 	productRepository *prodRepoMock.MockProductRepository
-	// }
-	// type args struct {
-	// 	ctx             context.Context
-	// 	productCategory *prodEntity.ProductCategory
-	// }
-	// tests := []struct {
-	// 	name          string
-	// 	fields        fields
-	// 	args          args
-	// 	wantErr       bool
-	// 	expectedError error
-	// }{
-	// 	{
-	// 		name: "UpsertProductCategory_NameAlreadyExist_ReturnTheError",
-	// 		fields: fields{
-	// 			productRepository: mockProdRepo,
-	// 		},
-	// 		args: args{
-	// 			ctx:             ctx,
-	// 			productCategory: pakaian,
-	// 		},
-	// 		wantErr:       true,
-	// 		expectedError: status.Errorf(codes.AlreadyExists, "Category name is already exist in database"),
-	// 	},
-	// 	{
-	// 		name: "UpsertProductCategory_Error_ReturnTheError",
-	// 		fields: fields{
-	// 			productRepository: mockProdRepo,
-	// 		},
-	// 		args: args{
-	// 			ctx:             ctx,
-	// 			productCategory: komputer,
-	// 		},
-	// 		wantErr:       true,
-	// 		expectedError: status.Errorf(codes.Internal, "Error when inserting / updating product category :"+errMsg),
-	// 	},
-	// 	{
-	// 		name: "UpsertProductCategory_NoError_Success",
-	// 		fields: fields{
-	// 			productRepository: mockProdRepo,
-	// 		},
-	// 		args: args{
-	// 			ctx:             ctx,
-	// 			productCategory: makanan,
-	// 		},
-	// 		wantErr: false,
-	// 	},
-	// }
-	// for _, tt := range tests {
-	// 	t.Run(tt.name, func(t *testing.T) {
-	// 		s := New(nil, tt.fields.productRepository, nil, nil)
-	// 		if err := s.UpsertProductCategory(tt.args.ctx, tt.args.productCategory); err != nil && tt.wantErr {
-	// 			assert.NotNil(t, err)
-	// 			assert.Equal(t, tt.expectedError, err)
-	// 		} else {
-	// 			assert.Nil(t, err)
-	// 		}
-	// 	})
-	// }
-	// create new sqllite db connection using gorm
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
-		TranslateError:         false,
-		SkipDefaultTransaction: true,
+		assert.Nil(t, err)
+		assert.Equal(t, updatedStore, result)
 	})
-	assert.NoError(t, err)
-	db.AutoMigrate(&prodEntity.ProductCategory{})
 
-	productRepository := prodRepo.NewPostgres(db)
-	svc := New(nil, productRepository, nil, nil)
+	t.Run("Should return success 24 Hours", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(existingStore, nil)
 
-	productCategory := &prodEntity.ProductCategory{
-		Name:     "test",
-		IsActive: false,
-		BaseMasterDataModel: base_model.BaseMasterDataModel{
-			CreatedAt: time.Now(),
-			CreatedBy: uuid.New(),
-			UpdatedAt: time.Now(),
-		},
-	}
-	err = svc.UpsertProductCategory(context.Background(), productCategory)
-	assert.NoError(t, err)
+		mockStorage.EXPECT().
+			UploadImage(ctx, imgBase64, storeID).
+			Times(1).
+			Return(imgURL, nil)
+
+		mockStoreRepo.EXPECT().
+			UpdateStore(ctx, gomock.Any()).
+			Times(1).
+			Return(updatedStore24Hours, nil)
+
+		result, err := service.UpdateStore(ctx, storeID, updatedStore24Hours)
+
+		assert.Nil(t, err)
+		assert.Equal(t, updatedStore24Hours, result)
+	})
+
+	t.Run("Should return error if failed to upload image", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(existingStore, nil)
+
+		mockStorage.EXPECT().
+			UploadImage(ctx, imgBase64, storeID).
+			Times(1).
+			Return(imgURL, errors.New("error"))
+
+		updatedStore.Images[0].ImageBase64 = imgBase64
+		_, err := service.UpdateStore(ctx, storeID, updatedStore)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if failed to parse store id", func(t *testing.T) {
+		_, err := service.UpdateStore(ctx, "storeID", updatedStore)
+
+		errMsg := status.Errorf(codes.InvalidArgument, "store id should be uuid")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if store not found", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(nil, status.Errorf(codes.NotFound, "Store is not found"))
+
+		_, err := service.UpdateStore(ctx, storeID, updatedStore)
+
+		assert.Error(t, err)
+	})
 }
 
-func Test_service_UpsertProductType(t *testing.T) {
+func TestListStores(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	service := New(mockStoreRepo, nil, nil, nil)
+
+	ctx := context.Background()
+	page := 1
+	limit := 10
+
+	store := []*entity.Store{
+		{
+			StoreName: "Toko Sebelah",
+		},
+	}
+
+	t.Run("Should return success", func(t *testing.T) {
+		mockStoreRepo.
+			EXPECT().ListStores(ctx, page, limit).
+			Times(1).
+			Return(store, nil)
+
+		result, err := service.ListStores(ctx, int32(page), int32(limit))
+
+		assert.Nil(t, err)
+		assert.Equal(t, store, result)
+	})
+
+	t.Run("Should return error if failed to get store", func(t *testing.T) {
+		mockStoreRepo.
+			EXPECT().ListStores(ctx, page, limit).
+			Times(1).
+			Return(nil, errors.New("error"))
+
+		_, err := service.ListStores(ctx, int32(page), int32(limit))
+
+		assert.Error(t, err)
+	})
+}
+
+func TestDeleteStore(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	service := New(mockStoreRepo, nil, nil, nil)
+
+	ctx := context.Background()
+
+	storeIds := []string{storeID}
+
+	t.Run("Should return success", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			DeleteStores(ctx, storeIds).
+			Times(1).
+			Return(nil)
+
+		err := service.DeleteStores(ctx, storeIds)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should return error if failed to delete store", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			DeleteStores(ctx, storeIds).
+			Times(1).
+			Return(errors.New("failed"))
+
+		err := service.DeleteStores(ctx, storeIds)
+
+		assert.Error(t, err)
+	})
+}
+
+func TestUpsertProductCategory(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	service := New(nil, mockProdRepo, nil, nil)
+
 	ctx := context.Background()
+
+	pakaian := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 0,
+		},
+		Name: "Pakaian",
+	}
+
+	kaos := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 2,
+		},
+		Name: "Pakaian",
+	}
+
+	t.Run("Should return error if failed get product category", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryByName(ctx, strings.ToLower(pakaian.Name)).
+			Times(1).
+			Return(nil, errors.New("failed"))
+
+		err := service.UpsertProductCategory(ctx, pakaian)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return error if name already exist", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryByName(ctx, strings.ToLower(pakaian.Name)).
+			Times(1).
+			Return(kaos, nil)
+
+		err := service.UpsertProductCategory(ctx, pakaian)
+
+		errMsg := util.NewError(codes.AlreadyExists, string(ERR_PRODUCT_CATEGORY_IS_EXIST), "Name is already used by another product category")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if failed upsert product category", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryByName(ctx, strings.ToLower(pakaian.Name)).
+			Times(1).
+			Return(nil, errors.New("record not found"))
+
+		mockProdRepo.EXPECT().
+			UpsertProductCategory(ctx, gomock.Any()).
+			Times(1).
+			Return(errors.New("failed"))
+
+		err := service.UpsertProductCategory(ctx, pakaian)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("Should return success", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryByName(ctx, strings.ToLower(pakaian.Name)).
+			Times(1).
+			Return(nil, errors.New("record not found"))
+
+		mockProdRepo.EXPECT().
+			UpsertProductCategory(ctx, pakaian).
+			Times(1).
+			Return(nil)
+
+		err := service.UpsertProductCategory(ctx, pakaian)
+
+		assert.Nil(t, err)
+	})
+}
+
+func TestUpsertProductType(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+
+	service := New(nil, mockProdRepo, nil, nil)
+
+	ctx := context.Background()
+
 	makanan := &prodEntity.ProductCategory{
 		BaseMasterDataModel: base_model.BaseMasterDataModel{
 			ID: 1,
 		},
 		Name: "makanan",
 	}
-	komputer := &prodEntity.ProductCategory{
-		BaseMasterDataModel: base_model.BaseMasterDataModel{
-			ID: 3,
-		},
-		Name: "komputer",
-	}
+
 	kendaraan := &prodEntity.ProductCategory{
 		BaseMasterDataModel: base_model.BaseMasterDataModel{
 			ID: 2,
 		},
 		Name: "kendaraan",
 	}
-	mouse := &prodEntity.ProductType{
-		Name:              "mouse",
-		ProductCategoryID: komputer.BaseMasterDataModel.ID,
+
+	komputer := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 3,
+		},
+		Name: "komputer",
 	}
+
 	indomie := &prodEntity.ProductType{
 		Name:              "indomie",
 		ProductCategoryID: makanan.BaseMasterDataModel.ID,
 	}
-	pizza := &prodEntity.ProductType{
-		Name:              "pizza",
-		ProductCategoryID: makanan.BaseMasterDataModel.ID,
-	}
+
 	sedan := &prodEntity.ProductType{
 		Name:              "sedan",
 		ProductCategoryID: kendaraan.BaseMasterDataModel.ID,
 	}
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
-	mockProdRepo.EXPECT().GetProductCategoryById(ctx, makanan.BaseMasterDataModel.ID).Return(makanan, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategoryById(ctx, komputer.BaseMasterDataModel.ID).Return(komputer, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategoryById(ctx, kendaraan.BaseMasterDataModel.ID).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), pizza.Name).Return(pizza, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), mouse.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), indomie.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypeByName(ctx, gomock.Any(), kendaraan.Name).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().UpsertProductType(ctx, mouse).Return(err).AnyTimes()
-	mockProdRepo.EXPECT().UpsertProductType(ctx, indomie).Return(nil).AnyTimes()
 
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
+	mouse := &prodEntity.ProductType{
+		Name:              "mouse",
+		ProductCategoryID: komputer.BaseMasterDataModel.ID,
 	}
-	type args struct {
-		ctx         context.Context
-		productType *prodEntity.ProductType
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "UpsertProductType_NameIsAlreadyExist_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:         ctx,
-				productType: sedan,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category"),
-		},
-		{
-			name: "UpsertProductType_ProductCategoryNotFound_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:         ctx,
-				productType: sedan,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.NotFound, "Related product category data is not found"),
-		},
-		{
-			name: "UpsertProductType_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:         ctx,
-				productType: mouse,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when inserting / updating product Type :"+errMsg),
-		},
-		{
-			name: "UpsertProductType_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:         ctx,
-				productType: indomie,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if err := s.UpsertProductType(tt.args.ctx, tt.args.productType); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-			} else {
-				assert.Nil(t, err)
-			}
-		})
-	}
-}
 
-func Test_service_GetUnitOfMeasures(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	ctx := context.Background()
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
-	uoms := []*prodEntity.UnitOfMeasure{}
-	uoms = append(uoms, &prodEntity.UnitOfMeasure{
-		Name: "kg",
+	prodType1 := &prodEntity.ProductType{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 4,
+		},
+		Name:              "indomie",
+		ProductCategoryID: makanan.BaseMasterDataModel.ID,
+	}
+
+	t.Run("Should return error if name is already exist", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, kendaraan.BaseMasterDataModel.ID).
+			Times(1).
+			Return(kendaraan, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypeByName(ctx, sedan.ProductCategoryID, sedan.Name).
+			Times(1).
+			Return(sedan, nil)
+
+		err := service.UpsertProductType(ctx, sedan)
+
+		errMsg := status.Errorf(codes.AlreadyExists, "Product type is already exist for this product category")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
 	})
-	mockProdRepo.EXPECT().GetUnitOfMeasures(ctx, false).Return(nil, err).AnyTimes()
-	mockProdRepo.EXPECT().GetUnitOfMeasures(ctx, true).Return(uoms, nil).AnyTimes()
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-	}
-	type args struct {
-		ctx                  context.Context
-		isIncludeDeactivated bool
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "GetUnitOfMeasures_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:                  ctx,
-				isIncludeDeactivated: false,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when getting unit of measures :"+errMsg),
-		},
-		{
-			name: "GetUnitOfMeasures_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:                  ctx,
-				isIncludeDeactivated: true,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if uom, err := s.GetUnitOfMeasures(tt.args.ctx, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Nil(t, uom)
-			} else {
-				assert.Nil(t, err)
-				assert.NotNil(t, uom)
-			}
-		})
-	}
+
+	t.Run("Should return error if GetProductTypeByName return error", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, kendaraan.BaseMasterDataModel.ID).
+			Times(1).
+			Return(kendaraan, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypeByName(ctx, sedan.ProductCategoryID, sedan.Name).
+			Times(1).
+			Return(nil, fmt.Errorf("error"))
+
+		err := service.UpsertProductType(ctx, sedan)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting product type by name : error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product category not found", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, kendaraan.BaseMasterDataModel.ID).
+			Times(1).
+			Return(nil, nil)
+
+		err := service.UpsertProductType(ctx, sedan)
+
+		errMsg := status.Errorf(codes.NotFound, "Related product category data is not found")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product category return error", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, kendaraan.BaseMasterDataModel.ID).
+			Times(1).
+			Return(nil, fmt.Errorf("error"))
+
+		err := service.UpsertProductType(ctx, sedan)
+
+		errMsg := status.Errorf(codes.AlreadyExists, "Error getting product category by id data")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if failed to update product type", func(t *testing.T) {
+		errorMsg := errors.New("error")
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, komputer.BaseMasterDataModel.ID).
+			Times(1).
+			Return(komputer, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypeByName(ctx, mouse.ProductCategoryID, mouse.Name).
+			Times(1).
+			Return(nil, nil)
+
+		mockProdRepo.EXPECT().
+			UpsertProductType(ctx, mouse).
+			Times(1).
+			Return(errorMsg)
+
+		err := service.UpsertProductType(ctx, mouse)
+
+		errMsg := status.Errorf(codes.Internal, "Error when inserting / updating product Type :"+errorMsg.Error())
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return success", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, makanan.BaseMasterDataModel.ID).
+			Times(1).
+			Return(makanan, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypeByName(ctx, indomie.ProductCategoryID, indomie.Name).
+			Times(1).
+			Return(nil, nil)
+
+		mockProdRepo.EXPECT().
+			UpsertProductType(ctx, indomie).
+			Times(1).
+			Return(nil)
+
+		err := service.UpsertProductType(ctx, indomie)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should return error if product type not found when updating product type", func(t *testing.T) {
+
+		mockProdRepo.EXPECT().
+			GetProductTypeById(ctx, prodType1.BaseMasterDataModel.ID).
+			Times(1).
+			Return(nil, fmt.Errorf("not found"))
+
+		err := service.UpsertProductType(ctx, prodType1)
+
+		errMsg := status.Errorf(codes.NotFound, "{\"code\":5,\"code_detail\":\"ERR_PRODUCT_TYPE_NOT_FOUND\",\"message\":\"not found\"}")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product type return error when updating product type", func(t *testing.T) {
+
+		mockProdRepo.EXPECT().
+			GetProductTypeById(ctx, prodType1.BaseMasterDataModel.ID).
+			Times(1).
+			Return(nil, fmt.Errorf("undefined error"))
+
+		err := service.UpsertProductType(ctx, prodType1)
+
+		errMsg := status.Errorf(codes.Internal, "{\"code\":13,\"code_detail\":\"ERR_UNKNOWN\",\"message\":\"undefined error\"}")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return success on update product type", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductTypeById(ctx, prodType1.BaseMasterDataModel.ID).
+			Times(1).
+			Return(prodType1, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, makanan.BaseMasterDataModel.ID).
+			Times(1).
+			Return(makanan, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypeByName(ctx, indomie.ProductCategoryID, indomie.Name).
+			Times(1).
+			Return(nil, nil)
+
+		mockProdRepo.EXPECT().
+			UpsertProductType(ctx, prodType1).
+			Times(1).
+			Return(nil)
+
+		err := service.UpsertProductType(ctx, prodType1)
+
+		assert.Nil(t, err)
+	})
 }
 
-func Test_service_GetProductsByStoreId(t *testing.T) {
+func TestGetProductsByStoreId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+
+	service := New(mockStoreRepo, mockProdRepo, nil, nil)
+
 	ctx := context.Background()
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
+
+	var page int32 = 1
+	var limit int32 = 10
 	storeIDUuid := uuid.MustParse(storeID)
+	userIDUuid := uuid.New()
 	otherStoreIDUuid := uuid.MustParse(otherStoreID)
 	otherStoreID2Uuid := uuid.MustParse(otherStoreID2)
 
+	getProductsByStoreIdParams := types.GetProductsByStoreIdParams{
+		Page:                 page,
+		Limit:                limit,
+		StoreID:              otherStoreID2Uuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
+		UserID: 			  userIDUuid,
+	}
+
+	getProductsByStoreIdParams2 := types.GetProductsByStoreIdParams{
+		Page:                 page,
+		Limit:                limit,
+		StoreID:              otherStoreIDUuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
+		UserID: 			  userIDUuid,
+	}
+
+	getProductsByStoreIdParams3 := types.GetProductsByStoreIdParams{
+		Page:                 page,
+		Limit:                limit,
+		StoreID:              storeIDUuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
+		UserID: 			  userIDUuid,
+	}
+
+	store := &entity.Store{
+		BaseModel: base_model.BaseModel{
+			ID: storeIDUuid,
+		},
+		UserID: userIDUuid,
+	}
+
+	otherStore2 := &entity.Store{
+		BaseModel: base_model.BaseModel{
+			ID: otherStoreIDUuid,
+		},
+		UserID: userIDUuid,
+	}
+
+	invalidStore := &entity.Store{
+		BaseModel: base_model.BaseModel{
+			ID: otherStoreIDUuid,
+		},
+		UserID: uuid.New(),
+	}
+
 	products := []*prodEntity.Product{
-		&prodEntity.Product{
+		{
 			Name: "mouse",
 		},
 	}
 
-	mockStoreRepo.EXPECT().GetStore(ctx, storeID).Return(&entity.Store{
-		BaseModel: base_model.BaseModel{
-			ID: storeIDUuid,
-		},
-	}, nil).AnyTimes()
-	mockStoreRepo.EXPECT().GetStore(ctx, otherStoreID).Return(&entity.Store{
-		BaseModel: base_model.BaseModel{
-			ID: otherStoreIDUuid,
-		},
-	}, nil).AnyTimes()
-	mockStoreRepo.EXPECT().GetStore(ctx, otherStoreID2).Return(nil, status.Errorf(codes.NotFound, "Not Found")).AnyTimes()
-	mockProdRepo.EXPECT().GetProductsByStoreId(ctx, otherStoreIDUuid, gomock.Any(), false).Return(nil, err).AnyTimes()
-	mockProdRepo.EXPECT().GetProductsByStoreId(ctx, storeIDUuid, gomock.Any(), false).Return(products, nil).AnyTimes()
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-		storeRepository   *storeRepoMock.MockStoreServiceRepository
+	pagingReq := base_model.Pagination{
+		Page:  page,
+		Limit: limit,
 	}
-	type args struct {
-		ctx                  context.Context
-		storeID              uuid.UUID
-		productTypeId        *int64
-		isIncludeDeactivated bool
+
+	paging := base_model.Pagination{
+		Records:      0,
+		TotalRecords: 20,
+		Limit:        10,
+		Page:         1,
+		TotalPage:    2,
 	}
-	tests := []struct {
-		name          string
-		s             *service
-		fields        fields
-		args          args
-		expectedError error
-		wantErr       bool
-	}{
-		{
-			name: "GetProductsByStoreId_StoreIDNotFound_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:     ctx,
-				storeID: otherStoreID2Uuid,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.NotFound, "Not Found"),
-		},
-		{
-			name: "GetProductsByStoreId_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:     ctx,
-				storeID: otherStoreIDUuid,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when getting product list :"+errMsg),
-		},
-		{
-			name: "GetProductsByStoreId_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-				storeRepository:   mockStoreRepo,
-			},
-			args: args{
-				ctx:     ctx,
-				storeID: storeIDUuid,
-			},
-			wantErr: false,
-		},
+
+	getProductsByStoreIdRepoParams := types.GetProductsByStoreIdRepoParams{
+		Pagination:           pagingReq,
+		StoreID:              otherStoreIDUuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(tt.fields.storeRepository, tt.fields.productRepository, nil, nil)
-			if gotProducts, err := s.GetProductsByStoreId(tt.args.ctx, tt.args.storeID, tt.args.productTypeId, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Nil(t, gotProducts)
-			} else {
-				assert.Nil(t, err)
-				assert.NotNil(t, gotProducts)
-			}
-		})
+
+	getProductsByStoreIdRepoParams2 := types.GetProductsByStoreIdRepoParams{
+		Pagination:           pagingReq,
+		StoreID:              storeIDUuid,
+		ProductTypeId:        nil,
+		IsIncludeDeactivated: false,
 	}
+
+	t.Run("Should return error if store id not found", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, otherStoreID2).
+			Times(1).
+			Return(nil, status.Errorf(codes.NotFound, "Not Found"))
+
+		_, _, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams)
+
+		errMsg := status.Errorf(codes.NotFound, "Not Found")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if failed to get product", func(t *testing.T) {
+		errorMsg := errors.New("error")
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, otherStoreID).
+			Times(1).
+			Return(otherStore2, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreId(ctx, getProductsByStoreIdRepoParams).
+			Times(1).
+			Return(nil, paging, errorMsg)
+
+		_, _, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams2)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting product list :"+errorMsg.Error())
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+	
+	t.Run("Should return error if user not allowed to access", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, otherStoreID).
+			Times(1).
+			Return(invalidStore, nil)
+
+		_, _, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams2)
+
+		errMsg := status.Errorf(codes.PermissionDenied, "You do not have permission to open / close this store")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return success", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(store, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductsByStoreId(ctx, getProductsByStoreIdRepoParams2).
+			Times(1).
+			Return(products, paging, nil)
+
+		result, pagination, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams3)
+
+		assert.Nil(t, err)
+		assert.Equal(t, products, result)
+		assert.Equal(t, paging, pagination)
+	})
 }
 
-func Test_service_GetProductCategories(t *testing.T) {
+func TestGetProductCategories(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	service := New(nil, mockProdRepo, nil, nil)
+
 	ctx := context.Background()
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
-	category := []*prodEntity.ProductCategory{}
-	category = append(category, &prodEntity.ProductCategory{
-		Name: "shirt",
+
+	category := []*prodEntity.ProductCategory{
+		{
+			Name: "shirt",
+		},
+	}
+
+	t.Run("Should return error if failed to get product categories", func(t *testing.T) {
+		errorMsg := errors.New("error")
+		mockProdRepo.EXPECT().
+			GetProductCategories(ctx, false).
+			Return(nil, errorMsg)
+
+		_, _, err := service.GetProductCategories(ctx, false)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting product categories :"+errorMsg.Error())
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
 	})
-	uoms := []string{"pieces", "kilogram", "ons", "pound", "botol"}
-	mockProdRepo.EXPECT().GetProductCategories(ctx, false).Return(nil, err).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategories(ctx, true).Return(category, nil).AnyTimes()
 
-	// write file
-	fileName := "uom.json"
-	file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	defer func() {
-		file.Close()
-		_ = os.Remove("uom.json")
-	}()
-	encoder := json.NewEncoder(file)
-	_ = encoder.Encode(uoms)
+	t.Run("Should return success if failed to get read file", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategories(ctx, false).
+			Return(category, nil)
 
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-	}
-	type args struct {
-		ctx                  context.Context
-		isIncludeDeactivated bool
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "GetProductCategories_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:                  ctx,
-				isIncludeDeactivated: false,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when getting product categories :"+errMsg),
-		},
-		{
-			name: "GetProductCategories_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:                  ctx,
-				isIncludeDeactivated: true,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if cats, uom, err := s.GetProductCategories(tt.args.ctx, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Nil(t, cats)
-				assert.Nil(t, uom)
-			} else {
-				assert.Nil(t, err)
-				assert.NotNil(t, cats)
-				assert.NotNil(t, uom)
-			}
-		})
-	}
+		cat, uom, err := service.GetProductCategories(ctx, false)
+
+		assert.Nil(t, err)
+		assert.Nil(t, uom)
+		assert.Equal(t, category, cat)
+	})
+
+	t.Run("Should return success", func(t *testing.T) {
+		// write file
+		uoms := []string{"pieces", "kilogram", "ons", "pound", "botol"}
+		fileName := "uom.json"
+		file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		defer func() {
+			file.Close()
+			_ = os.Remove("uom.json")
+		}()
+		encoder := json.NewEncoder(file)
+		_ = encoder.Encode(uoms)
+
+		mockProdRepo.EXPECT().
+			GetProductCategories(ctx, false).
+			Return(category, nil)
+
+		cat, uom, err := service.GetProductCategories(ctx, false)
+
+		assert.Nil(t, err)
+		assert.Equal(t, uoms, uom)
+		assert.Equal(t, category, cat)
+	})
 }
 
-func Test_service_GetProductTypes(t *testing.T) {
+func TestGetProductTypes(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+
+	service := New(nil, mockProdRepo, nil, nil)
+
 	ctx := context.Background()
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
-	prodTypes := []*prodEntity.ProductType{}
-	prodTypes = append(prodTypes, &prodEntity.ProductType{
-		Name: "makanan",
-	})
+
 	prodCat1 := &prodEntity.ProductCategory{
 		BaseMasterDataModel: base_model.BaseMasterDataModel{
 			ID: 1,
 		},
 	}
+
 	prodCat2 := &prodEntity.ProductCategory{
 		BaseMasterDataModel: base_model.BaseMasterDataModel{
 			ID: 2,
 		},
 	}
 
-	mockProdRepo.EXPECT().GetProductCategoryById(ctx, prodCat2.ID).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductCategoryById(ctx, prodCat1.ID).Return(prodCat1, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypes(ctx, prodCat1.ID, false).Return(nil, err).AnyTimes()
-	mockProdRepo.EXPECT().GetProductTypes(ctx, prodCat1.ID, true).Return(prodTypes, nil).AnyTimes()
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-	}
-	type args struct {
-		ctx                  context.Context
-		productCategoryId    int64
-		isIncludeDeactivated bool
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
+	prodTypes := []*prodEntity.ProductType{
 		{
-			name: "GetProductTypes_ProdCategoryNotExist_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:                  ctx,
-				productCategoryId:    prodCat2.ID,
-				isIncludeDeactivated: false,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.NotFound, "Product category id is not found"),
-		},
-		{
-			name: "GetProductTypes_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:                  ctx,
-				productCategoryId:    prodCat1.ID,
-				isIncludeDeactivated: false,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when getting product types :"+errMsg),
-		},
-		{
-			name: "GetProductTypes_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:                  ctx,
-				productCategoryId:    prodCat1.ID,
-				isIncludeDeactivated: true,
-			},
-			wantErr: false,
+			Name: "makanan",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if prodType, err := s.GetProductTypes(tt.args.ctx, tt.args.productCategoryId, tt.args.isIncludeDeactivated); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Nil(t, prodType)
-			} else {
-				assert.Nil(t, err)
-				assert.NotNil(t, prodType)
-			}
-		})
-	}
+
+	t.Run("Should return error if failed to get product category", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, prodCat2.ID).
+			Times(1).
+			Return(nil, errors.New("error"))
+
+		_, err := service.GetProductTypes(ctx, prodCat2.ID, false)
+
+		errMsg := status.Errorf(codes.AlreadyExists, "Error getting product category by id data")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product category not exist", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, prodCat2.ID).
+			Times(1).
+			Return(nil, nil)
+
+		_, err := service.GetProductTypes(ctx, prodCat2.ID, false)
+
+		errMsg := status.Errorf(codes.NotFound, "Product category id is not found")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if failed to get product types", func(t *testing.T) {
+		errorMsg := errors.New("error")
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, prodCat1.ID).
+			Times(1).
+			Return(prodCat1, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypes(ctx, prodCat1.ID, false).
+			Return(nil, errorMsg)
+
+		_, err := service.GetProductTypes(ctx, prodCat1.ID, false)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting product types :"+errorMsg.Error())
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return success", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductCategoryById(ctx, prodCat1.ID).
+			Times(1).
+			Return(prodCat1, nil)
+
+		mockProdRepo.EXPECT().
+			GetProductTypes(ctx, prodCat1.ID, false).
+			Return(prodTypes, nil)
+
+		result, err := service.GetProductTypes(ctx, prodCat1.ID, false)
+
+		assert.Nil(t, err)
+		assert.Equal(t, prodTypes, result)
+	})
 }
 
-func Test_service_UpdateUnitOfMeasure(t *testing.T) {
+func TestGetProductById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	service := New(nil, mockProdRepo, nil, nil)
+
 	ctx := context.Background()
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
-	var uomId1 int64 = 1
-	var uomId2 int64 = 2
-	var uomId3 int64 = 3
 
-	initialUom := &prodEntity.UnitOfMeasure{
-		BaseMasterDataModel: base_model.BaseMasterDataModel{
-			ID: 1,
-		},
-		Name:     "celcius",
-		Symbol:   "c",
-		IsActive: true,
-	}
-
-	updatedUom1 := &prodEntity.UnitOfMeasure{
-		BaseMasterDataModel: base_model.BaseMasterDataModel{
-			ID: 2,
-		},
-		Name:     "fahrenheit",
-		Symbol:   "f",
-		IsActive: true,
-	}
-
-	updatedUom2 := &prodEntity.UnitOfMeasure{
-		BaseMasterDataModel: base_model.BaseMasterDataModel{
-			ID: 3,
-		},
-		Name:     "kelvin",
-		Symbol:   "k",
-		IsActive: true,
-	}
-
-	// 1st scenario: ERROR getting UoM by ID
-	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId1).Return(nil, err)
-
-	// 2nd scenario: ERROR, Name already used by another UoM
-	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(initialUom, nil)
-	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, initialUom.Name).Return(updatedUom1, nil)
-
-	// 3rd scenario: ERROR, Symbol already used by another UoM
-	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(initialUom, nil)
-	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom1.Name).Return(nil, nil)
-	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom1.Symbol).Return(updatedUom2, nil)
-
-	// 4th scenario: ERROR, fail updating the UoM
-	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId2).Return(updatedUom1, nil)
-	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom1.Name).Return(nil, nil)
-	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom1.Symbol).Return(nil, nil)
-	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom1).Return(err).AnyTimes()
-
-	// 5th scenario: SUCCESS updating the UoM
-	mockProdRepo.EXPECT().GetUnitOfMeasureById(ctx, uomId3).Return(updatedUom2, nil)
-	mockProdRepo.EXPECT().GetUnitOfMeasureByName(ctx, updatedUom2.Name).Return(nil, nil)
-	mockProdRepo.EXPECT().GetUnitOfMeasureBySymbol(ctx, updatedUom2.Symbol).Return(nil, nil)
-	mockProdRepo.EXPECT().UpsertUnitOfMeasure(ctx, updatedUom2).Return(nil)
-
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
-	}
-
-	type args struct {
-		ctx   context.Context
-		uomId int64
-		uom   *prodEntity.UnitOfMeasure
-	}
-
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "UpdateUnitOfMeasure_Error_UnableToGetUoMByID",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:   ctx,
-				uomId: uomId1,
-				uom:   updatedUom1,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when getting uom: "+errMsg),
-		},
-		{
-			name: "UpdateUnitOfMeasure_Error_UoMNameAlreadyExists",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:   ctx,
-				uomId: uomId2,
-				uom:   initialUom,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.AlreadyExists, "Name is already used by another UoM"),
-		},
-		{
-			name: "UpdateUnitOfMeasure_Error_SymbolAlreadyExists",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:   ctx,
-				uomId: uomId2,
-				uom:   updatedUom1,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.AlreadyExists, "Symbol is already used by another UoM"),
-		},
-		{
-			name: "UpdateUnitOfMeasure_Error_UnableToUpdateUoM",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:   ctx,
-				uomId: uomId2,
-				uom:   updatedUom1,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when updating unit of measure: "+errMsg),
-		},
-		{
-			name: "UpdateUnitOfMeasure_NoError_SuccessUpdatingUoM",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:   ctx,
-				uomId: uomId3,
-				uom:   updatedUom2,
-			},
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if err := s.UpdateUnitOfMeasure(tt.args.ctx, tt.args.uomId, tt.args.uom); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.Nil(t, err)
-			}
-		})
-	}
-}
-
-func Test_service_GetProductById(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	ctx := context.Background()
-	errMsg := "ERROR"
-	err := errors.New(errMsg)
 	productIDUuid := uuid.MustParse(productID)
 	otherProductIDUuid := uuid.MustParse(otherProductID)
 	otherProductIDUuid2 := uuid.MustParse(otherProductID2)
 
-	mockProdRepo.EXPECT().GetProductById(ctx, otherProductIDUuid2).Return(nil, nil).AnyTimes()
-	mockProdRepo.EXPECT().GetProductById(ctx, otherProductIDUuid).Return(nil, err).AnyTimes()
-	mockProdRepo.EXPECT().GetProductById(ctx, productIDUuid).Return(&prodEntity.Product{
+	products := &prodEntity.Product{
 		Name: "mouse",
-	}, nil).AnyTimes()
-	type fields struct {
-		productRepository *prodRepoMock.MockProductRepository
 	}
-	type args struct {
-		ctx       context.Context
-		productId uuid.UUID
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		expectedError error
-	}{
-		{
-			name: "GetProductById_Error_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				productId: otherProductIDUuid,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.Internal, "Error when getting product by id :"+errMsg),
-		},
-		{
-			name: "GetProductById_ProductIdNotFound_ReturnTheError",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				productId: otherProductIDUuid2,
-			},
-			wantErr:       true,
-			expectedError: status.Errorf(codes.NotFound, "Product id not found"),
-		},
-		{
-			name: "GetProductById_NoError_Success",
-			fields: fields{
-				productRepository: mockProdRepo,
-			},
-			args: args{
-				ctx:       ctx,
-				productId: productIDUuid,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(nil, tt.fields.productRepository, nil, nil)
-			if p, err := s.GetProductById(tt.args.ctx, tt.args.productId); err != nil && tt.wantErr {
-				assert.NotNil(t, err)
-				assert.Nil(t, p)
-			} else {
-				assert.Nil(t, err)
-				assert.NotNil(t, p)
-			}
-		})
-	}
+
+	t.Run("Should return error if failed to get product by id", func(t *testing.T) {
+		errorMsg := errors.New("error")
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, otherProductIDUuid).
+			Times(1).
+			Return(nil, errorMsg)
+
+		_, err := service.GetProductById(ctx, otherProductIDUuid)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting product by id :"+errorMsg.Error())
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if product id not found", func(t *testing.T) {
+		errorNotFound := errors.New("not found")
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, otherProductIDUuid2).
+			Times(1).
+			Return(nil, errorNotFound)
+
+		_, err := service.GetProductById(ctx, otherProductIDUuid2)
+
+		errMsg := status.Errorf(codes.NotFound, "Product id not found")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return success", func(t *testing.T) {
+		mockProdRepo.EXPECT().
+			GetProductById(ctx, productIDUuid).
+			Times(1).
+			Return(products, nil)
+
+		result, err := service.GetProductById(ctx, productIDUuid)
+
+		assert.Nil(t, err)
+		assert.Equal(t, products, result)
+	})
 }
 
 func TestDeleteProductById(t *testing.T) {
@@ -2072,4 +2478,650 @@ func TestDeleteProductById(t *testing.T) {
 
 		assert.Error(t, err)
 	})
+}
+
+func TestGetStoreByUserID(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	service := New(mockStoreRepo, nil, nil, nil)
+
+	ctx := context.Background()
+
+	storeIdUuid, _ := uuid.Parse(storeID)
+	store := entity.Store{
+		StoreName: "Toko Agak Laen",
+	}
+
+	t.Run("Should return success", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStoreByUserID(ctx, storeIdUuid).
+			Times(1).
+			Return(&store, nil)
+
+		result, err := service.GetStoreByUserID(ctx, storeIdUuid)
+
+		assert.Nil(t, err)
+		assert.Equal(t, &store, result)
+	})
+
+	t.Run("Should return error if failed to get store by user id", func(t *testing.T) {
+		errorMsg := errors.New("error")
+		mockStoreRepo.EXPECT().
+			GetStoreByUserID(ctx, storeIdUuid).
+			Times(1).
+			Return(nil, errorMsg)
+
+		_, err := service.GetStoreByUserID(ctx, storeIdUuid)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting store by user id :"+errorMsg.Error())
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+}
+
+func TestNew(t *testing.T) {
+	type args struct {
+		storeRepository repository.StoreServiceRepository
+		prodRepository  prodRepository.ProductRepository
+		storage         repository.Storage
+		imageRepo       imageRepository.ImageRepository
+	}
+	tests := []struct {
+		name string
+		args args
+		want Service
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := New(tt.args.storeRepository, tt.args.prodRepository, tt.args.storage, tt.args.imageRepo); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("New() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_GetStore(t *testing.T) {
+	type args struct {
+		ctx     context.Context
+		storeID string
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    *entity.Store
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.GetStore(tt.args.ctx, tt.args.storeID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetStore() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.GetStore() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_UpdateStore(t *testing.T) {
+	type args struct {
+		ctx     context.Context
+		storeID string
+		update  *entity.Store
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    *entity.Store
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.UpdateStore(tt.args.ctx, tt.args.storeID, tt.args.update)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.UpdateStore() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.UpdateStore() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_ListStores(t *testing.T) {
+	type args struct {
+		ctx   context.Context
+		page  int32
+		limit int32
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    []*entity.Store
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.ListStores(tt.args.ctx, tt.args.page, tt.args.limit)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.ListStores() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.ListStores() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_DeleteStores(t *testing.T) {
+	type args struct {
+		ctx      context.Context
+		storeIDs []string
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.DeleteStores(tt.args.ctx, tt.args.storeIDs); (err != nil) != tt.wantErr {
+				t.Errorf("service.DeleteStores() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_OpenCloseStore(t *testing.T) {
+	type args struct {
+		ctx       context.Context
+		userID    uuid.UUID
+		roleNames []string
+		storeID   string
+		isActive  bool
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.OpenCloseStore(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isActive); (err != nil) != tt.wantErr {
+				t.Errorf("service.OpenCloseStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_UpsertProducts(t *testing.T) {
+	type args struct {
+		ctx       context.Context
+		userID    uuid.UUID
+		roleNames []string
+		storeID   uuid.UUID
+		isUpdate  bool
+		products  []*prodEntity.Product
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.UpsertProducts(tt.args.ctx, tt.args.userID, tt.args.roleNames, tt.args.storeID, tt.args.isUpdate, tt.args.products...); (err != nil) != tt.wantErr {
+				t.Errorf("service.UpsertProducts() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_UploadImageToStorage(t *testing.T) {
+	type args struct {
+		ctx            context.Context
+		imageBase64Str string
+		userID         uuid.UUID
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		want    *uuid.UUID
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.s.UploadImageToStorage(tt.args.ctx, tt.args.imageBase64Str, tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.UploadImageToStorage() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("service.UploadImageToStorage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_service_UpdateProductCategory(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	svc := New(nil, mockProdRepo, nil, nil)
+
+	ctx := context.Background()
+
+	kaos := &prodEntity.ProductCategory{
+		BaseMasterDataModel: base_model.BaseMasterDataModel{
+			ID: 2,
+		},
+		Name: "Pakaian",
+	}
+
+	type args struct {
+		ctx          context.Context
+		prodCategory *prodEntity.ProductCategory
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+		mocks   []*gomock.Call
+	}{
+		{
+			name: "Should return error record not found if no data from repo",
+			s:    svc,
+			args: args{
+				ctx:          ctx,
+				prodCategory: kaos,
+			},
+			wantErr: true,
+			mocks: []*gomock.Call{
+				mockProdRepo.EXPECT().
+					GetProductCategoryById(ctx, gomock.Any()).
+					Return(nil, errors.New("record not found")),
+			},
+		},
+		{
+			name: "Should return error internal error if there is other error from db",
+			s:    svc,
+			args: args{
+				ctx:          ctx,
+				prodCategory: kaos,
+			},
+			wantErr: true,
+			mocks: []*gomock.Call{
+				mockProdRepo.EXPECT().
+					GetProductCategoryById(ctx, gomock.Any()).
+					Return(nil, errors.New("any error")),
+			},
+		},
+		{
+			name: "Should return from Upsert product category",
+			s:    svc,
+			args: args{
+				ctx:          ctx,
+				prodCategory: kaos,
+			},
+			wantErr: true,
+			mocks: []*gomock.Call{
+				mockProdRepo.EXPECT().
+					GetProductCategoryById(ctx, gomock.Any()).
+					Return(kaos, nil),
+				mockProdRepo.EXPECT().
+					UpsertProductCategory(ctx, gomock.Any()).
+					Return(errors.New("failed")),
+			},
+		},
+		{
+			name: "Success",
+			s:    svc,
+			args: args{
+				ctx:          ctx,
+				prodCategory: kaos,
+			},
+			wantErr: false,
+			mocks: []*gomock.Call{
+				mockProdRepo.EXPECT().
+					GetProductCategoryById(ctx, gomock.Any()).
+					Return(kaos, nil),
+				mockProdRepo.EXPECT().
+					UpsertProductCategory(ctx, gomock.Any()).
+					Return(nil),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.UpdateProductCategory(tt.args.ctx, tt.args.prodCategory); (err != nil) != tt.wantErr {
+				t.Errorf("service.UpdateProductCategory() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_DeleteProductById(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		userId uuid.UUID
+		id     uuid.UUID
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.DeleteProductById(tt.args.ctx, tt.args.userId, tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("service.DeleteProductById() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductCategories(t *testing.T) {
+	type args struct {
+		ctx                  context.Context
+		isIncludeDeactivated bool
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantCat []*prodEntity.ProductCategory
+		wantUom []string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCat, gotUom, err := tt.s.GetProductCategories(tt.args.ctx, tt.args.isIncludeDeactivated)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductCategories() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotCat, tt.wantCat) {
+				t.Errorf("service.GetProductCategories() gotCat = %v, want %v", gotCat, tt.wantCat)
+			}
+			if !reflect.DeepEqual(gotUom, tt.wantUom) {
+				t.Errorf("service.GetProductCategories() gotUom = %v, want %v", gotUom, tt.wantUom)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductTypes(t *testing.T) {
+	type args struct {
+		ctx                  context.Context
+		productCategoryID    int64
+		isIncludeDeactivated bool
+	}
+	tests := []struct {
+		name      string
+		s         *service
+		args      args
+		wantTypes []*prodEntity.ProductType
+		wantErr   bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTypes, err := tt.s.GetProductTypes(tt.args.ctx, tt.args.productCategoryID, tt.args.isIncludeDeactivated)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductTypes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotTypes, tt.wantTypes) {
+				t.Errorf("service.GetProductTypes() = %v, want %v", gotTypes, tt.wantTypes)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductById(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		id  uuid.UUID
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantP   *prodEntity.Product
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotP, err := tt.s.GetProductById(tt.args.ctx, tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductById() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotP, tt.wantP) {
+				t.Errorf("service.GetProductById() = %v, want %v", gotP, tt.wantP)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductImagesInformation(t *testing.T) {
+	type args struct {
+		ctx      context.Context
+		product  *prodEntity.Product
+		products []*prodEntity.Product
+	}
+	tests := []struct {
+		name    string
+		s       *service
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.s.GetProductImagesInformation(tt.args.ctx, tt.args.product, tt.args.products); (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductImagesInformation() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_service_GetStoreByUserID(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		userID uuid.UUID
+	}
+	tests := []struct {
+		name      string
+		s         *service
+		args      args
+		wantStore *entity.Store
+		wantErr   bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotStore, err := tt.s.GetStoreByUserID(tt.args.ctx, tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetStoreByUserID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotStore, tt.wantStore) {
+				t.Errorf("service.GetStoreByUserID() = %v, want %v", gotStore, tt.wantStore)
+			}
+		})
+	}
+}
+
+func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockProductRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	svc := New(mockStoreRepo, mockProductRepo, nil, nil)
+
+	ctx := context.Background()
+	
+	userIDUuid := uuid.MustParse(userID)
+	storeIdUuid, _ := uuid.Parse(storeID)
+	paramSvc := types.GetProductCategoriesByStoreIdParams{
+		StoreID: storeIdUuid,
+		UserID: userIDUuid,
+	}
+
+	params := types.GetProductCategoriesByStoreIdParams{
+		StoreID: storeIdUuid,
+	}
+
+	store := &entity.Store{
+		UserID: userIDUuid,
+	}
+
+	invalidStore := &entity.Store{
+		UserID: uuid.New(),
+	}
+
+	result := []*prodEntity.ProductCategory{
+		{
+			BaseMasterDataModel: base_model.BaseMasterDataModel{
+				ID: 1,
+			},
+			Name:     "Food",
+			IsActive: true,
+		},
+	}
+
+	type args struct {
+		ctx    context.Context
+		params types.GetProductCategoriesByStoreIdParams
+	}
+	tests := []struct {
+		name    string
+		args    args
+		mocks   []*gomock.Call
+		wantCat []*prodEntity.ProductCategory
+		wantErr bool
+	}{
+		{
+			name: "Should return error when user is not allowed to access store",
+			args: args{
+				ctx:    ctx,
+				params: params,
+			},
+			mocks: []*gomock.Call{
+				mockStoreRepo.EXPECT().
+					GetStore(gomock.Any(), storeID).
+					Times(1).
+					Return(invalidStore, nil),
+			},
+			wantCat: nil,
+			wantErr: true,
+		},
+		{
+			name: "Should return empty list when data not found",
+			args: args{
+				ctx:    ctx,
+				params: params,
+			},
+			mocks: []*gomock.Call{
+				mockStoreRepo.EXPECT().
+					GetStore(gomock.Any(), storeID).
+					Times(1).
+					Return(store, nil),
+
+				mockProductRepo.EXPECT().
+					GetProductCategoriesByStoreId(ctx, params).
+					Return(nil, nil),
+			},
+			wantCat: nil,
+			wantErr: false,
+		},
+		{
+			name: "Should return error when repo got error",
+			args: args{
+				ctx:    ctx,
+				params: params,
+			},
+			mocks: []*gomock.Call{
+				mockStoreRepo.EXPECT().
+					GetStore(gomock.Any(), storeID).
+					Times(1).
+					Return(store, nil),
+
+				mockProductRepo.EXPECT().
+					GetProductCategoriesByStoreId(ctx, params).
+					Return(nil, errors.New("error")),
+			},
+			wantCat: nil,
+			wantErr: true,
+		},
+		{
+			name: "Should return success",
+			args: args{
+				ctx:    ctx,
+				params: params,
+			},
+			mocks: []*gomock.Call{
+				mockStoreRepo.EXPECT().
+					GetStore(gomock.Any(), storeID).
+					Times(1).
+					Return(store, nil),
+
+				mockProductRepo.EXPECT().
+					GetProductCategoriesByStoreId(ctx, params).
+					Return(result, nil),
+			},
+			wantCat: result,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCat, err := svc.GetProductCategoriesByStoreId(tt.args.ctx, paramSvc)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("service.GetProductCategoriesByStoreId() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotCat, tt.wantCat) {
+				t.Errorf("service.GetProductCategoriesByStoreId() gotCat = %v, want %v", gotCat, tt.wantCat)
+			}
+		})
+	}
 }

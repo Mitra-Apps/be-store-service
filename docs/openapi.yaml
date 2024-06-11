@@ -90,6 +90,35 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/product-category/{storeId}/{isIncludeDeactivated}:
+        get:
+            tags:
+                - StoreService
+            operationId: StoreService_GetProductCategoriesByStoreId
+            parameters:
+                - name: storeId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: isIncludeDeactivated
+                  in: path
+                  required: true
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetProductCategoriesByStoreIdResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/product-list/{storeId}/{isIncludeDeactivated}:
         get:
             tags:
@@ -110,6 +139,44 @@ paths:
                   in: query
                   schema:
                     type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: orderBy
+                  in: query
+                  schema:
+                    type: string
+                - name: direction
+                  in: query
+                  schema:
+                    type: string
+                    examples:
+                    asc:
+                      summary: Ascending direction
+                      value: asc
+                    desc:
+                      summary: Descending direction
+                      value: desc
+                - name: search
+                  in: query
+                  description: Field to filter products name
+                  schema:
+                    type: string
+                  example: Hexos
+                - name: productCategoryId
+                  in: query
+                  schema:
+                    type: array
+                    items:
+                        type: string
+                    example: [1,2,3]
             responses:
                 "200":
                     description: OK
@@ -128,6 +195,41 @@ paths:
             tags:
                 - StoreService
             operationId: StoreService_UpsertProductType
+            parameters:
+                - name: id
+                  in: query
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProductType'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpsertProductTypeResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/product-type/{id}:
+        put:
+            tags:
+                - StoreService
+            operationId: StoreService_UpdateProductType
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
             requestBody:
                 content:
                     application/json:
@@ -526,6 +628,17 @@ paths:
                                 $ref: '#/components/schemas/Status'
 components:
     schemas:
+        Category:
+            type: object
+            properties:
+                id:
+                    type: string
+                parentId:
+                    type: string
+                name:
+                    type: string
+                isActive:
+                    type: boolean
         CreateStoreResponse:
             type: object
             properties:
@@ -557,6 +670,16 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/Product'
+        GetProductCategoriesByStoreIdResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/GetProductCategoriesResponseItem'
         GetProductCategoriesResponse:
             type: object
             properties:
@@ -590,6 +713,8 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/Product'
+                pagination:
+                    $ref: '#/components/schemas/Pagination'
         GetProductTypesResponse:
             type: object
             properties:
@@ -682,6 +807,24 @@ components:
                     format: int32
                 message:
                     type: string
+        Pagination:
+            type: object
+            properties:
+                page:
+                    type: integer
+                    format: int32
+                limit:
+                    type: integer
+                    format: int32
+                totalRecord:
+                    type: integer
+                    format: int32
+                records:
+                    type: integer
+                    format: int32
+                totalPage:
+                    type: integer
+                    format: int32
         Product:
             type: object
             properties:
@@ -712,6 +855,10 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/ProductImage'
+                categories:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Category'
         ProductCategory:
             type: object
             properties:
@@ -794,10 +941,6 @@ components:
                 locationLng:
                     type: number
                     format: double
-                tags:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/StoreTag'
                 hours:
                     type: array
                     items:
@@ -840,14 +983,6 @@ components:
                 imageBase64:
                     type: string
             description: Store image message
-        StoreTag:
-            type: object
-            properties:
-                id:
-                    type: string
-                tagName:
-                    type: string
-            description: Store tag message
         UnitOfMeasure:
             type: object
             properties:
