@@ -157,7 +157,7 @@ paths:
                   in: query
                   schema:
                     type: string
-                examples:
+                    examples:
                     asc:
                       summary: Ascending direction
                       value: asc
