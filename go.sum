@@ -12,6 +12,14 @@ github.com/Mitra-Apps/be-user-service v0.0.0-20240304101816-e90a810ad690 h1:dFpl
 github.com/Mitra-Apps/be-user-service v0.0.0-20240304101816-e90a810ad690/go.mod h1:qDMyoraGpLyHq64UGB5exep+LLCdsW2TNc/PgV9w1l8=
 github.com/Mitra-Apps/be-utility-service v0.0.0-20240315073722-9701dc8f90cb h1:B842L+3ohJL4KL3bo6uOzjV68M9uAle8XLAkOhBImOQ=
 github.com/Mitra-Apps/be-utility-service v0.0.0-20240315073722-9701dc8f90cb/go.mod h1:nnJySAZ2TBxl7SsTftFOb0M3nfQSQGL1x9ruvs4p98M=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240610064632-26d41b71256d h1:gDwyIM6/NEQHBTKh4E5CZidyGwg/oxC7lLOK7LxVhi0=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240610064632-26d41b71256d/go.mod h1:tJ0oe6Hj/Gi4OdSaFoR75eBZeQ5Oi8GTyAxtKSfecWM=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240611055235-852dcffa85aa h1:0gFMNKBhxA7k0TZ17ufg76U8HvkypfFklK9CHzYUItk=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240611055235-852dcffa85aa/go.mod h1:tJ0oe6Hj/Gi4OdSaFoR75eBZeQ5Oi8GTyAxtKSfecWM=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240611062450-db069438b326 h1:yYRpRhAU/VOAEZpUCLSKBEc+oUDJoa72y8WjOUwB3Vk=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240611062450-db069438b326/go.mod h1:tJ0oe6Hj/Gi4OdSaFoR75eBZeQ5Oi8GTyAxtKSfecWM=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240611072137-1b874e9e2eb6 h1:zXkBQnG29yZoD5946uCA/jS+3eFXMkL9AVTewkmC8i4=
+github.com/Mitra-Apps/be-utility-service v0.0.0-20240611072137-1b874e9e2eb6/go.mod h1:tJ0oe6Hj/Gi4OdSaFoR75eBZeQ5Oi8GTyAxtKSfecWM=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
@@ -185,6 +193,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
+github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
+github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.0/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
@@ -208,6 +218,8 @@ golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8U
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.21.0 h1:X31++rzVUdKhX5sWmSOFZxx8UW/ldWx55cbf08iNAMA=
 golang.org/x/crypto v0.21.0/go.mod h1:0BP7YvVV9gBbVKyeTG0Gyn+gZm94bibOW5BjDEYAOMs=
+golang.org/x/crypto v0.22.0 h1:g1v0xeRhjcugydODzvb3mEM9SQ0HGp9s/nh3COQ/C30=
+golang.org/x/crypto v0.22.0/go.mod h1:vr6Su+7cTlO45qkww3VDJlzDn0ctJvRgYbC2NvXHt+M=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
@@ -261,6 +273,8 @@ golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.18.0 h1:DBdB3niSjOA/O0blCZBqDefyWNYveAYMNF1Wum0DYQ4=
 golang.org/x/sys v0.18.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
+golang.org/x/sys v0.19.0 h1:q5f1RH2jigJ1MoAWp2KTp3gm5zAGFUTarQZ5U386+4o=
+golang.org/x/sys v0.19.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=

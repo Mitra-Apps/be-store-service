@@ -6,7 +6,7 @@ require (
 	connectrpc.com/connect v1.15.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/Mitra-Apps/be-user-service v0.0.0-20240304101816-e90a810ad690
-	github.com/Mitra-Apps/be-utility-service v0.0.0-20240315073722-9701dc8f90cb
+	github.com/Mitra-Apps/be-utility-service v0.0.0-20240611072137-1b874e9e2eb6
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
@@ -15,7 +15,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v7 v7.0.69
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	go.elastic.co/apm/module/apmgrpc v1.15.0
 	go.uber.org/mock v0.4.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240314234333-6e1732d8331c
@@ -65,12 +65,12 @@ require (
 	go.elastic.co/apm v1.15.0 // indirect
 	go.elastic.co/apm/module/apmhttp v1.15.0 // indirect
 	go.elastic.co/fastjson v1.3.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

@@ -14,6 +14,7 @@ services:
       - DB_NAME=store-service
       - GRPC_UTILITY_HOST=stag-utility-service:9300
       - JWT_SECRET=secret
+      - REDIS_SERVER=redis_prod:6380
     networks:
       - grpc_network
     volumes:
