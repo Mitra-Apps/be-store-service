@@ -440,8 +440,8 @@ func (g *GrpcRoute) GetProductList(ctx context.Context, req *pb.GetProductListRe
 		IsIncludeDeactivated: req.IsIncludeDeactivated,
 		OrderBy:              req.OrderBy,
 		Direction:            req.Direction,
-		Search: 			  req.Search,
-		UserID: 			  claims.UserID,	
+		Search:               req.Search,
+		UserID:               claims.UserID,
 	}
 
 	products, pagination, err := g.service.GetProductsByStoreId(ctx, getProductsByStoreIdParams)
@@ -490,7 +490,7 @@ func (g *GrpcRoute) GetProductCategories(ctx context.Context, req *pb.GetProduct
 }
 
 func (g *GrpcRoute) GetProductCategoriesByStoreId(ctx context.Context, req *pb.GetProductCategoriesByStoreIdRequest) (*pb.GetProductCategoriesByStoreIdResponse, error) {
-	
+
 	storeId, err := uuid.Parse(req.StoreId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
@@ -502,13 +502,13 @@ func (g *GrpcRoute) GetProductCategoriesByStoreId(ctx context.Context, req *pb.G
 	}
 
 	args := types.GetProductCategoriesByStoreIdParams{
-		StoreID: storeId,
+		StoreID:              storeId,
 		IsIncludeDeactivated: req.IsIncludeDeactivated,
-		UserID: claims.UserID,
+		UserID:               claims.UserID,
 	}
-	
+
 	cat, err := g.service.GetProductCategoriesByStoreId(ctx, args)
-	
+
 	if err != nil {
 		return nil, err
 	}

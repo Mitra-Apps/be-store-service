@@ -1965,7 +1965,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 		StoreID:              otherStoreID2Uuid,
 		ProductTypeId:        nil,
 		IsIncludeDeactivated: false,
-		UserID: 			  userIDUuid,
+		UserID:               userIDUuid,
 	}
 
 	getProductsByStoreIdParams2 := types.GetProductsByStoreIdParams{
@@ -1974,7 +1974,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 		StoreID:              otherStoreIDUuid,
 		ProductTypeId:        nil,
 		IsIncludeDeactivated: false,
-		UserID: 			  userIDUuid,
+		UserID:               userIDUuid,
 	}
 
 	getProductsByStoreIdParams3 := types.GetProductsByStoreIdParams{
@@ -1983,7 +1983,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 		StoreID:              storeIDUuid,
 		ProductTypeId:        nil,
 		IsIncludeDeactivated: false,
-		UserID: 			  userIDUuid,
+		UserID:               userIDUuid,
 	}
 
 	store := &entity.Store{
@@ -2073,7 +2073,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, errMsg, err)
 	})
-	
+
 	t.Run("Should return error if user not allowed to access", func(t *testing.T) {
 		mockStoreRepo.EXPECT().
 			GetStore(ctx, otherStoreID).
@@ -2998,12 +2998,12 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 	svc := New(mockStoreRepo, mockProductRepo, nil, nil)
 
 	ctx := context.Background()
-	
+
 	userIDUuid := uuid.MustParse(userID)
 	storeIdUuid, _ := uuid.Parse(storeID)
 	paramSvc := types.GetProductCategoriesByStoreIdParams{
 		StoreID: storeIdUuid,
-		UserID: userIDUuid,
+		UserID:  userIDUuid,
 	}
 
 	params := types.GetProductCategoriesByStoreIdParams{

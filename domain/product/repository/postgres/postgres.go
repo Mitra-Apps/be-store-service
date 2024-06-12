@@ -38,6 +38,7 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, params types.GetPro
 		InnerJoins("ProductType.ProductCategory").
 		Preload("Images").
 		Preload("ProductType").
+		Preload("ProductType.ProductCategory").
 		Where("store_id = ?", params.StoreID)
 
 	if !params.IsIncludeDeactivated {
@@ -47,10 +48,10 @@ func (p *Postgres) GetProductsByStoreId(ctx context.Context, params types.GetPro
 	if params.ProductTypeId != nil {
 		tx = tx.Where("product_type_id = ?", *params.ProductTypeId)
 	}
-	
+
 	if params.Search != nil {
-		search := strings.ReplaceAll(*params.Search, "%", "\\%");
-		tx = tx.Where("\"products\".name ILIKE ?", "%" + search + "%")
+		search := strings.ReplaceAll(*params.Search, "%", "\\%")
+		tx = tx.Where("\"products\".name ILIKE ?", "%"+search+"%")
 	}
 
 	if len(params.ProductCategoryId) > 0 {
@@ -307,7 +308,7 @@ func (p *Postgres) GetProductCategories(ctx context.Context, includeDeactivated 
 
 func (p *Postgres) GetProductCategoriesByStoreId(ctx context.Context, params types.GetProductCategoriesByStoreIdParams) ([]*entity.ProductCategory, error) {
 	categories := []*entity.ProductCategory{}
-	
+
 	productTable := "products"
 	productTypeTable := "product_types"
 	aliasCategoryTable := "\"product_categories\""
@@ -321,14 +322,14 @@ func (p *Postgres) GetProductCategoriesByStoreId(ctx context.Context, params typ
 		Where(fmt.Sprintf("%s.is_active = ?", aliasCategoryTable), !params.IsIncludeDeactivated).
 		Group(selectCategoryColumn).
 		Order(fmt.Sprintf("%s.name ASC", aliasCategoryTable))
-	
+
 	if err := tx.Find(&categories).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	
+
 	return categories, nil
 }
 
