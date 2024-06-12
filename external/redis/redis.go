@@ -1,13 +1,14 @@
-package utilityservice
+package redis
 
 import (
 	"context"
 	"os"
 	"time"
 
-	_redis "github.com/Mitra-Apps/be-utility-service/external/redis"
 	"github.com/go-redis/redis/v8"
 )
+
+// var redisClient *redis.Client
 
 type redisClient struct {
 	client *redis.Client
@@ -22,9 +23,15 @@ type RedisInterface interface {
 
 func Connection() *redisClient {
 	redisServer := os.Getenv("REDIS_SERVER")
-	client := _redis.Connection(redisServer)
+	// Initialize Redis connection
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisServer, // Your Redis server address
+		Password: "",          // No password
+		DB:       0,           // Default DB
+	})
+	client.Context()
 	return &redisClient{
-		client: client.Client,
+		client: client,
 	}
 }
 
