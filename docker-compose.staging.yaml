@@ -20,6 +20,8 @@ services:
       - STORAGE_BUCKET_NAME=mitra-apps
       - JWT_SECRET=secret
       - REDIS_SERVER=redis_staging:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
     networks:
       - grpc_network
     volumes:

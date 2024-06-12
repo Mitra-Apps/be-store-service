@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -21,18 +22,24 @@ type RedisInterface interface {
 	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
 }
 
-func Connection() *redisClient {
+func Connection() (*redisClient, error) {
+
 	redisServer := os.Getenv("REDIS_SERVER")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	redisDB, err := getenvInt("REDIS_DB")
+	if err != nil {
+		return nil, err
+	}
 	// Initialize Redis connection
 	client := redis.NewClient(&redis.Options{
-		Addr:     redisServer, // Your Redis server address
-		Password: "",          // No password
-		DB:       0,           // Default DB
+		Addr:     redisServer,   // Your Redis server address
+		Password: redisPassword, // No password
+		DB:       redisDB,       // Default DB
 	})
 	client.Context()
 	return &redisClient{
 		client: client,
-	}
+	}, nil
 }
 
 func (r *redisClient) GetStringKey(ctx context.Context, key string) (string, error) {
@@ -45,4 +52,16 @@ func (r *redisClient) Set(ctx context.Context, key string, value interface{}, ex
 
 func (r *redisClient) GetContext() context.Context {
 	return r.client.Context()
+}
+
+func getenvInt(key string) (int, error) {
+	val := os.Getenv(key)
+	if val == "" {
+		return 0, nil
+	}
+	valInt, err := strconv.Atoi(val)
+	if err != nil {
+		return 0, err
+	}
+	return valInt, nil
 }
