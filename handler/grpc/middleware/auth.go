@@ -54,16 +54,17 @@ func Auth(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, hand
 	return handler(ctx, req)
 }
 
-func getTokenValue(headers metadata.MD) string {
-	token := ""
+func getTokenValue(headers metadata.MD) (token string) {
+
 	if values := headers.Get("authorization"); len(values) > 0 {
 		token = strings.TrimPrefix(values[0], "Bearer ")
 		token = strings.TrimSpace(token)
 	}
-	return token
+
+	return
 }
 
-func verifyToken(ctx context.Context, token string) (string, []string, error) {
+func verifyToken(ctx context.Context, token string) (userId string, roles []string, err error) {
 	userService := user_service.NewAuthClient(ctx)
 	defer userService.Close()
 
@@ -73,10 +74,15 @@ func verifyToken(ctx context.Context, token string) (string, []string, error) {
 	response, err := userService.ValidateUserToken(ctx, &params)
 
 	if err != nil {
-		return "", nil, status.Errorf(codes.Unauthenticated, "invalid token")
+		err = status.Errorf(codes.Unauthenticated, "invalid token")
+
+		return
 	}
 
-	return response.RegisteredClaims.Subject, response.Roles, nil
+	userId = response.RegisteredClaims.Subject
+	roles = response.Roles
+
+	return
 }
 
 func GetClaimsFromContext(ctx context.Context) (*JwtClaims, error) {
