@@ -3,11 +3,9 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/Mitra-Apps/be-user-service/external/redis"
-	userService "github.com/Mitra-Apps/be-user-service/service"
+	"github.com/Mitra-Apps/be-store-service/external/user_service"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -65,15 +63,20 @@ func getTokenValue(headers metadata.MD) string {
 	return token
 }
 
-func verifyToken(ctx context.Context, tokenString string) (string, []string, error) {
-	redis := redis.Connection()
-	authClient := userService.NewAuthClient(os.Getenv("JWT_SECRET"), redis)
-	claims, err := authClient.ValidateToken(ctx, tokenString)
+func verifyToken(ctx context.Context, token string) (string, []string, error) {
+	userService := user_service.NewAuthClient(ctx)
+	defer userService.Close()
+
+	params := user_service.ValidateUserTokenRequest{
+		Token: token,
+	}
+	response, err := userService.ValidateUserToken(ctx, &params)
+
 	if err != nil {
-		return "", nil, err
+		return "", nil, status.Errorf(codes.Unauthenticated, "invalid token")
 	}
 
-	return claims.Subject, claims.Roles, nil
+	return response.RegisteredClaims.Subject, response.Roles, nil
 }
 
 func GetClaimsFromContext(ctx context.Context) (*JwtClaims, error) {
