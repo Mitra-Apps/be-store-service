@@ -9,8 +9,8 @@ import (
 	reflect "reflect"
 
 	utility "github.com/Mitra-Apps/be-utility-service/domain/proto/utility"
-	gomock "go.uber.org/mock/gomock"
 	uuid "github.com/google/uuid"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockImageRepository is a mock of ImageRepository interface.

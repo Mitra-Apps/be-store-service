@@ -157,7 +157,7 @@ paths:
                   in: query
                   schema:
                     type: string
-                  examples:
+                    examples:
                     asc:
                       summary: Ascending direction
                       value: asc
@@ -628,6 +628,17 @@ paths:
                                 $ref: '#/components/schemas/Status'
 components:
     schemas:
+        Category:
+            type: object
+            properties:
+                id:
+                    type: string
+                parentId:
+                    type: string
+                name:
+                    type: string
+                isActive:
+                    type: boolean
         CreateStoreResponse:
             type: object
             properties:
@@ -844,6 +855,10 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/ProductImage'
+                categories:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Category'
         ProductCategory:
             type: object
             properties:
@@ -926,10 +941,6 @@ components:
                 locationLng:
                     type: number
                     format: double
-                tags:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/StoreTag'
                 hours:
                     type: array
                     items:
@@ -972,14 +983,6 @@ components:
                 imageBase64:
                     type: string
             description: Store image message
-        StoreTag:
-            type: object
-            properties:
-                id:
-                    type: string
-                tagName:
-                    type: string
-            description: Store tag message
         UnitOfMeasure:
             type: object
             properties:

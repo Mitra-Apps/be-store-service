@@ -1460,11 +1460,6 @@ func TestUpdateStore(t *testing.T) {
 				ImageURL:    imgURL,
 			},
 		},
-		Tags: []*entity.StoreTag{
-			{
-				TagName: "aaa",
-			},
-		},
 		Hours: []*entity.StoreHour{
 			{
 				Open:  "00:00",
@@ -1483,11 +1478,6 @@ func TestUpdateStore(t *testing.T) {
 			{
 				ImageBase64: imgBase64,
 				ImageURL:    imgURL,
-			},
-		},
-		Tags: []*entity.StoreTag{
-			{
-				TagName: "aaa",
 			},
 		},
 		Hours: []*entity.StoreHour{
@@ -1965,6 +1955,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 	var page int32 = 1
 	var limit int32 = 10
 	storeIDUuid := uuid.MustParse(storeID)
+	userIDUuid := uuid.New()
 	otherStoreIDUuid := uuid.MustParse(otherStoreID)
 	otherStoreID2Uuid := uuid.MustParse(otherStoreID2)
 
@@ -1974,6 +1965,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 		StoreID:              otherStoreID2Uuid,
 		ProductTypeId:        nil,
 		IsIncludeDeactivated: false,
+		UserID:               userIDUuid,
 	}
 
 	getProductsByStoreIdParams2 := types.GetProductsByStoreIdParams{
@@ -1982,6 +1974,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 		StoreID:              otherStoreIDUuid,
 		ProductTypeId:        nil,
 		IsIncludeDeactivated: false,
+		UserID:               userIDUuid,
 	}
 
 	getProductsByStoreIdParams3 := types.GetProductsByStoreIdParams{
@@ -1990,18 +1983,28 @@ func TestGetProductsByStoreId(t *testing.T) {
 		StoreID:              storeIDUuid,
 		ProductTypeId:        nil,
 		IsIncludeDeactivated: false,
+		UserID:               userIDUuid,
 	}
 
 	store := &entity.Store{
 		BaseModel: base_model.BaseModel{
 			ID: storeIDUuid,
 		},
+		UserID: userIDUuid,
 	}
 
 	otherStore2 := &entity.Store{
 		BaseModel: base_model.BaseModel{
 			ID: otherStoreIDUuid,
 		},
+		UserID: userIDUuid,
+	}
+
+	invalidStore := &entity.Store{
+		BaseModel: base_model.BaseModel{
+			ID: otherStoreIDUuid,
+		},
+		UserID: uuid.New(),
 	}
 
 	products := []*prodEntity.Product{
@@ -2066,6 +2069,20 @@ func TestGetProductsByStoreId(t *testing.T) {
 		_, _, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams2)
 
 		errMsg := status.Errorf(codes.Internal, "Error when getting product list :"+errorMsg.Error())
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error if user not allowed to access", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, otherStoreID).
+			Times(1).
+			Return(invalidStore, nil)
+
+		_, _, err := service.GetProductsByStoreId(ctx, getProductsByStoreIdParams2)
+
+		errMsg := status.Errorf(codes.PermissionDenied, "You do not have permission to open / close this store")
 
 		assert.Error(t, err)
 		assert.Equal(t, errMsg, err)
@@ -2977,13 +2994,28 @@ func Test_service_GetStoreByUserID(t *testing.T) {
 func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProductRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	svc := New(nil, mockProductRepo, nil, nil)
+	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	svc := New(mockStoreRepo, mockProductRepo, nil, nil)
 
 	ctx := context.Background()
 
+	userIDUuid := uuid.MustParse(userID)
 	storeIdUuid, _ := uuid.Parse(storeID)
+	paramSvc := types.GetProductCategoriesByStoreIdParams{
+		StoreID: storeIdUuid,
+		UserID:  userIDUuid,
+	}
+
 	params := types.GetProductCategoriesByStoreIdParams{
 		StoreID: storeIdUuid,
+	}
+
+	store := &entity.Store{
+		UserID: userIDUuid,
+	}
+
+	invalidStore := &entity.Store{
+		UserID: uuid.New(),
 	}
 
 	result := []*prodEntity.ProductCategory{
@@ -2991,7 +3023,7 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 			BaseMasterDataModel: base_model.BaseMasterDataModel{
 				ID: 1,
 			},
-			Name: "Food",
+			Name:     "Food",
 			IsActive: true,
 		},
 	}
@@ -3008,12 +3040,32 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name: "Should return error when user is not allowed to access store",
+			args: args{
+				ctx:    ctx,
+				params: params,
+			},
+			mocks: []*gomock.Call{
+				mockStoreRepo.EXPECT().
+					GetStore(gomock.Any(), storeID).
+					Times(1).
+					Return(invalidStore, nil),
+			},
+			wantCat: nil,
+			wantErr: true,
+		},
+		{
 			name: "Should return empty list when data not found",
 			args: args{
 				ctx:    ctx,
 				params: params,
 			},
 			mocks: []*gomock.Call{
+				mockStoreRepo.EXPECT().
+					GetStore(gomock.Any(), storeID).
+					Times(1).
+					Return(store, nil),
+
 				mockProductRepo.EXPECT().
 					GetProductCategoriesByStoreId(ctx, params).
 					Return(nil, nil),
@@ -3028,6 +3080,11 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 				params: params,
 			},
 			mocks: []*gomock.Call{
+				mockStoreRepo.EXPECT().
+					GetStore(gomock.Any(), storeID).
+					Times(1).
+					Return(store, nil),
+
 				mockProductRepo.EXPECT().
 					GetProductCategoriesByStoreId(ctx, params).
 					Return(nil, errors.New("error")),
@@ -3042,6 +3099,11 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 				params: params,
 			},
 			mocks: []*gomock.Call{
+				mockStoreRepo.EXPECT().
+					GetStore(gomock.Any(), storeID).
+					Times(1).
+					Return(store, nil),
+
 				mockProductRepo.EXPECT().
 					GetProductCategoriesByStoreId(ctx, params).
 					Return(result, nil),
@@ -3052,7 +3114,7 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotCat, err := svc.GetProductCategoriesByStoreId(tt.args.ctx, tt.args.params)
+			gotCat, err := svc.GetProductCategoriesByStoreId(tt.args.ctx, paramSvc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("service.GetProductCategoriesByStoreId() error = %v, wantErr %v", err, tt.wantErr)
 				return

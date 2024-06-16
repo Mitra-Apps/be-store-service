@@ -144,11 +144,6 @@ func (s *service) UpdateStore(ctx context.Context, storeID string, update *entit
 		img.ID = uuid.Nil
 	}
 
-	for _, tag := range update.Tags {
-		tag.UpdatedBy = claims.UserID
-		tag.ID = uuid.Nil
-	}
-
 	for _, hour := range update.Hours {
 		hour.UpdatedBy = claims.UserID
 		hour.StoreID = update.ID
@@ -520,8 +515,9 @@ func (s *service) GetProductsByStoreId(ctx context.Context, params types.GetProd
 		Limit: params.Limit,
 	}
 
-	if _, err := s.storeRepository.GetStore(ctx, params.StoreID.String()); err != nil {
-		return nil, pagination, err
+	err = s.checkPermissionStoreAndUser(ctx, params.StoreID, params.UserID)
+	if err != nil {
+		return
 	}
 
 	getProductsByStoreIdRepoParams := types.GetProductsByStoreIdRepoParams{
@@ -531,8 +527,8 @@ func (s *service) GetProductsByStoreId(ctx context.Context, params types.GetProd
 		IsIncludeDeactivated: params.IsIncludeDeactivated,
 		OrderBy:              params.OrderBy,
 		Direction:            params.Direction,
-		Search: 			  params.Search,
-		ProductCategoryId: 	  params.ProductCategoryId,
+		Search:               params.Search,
+		ProductCategoryId:    params.ProductCategoryId,
 	}
 
 	if products, pagination, err = s.productRepository.GetProductsByStoreId(ctx, getProductsByStoreIdRepoParams); err != nil {
@@ -547,10 +543,15 @@ func (s *service) GetProductsByStoreId(ctx context.Context, params types.GetProd
 }
 
 func (s *service) GetProductCategoriesByStoreId(ctx context.Context, params types.GetProductCategoriesByStoreIdParams) (cat []*prodEntity.ProductCategory, err error) {
-	
+
+	err = s.checkPermissionStoreAndUser(ctx, params.StoreID, params.UserID)
+	if err != nil {
+		return
+	}
+
 	args := types.GetProductCategoriesByStoreIdParams{
 		IsIncludeDeactivated: params.IsIncludeDeactivated,
-		StoreID: params.StoreID,
+		StoreID:              params.StoreID,
 	}
 
 	if cat, err = s.productRepository.GetProductCategoriesByStoreId(ctx, args); err != nil {
@@ -654,4 +655,19 @@ func (s *service) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store
 	}
 
 	return store, nil
+}
+
+func (s *service) checkPermissionStoreAndUser(ctx context.Context, storeId, userID uuid.UUID) (err error) {
+	store, err := s.storeRepository.GetStore(ctx, storeId.String())
+	if err != nil {
+		err = status.Errorf(codes.NotFound, "Not Found")
+		return
+	}
+
+	if store.UserID != userID {
+		err = status.Errorf(codes.PermissionDenied, "You do not have permission to open / close this store")
+		return
+	}
+
+	return
 }
