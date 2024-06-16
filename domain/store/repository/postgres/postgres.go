@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
@@ -54,6 +55,7 @@ func (p *postgresImpl) GetStore(ctx context.Context, storeID string) (*entity.St
 	return &store, nil
 }
 
+// TODO: need to check the logic again
 func (p *postgresImpl) UpdateStore(ctx context.Context, update *entity.Store) (*entity.Store, error) {
 	if update.ID == uuid.Nil {
 		return nil, status.Errorf(codes.InvalidArgument, "store id is required")
@@ -77,7 +79,7 @@ func (p *postgresImpl) UpdateStore(ctx context.Context, update *entity.Store) (*
 			"is_active":         update.IsActive,
 		}).Error
 		if err != nil {
-			if err == gorm.ErrRecordNotFound {
+			if strings.Contains(err.Error(), "not found") {
 				return status.Errorf(codes.NotFound, "store with ID %s not found", update.ID.String())
 			}
 

@@ -6,7 +6,6 @@ require (
 	connectrpc.com/connect v1.15.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/Mitra-Apps/be-user-service v0.0.0-20240607030514-9c91bad20625
-	github.com/Mitra-Apps/be-utility-service v0.0.2-0.20240612055801-2cc3ffcc67df
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/protobuf v1.5.4
@@ -29,6 +28,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/Mitra-Apps/be-utility-service v0.0.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

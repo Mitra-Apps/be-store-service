@@ -10,8 +10,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/Mitra-Apps/be-user-service v0.0.0-20240607030514-9c91bad20625 h1:3Gtc4OWJOTUWD/rEmA0f6YLH1iXNAG4sRujmsmiRy3A=
 github.com/Mitra-Apps/be-user-service v0.0.0-20240607030514-9c91bad20625/go.mod h1:ZyurdWBFe5OmZYcWVplp/CwlJno8dXGC9SQKSzlAZo8=
-github.com/Mitra-Apps/be-utility-service v0.0.2-0.20240612055801-2cc3ffcc67df h1:dnvlpbsYEVU/9+FKKfs0kpq9F+fxvJQeYCn4loyG/p0=
-github.com/Mitra-Apps/be-utility-service v0.0.2-0.20240612055801-2cc3ffcc67df/go.mod h1:NtbDtBrsE6NaYHFXmy9LKRIoUhOwVReujmVQyaKDA1k=
+github.com/Mitra-Apps/be-utility-service v0.0.1 h1:5iYGelV7YIsCpoxpl4/YjYN8dQVyi9pNO3fla1olPOU=
+github.com/Mitra-Apps/be-utility-service v0.0.1/go.mod h1:tJ0oe6Hj/Gi4OdSaFoR75eBZeQ5Oi8GTyAxtKSfecWM=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
