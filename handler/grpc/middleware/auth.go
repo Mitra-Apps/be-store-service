@@ -3,11 +3,9 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/Mitra-Apps/be-user-service/external/redis"
-	userService "github.com/Mitra-Apps/be-user-service/service"
+	"github.com/Mitra-Apps/be-store-service/external/user_service"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -56,24 +54,35 @@ func Auth(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, hand
 	return handler(ctx, req)
 }
 
-func getTokenValue(headers metadata.MD) string {
-	token := ""
+func getTokenValue(headers metadata.MD) (token string) {
+
 	if values := headers.Get("authorization"); len(values) > 0 {
 		token = strings.TrimPrefix(values[0], "Bearer ")
 		token = strings.TrimSpace(token)
 	}
-	return token
+
+	return
 }
 
-func verifyToken(ctx context.Context, tokenString string) (string, []string, error) {
-	redis := redis.Connection()
-	authClient := userService.NewAuthClient(os.Getenv("JWT_SECRET"), redis)
-	claims, err := authClient.ValidateToken(ctx, tokenString)
+func verifyToken(ctx context.Context, token string) (userId string, roles []string, err error) {
+	userService := user_service.NewAuthClient(ctx)
+	defer userService.Close()
+
+	params := user_service.ValidateUserTokenRequest{
+		Token: token,
+	}
+	response, err := userService.ValidateUserToken(ctx, &params)
+
 	if err != nil {
-		return "", nil, err
+		err = status.Errorf(codes.Unauthenticated, "invalid token")
+
+		return
 	}
 
-	return claims.Subject, claims.Roles, nil
+	userId = response.RegisteredClaims.Subject
+	roles = response.Roles
+
+	return
 }
 
 func GetClaimsFromContext(ctx context.Context) (*JwtClaims, error) {
