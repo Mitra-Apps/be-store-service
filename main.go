@@ -12,6 +12,7 @@ import (
 	imageGrpcRepo "github.com/Mitra-Apps/be-store-service/domain/image/repository/grpc"
 	prodPostgre "github.com/Mitra-Apps/be-store-service/domain/product/repository/postgres"
 	pb "github.com/Mitra-Apps/be-store-service/domain/proto/store"
+	"github.com/Mitra-Apps/be-store-service/external/redis"
 	grpcRoute "github.com/Mitra-Apps/be-store-service/handler/grpc"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/service"
@@ -60,7 +61,8 @@ func main() {
 	repoPostgres := repositoryPostgres.NewPostgres(db)
 	prodPostgreRepo := prodPostgre.NewPostgres(db)
 	repoStorage := storage.New()
-	svc := service.New(repoPostgres, prodPostgreRepo, repoStorage, imageGrpcRepo)
+	redis, err := redis.Connection()
+	svc := service.New(repoPostgres, prodPostgreRepo, repoStorage, imageGrpcRepo, redis)
 	grpcServer := GrpcNewServer(ctx, []grpc.ServerOption{})
 	route := grpcRoute.New(svc)
 	pb.RegisterStoreServiceServer(grpcServer, route)

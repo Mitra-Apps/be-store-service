@@ -13,3 +13,8 @@ const (
 	ERR_PRODUCT_NOT_FOUND          CodeDetail = "ERR_PRODUCT_NOT_FOUND"
 	ERR_PRODUCT_TYPE_NOT_FOUND     CodeDetail = "ERR_PRODUCT_TYPE_NOT_FOUND"
 )
+
+const (
+	GetCategoriesRedisPrefix = "GetProductCategoriesByStoreId:"
+	EmptyString              = ""
+)

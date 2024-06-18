@@ -42,6 +42,7 @@ const (
 	StoreService_GetProductTypes_FullMethodName               = "/StoreService/GetProductTypes"
 	StoreService_UpsertProductType_FullMethodName             = "/StoreService/UpsertProductType"
 	StoreService_UpdateProductType_FullMethodName             = "/StoreService/UpdateProductType"
+	StoreService_GetCategoriesByStoreId_FullMethodName        = "/StoreService/GetCategoriesByStoreId"
 )
 
 // StoreServiceClient is the client API for StoreService service.
@@ -77,6 +78,7 @@ type StoreServiceClient interface {
 	GetProductTypes(ctx context.Context, in *GetProductTypesRequest, opts ...grpc.CallOption) (*GetProductTypesResponse, error)
 	UpsertProductType(ctx context.Context, in *UpsertProductTypeRequest, opts ...grpc.CallOption) (*UpsertProductTypeResponse, error)
 	UpdateProductType(ctx context.Context, in *UpsertProductTypeRequest, opts ...grpc.CallOption) (*UpsertProductTypeResponse, error)
+	GetCategoriesByStoreId(ctx context.Context, in *GetCategoriesByStoreIdRequest, opts ...grpc.CallOption) (*GetCategoriesByStoreIdResponse, error)
 }
 
 type storeServiceClient struct {
@@ -285,6 +287,15 @@ func (c *storeServiceClient) UpdateProductType(ctx context.Context, in *UpsertPr
 	return out, nil
 }
 
+func (c *storeServiceClient) GetCategoriesByStoreId(ctx context.Context, in *GetCategoriesByStoreIdRequest, opts ...grpc.CallOption) (*GetCategoriesByStoreIdResponse, error) {
+	out := new(GetCategoriesByStoreIdResponse)
+	err := c.cc.Invoke(ctx, StoreService_GetCategoriesByStoreId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StoreServiceServer is the server API for StoreService service.
 // All implementations must embed UnimplementedStoreServiceServer
 // for forward compatibility
@@ -318,6 +329,7 @@ type StoreServiceServer interface {
 	GetProductTypes(context.Context, *GetProductTypesRequest) (*GetProductTypesResponse, error)
 	UpsertProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error)
 	UpdateProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error)
+	GetCategoriesByStoreId(context.Context, *GetCategoriesByStoreIdRequest) (*GetCategoriesByStoreIdResponse, error)
 	mustEmbedUnimplementedStoreServiceServer()
 }
 
@@ -390,6 +402,9 @@ func (UnimplementedStoreServiceServer) UpsertProductType(context.Context, *Upser
 }
 func (UnimplementedStoreServiceServer) UpdateProductType(context.Context, *UpsertProductTypeRequest) (*UpsertProductTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProductType not implemented")
+}
+func (UnimplementedStoreServiceServer) GetCategoriesByStoreId(context.Context, *GetCategoriesByStoreIdRequest) (*GetCategoriesByStoreIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategoriesByStoreId not implemented")
 }
 func (UnimplementedStoreServiceServer) mustEmbedUnimplementedStoreServiceServer() {}
 
@@ -800,6 +815,24 @@ func _StoreService_UpdateProductType_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StoreService_GetCategoriesByStoreId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCategoriesByStoreIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StoreServiceServer).GetCategoriesByStoreId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StoreService_GetCategoriesByStoreId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StoreServiceServer).GetCategoriesByStoreId(ctx, req.(*GetCategoriesByStoreIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StoreService_ServiceDesc is the grpc.ServiceDesc for StoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -894,6 +927,10 @@ var StoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateProductType",
 			Handler:    _StoreService_UpdateProductType_Handler,
+		},
+		{
+			MethodName: "GetCategoriesByStoreId",
+			Handler:    _StoreService_GetCategoriesByStoreId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

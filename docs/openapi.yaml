@@ -7,6 +7,35 @@ info:
     description: Store service definition
     version: 0.0.1
 paths:
+    /api/v1/categories/{storeId}/{isIncludeDeactivated}:
+        get:
+            tags:
+                - StoreService
+            operationId: StoreService_GetCategoriesByStoreId
+            parameters:
+                - name: storeId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: isIncludeDeactivated
+                  in: path
+                  required: true
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetCategoriesByStoreIdResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/product-category:
         post:
             tags:
@@ -660,6 +689,27 @@ components:
                     type: string
                 data:
                     type: object
+        GetCategoriesByStoreIdResponse:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/GetCategoriesByStoreIdResponseItem'
+        GetCategoriesByStoreIdResponseItem:
+            type: object
+            properties:
+                category:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Category'
+                uom:
+                    type: array
+                    items:
+                        type: string
         GetProductByIdResponse:
             type: object
             properties:

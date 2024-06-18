@@ -613,3 +613,39 @@ func (g *GrpcRoute) validateUpdateProductTypeRequest(ctx context.Context, req *p
 
 	return &prodType, nil
 }
+
+func (g *GrpcRoute) GetCategoriesByStoreId(ctx context.Context, req *pb.GetCategoriesByStoreIdRequest) (*pb.GetCategoriesByStoreIdResponse, error) {
+
+	storeId, err := uuid.Parse(req.StoreId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Error when parsing store id to uuid")
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Error when getting claims from jwt token")
+	}
+
+	args := types.GetCategoriesByStoreIdInput{
+		StoreID:              storeId,
+		IsIncludeDeactivated: req.IsIncludeDeactivated,
+		UserID:               claims.UserID,
+	}
+
+	categories, err := g.service.GetCategoriesByStoreId(ctx, args)
+
+	if err != nil {
+		return nil, err
+	}
+	categoryItems := []*pb.Category{}
+	for _, category := range categories.Categories {
+		categoryItems = append(categoryItems, category.ToProto())
+	}
+	return &pb.GetCategoriesByStoreIdResponse{
+		Code:    int32(codes.OK),
+		Message: codes.OK.String(),
+		Data: &pb.GetCategoriesByStoreIdResponseItem{
+			Category: categoryItems,
+		},
+	}, nil
+}
