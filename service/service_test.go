@@ -11,15 +11,13 @@ import (
 	"testing"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
-	imageRepository "github.com/Mitra-Apps/be-store-service/domain/image/repository"
 	imageRepoMock "github.com/Mitra-Apps/be-store-service/domain/image/repository/mock"
 	prodEntity "github.com/Mitra-Apps/be-store-service/domain/product/entity"
-	prodRepository "github.com/Mitra-Apps/be-store-service/domain/product/repository"
 	prodRepoMock "github.com/Mitra-Apps/be-store-service/domain/product/repository/mock"
 	errPb "github.com/Mitra-Apps/be-store-service/domain/proto"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
-	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
 	storeRepoMock "github.com/Mitra-Apps/be-store-service/domain/store/repository/mock"
+	redisMock "github.com/Mitra-Apps/be-store-service/external/redis/mock"
 	"github.com/Mitra-Apps/be-store-service/types"
 	util "github.com/Mitra-Apps/be-utility-service/service"
 	"github.com/google/uuid"
@@ -49,7 +47,7 @@ func TestOpenCloseStore(t *testing.T) {
 
 	ctx := context.Background()
 
-	service := New(mockStoreRepo, nil, nil, nil)
+	service := New(mockStoreRepo, nil, nil, nil, nil)
 
 	userIdUuid, _ := uuid.Parse(userID)
 	otherUserIdUuid, _ := uuid.Parse(otherUserID)
@@ -160,7 +158,7 @@ func TestCreateStore(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	storeRepository := storeRepoMock.NewMockStoreServiceRepository(ctrl)
 	storage := storeRepoMock.NewMockStorage(ctrl)
-	service := New(storeRepository, nil, storage, nil)
+	service := New(storeRepository, nil, storage, nil, nil)
 
 	ctx := context.Background()
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -307,7 +305,7 @@ func TestUpsertProducts(t *testing.T) {
 	mockImageRepo := imageRepoMock.NewMockImageRepository(ctrl)
 	ctx := context.Background()
 
-	service := New(mockStoreRepo, mockProdRepo, nil, mockImageRepo)
+	service := New(mockStoreRepo, mockProdRepo, nil, mockImageRepo, nil)
 
 	storeIdUuid, _ := uuid.Parse(storeID)
 	userIdUuid, _ := uuid.Parse(userID)
@@ -1423,7 +1421,7 @@ func TestUpdateStore(t *testing.T) {
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
 	mockImageRepo := imageRepoMock.NewMockImageRepository(ctrl)
 	mockStorage := storeRepoMock.NewMockStorage(ctrl)
-	service := New(mockStoreRepo, nil, mockStorage, mockImageRepo)
+	service := New(mockStoreRepo, nil, mockStorage, mockImageRepo, nil)
 
 	ctx := context.Background()
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -1575,7 +1573,7 @@ func TestUpdateStore(t *testing.T) {
 func TestListStores(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
-	service := New(mockStoreRepo, nil, nil, nil)
+	service := New(mockStoreRepo, nil, nil, nil, nil)
 
 	ctx := context.Background()
 	page := 1
@@ -1614,7 +1612,7 @@ func TestListStores(t *testing.T) {
 func TestDeleteStore(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
-	service := New(mockStoreRepo, nil, nil, nil)
+	service := New(mockStoreRepo, nil, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -1646,7 +1644,7 @@ func TestDeleteStore(t *testing.T) {
 func TestUpsertProductCategory(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	service := New(nil, mockProdRepo, nil, nil)
+	service := New(nil, mockProdRepo, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -1726,7 +1724,7 @@ func TestUpsertProductType(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 
-	service := New(nil, mockProdRepo, nil, nil)
+	service := New(nil, mockProdRepo, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -1948,7 +1946,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
 
-	service := New(mockStoreRepo, mockProdRepo, nil, nil)
+	service := New(mockStoreRepo, mockProdRepo, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -2110,7 +2108,7 @@ func TestGetProductsByStoreId(t *testing.T) {
 func TestGetProductCategories(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	service := New(nil, mockProdRepo, nil, nil)
+	service := New(nil, mockProdRepo, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -2174,7 +2172,7 @@ func TestGetProductTypes(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
 
-	service := New(nil, mockProdRepo, nil, nil)
+	service := New(nil, mockProdRepo, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -2263,7 +2261,7 @@ func TestGetProductTypes(t *testing.T) {
 func TestGetProductById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	service := New(nil, mockProdRepo, nil, nil)
+	service := New(nil, mockProdRepo, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -2327,7 +2325,7 @@ func TestDeleteProductById(t *testing.T) {
 	errMsg := "ERROR"
 	err := errors.New(errMsg)
 
-	productService := New(nil, mockProdRepo, nil, mockImageRepo)
+	productService := New(nil, mockProdRepo, nil, mockImageRepo, nil)
 
 	productIDUuid := uuid.MustParse(productID)
 	userIDUuid := uuid.MustParse(userID)
@@ -2483,7 +2481,7 @@ func TestDeleteProductById(t *testing.T) {
 func TestGetStoreByUserID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
-	service := New(mockStoreRepo, nil, nil, nil)
+	service := New(mockStoreRepo, nil, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -2518,29 +2516,6 @@ func TestGetStoreByUserID(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, errMsg, err)
 	})
-}
-
-func TestNew(t *testing.T) {
-	type args struct {
-		storeRepository repository.StoreServiceRepository
-		prodRepository  prodRepository.ProductRepository
-		storage         repository.Storage
-		imageRepo       imageRepository.ImageRepository
-	}
-	tests := []struct {
-		name string
-		args args
-		want Service
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.storeRepository, tt.args.prodRepository, tt.args.storage, tt.args.imageRepo); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
 
 func Test_service_GetStore(t *testing.T) {
@@ -2734,7 +2709,7 @@ func Test_service_UploadImageToStorage(t *testing.T) {
 func Test_service_UpdateProductCategory(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
-	svc := New(nil, mockProdRepo, nil, nil)
+	svc := New(nil, mockProdRepo, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -2995,7 +2970,7 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockProductRepo := prodRepoMock.NewMockProductRepository(ctrl)
 	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
-	svc := New(mockStoreRepo, mockProductRepo, nil, nil)
+	svc := New(mockStoreRepo, mockProductRepo, nil, nil, nil)
 
 	ctx := context.Background()
 
@@ -3124,4 +3099,153 @@ func Test_service_GetProductCategoriesByStoreId(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_service_GetCategoriesByStoreId(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockStoreRepo := storeRepoMock.NewMockStoreServiceRepository(ctrl)
+	mockProdRepo := prodRepoMock.NewMockProductRepository(ctrl)
+	redis := redisMock.NewMockRedisInterface(ctrl)
+	service := New(mockStoreRepo, mockProdRepo, nil, nil, redis)
+
+	ctx := context.Background()
+
+	storeIdUuid, _ := uuid.Parse(storeID)
+	userIdUuid, _ := uuid.Parse(userID)
+
+	input := types.GetCategoriesByStoreIdInput{
+		StoreID:              storeIdUuid,
+		IsIncludeDeactivated: false,
+		UserID:               userIdUuid,
+	}
+	store := entity.Store{
+		StoreName: "Toko 1",
+		UserID:    userIdUuid,
+	}
+	getCategoriesByStoreIdRepoOutput := types.GetCategoriesByStoreIdRepoOutput{
+		Categories: []*prodEntity.Category{{Name: "cat 1"}},
+	}
+
+	redisKey := fmt.Sprintf("%s%s", GetCategoriesRedisPrefix, input.StoreID)
+
+	redisValue := "[{\"key\":\"value\"}]"
+
+	t.Run("Should return success when redis key is exists", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(&store, nil)
+
+		redis.EXPECT().
+			GetStringKey(gomock.Any(), redisKey).
+			Times(1).
+			Return(redisValue, nil)
+
+		_, err := service.GetCategoriesByStoreId(ctx, input)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should successfully set redis key", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(&store, nil)
+
+		redis.EXPECT().
+			GetStringKey(gomock.Any(), redisKey).
+			Times(1).
+			Return("", fmt.Errorf("nil"))
+
+		mockProdRepo.EXPECT().
+			GetCategoriesByStoreIdRepo(ctx, gomock.Any()).
+			Times(1).
+			Return(getCategoriesByStoreIdRepoOutput, nil)
+
+		redis.EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(2).
+			Return(nil)
+
+		_, err := service.GetCategoriesByStoreId(ctx, input)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should return error when redis return error other than nil related key", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(&store, nil)
+
+		redis.EXPECT().
+			GetStringKey(gomock.Any(), redisKey).
+			Times(1).
+			Return("", fmt.Errorf("error"))
+
+		_, err := service.GetCategoriesByStoreId(ctx, input)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting categories : error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error when GetCategoriesByStoreIdRepo return error", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(&store, nil)
+
+		redis.EXPECT().
+			GetStringKey(gomock.Any(), redisKey).
+			Times(1).
+			Return("", fmt.Errorf("nil"))
+
+		mockProdRepo.EXPECT().
+			GetCategoriesByStoreIdRepo(ctx, gomock.Any()).
+			Times(1).
+			Return(types.GetCategoriesByStoreIdRepoOutput{}, fmt.Errorf("error"))
+
+		redis.EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(1).
+			Return(nil)
+
+		_, err := service.GetCategoriesByStoreId(ctx, input)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting categories : error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("Should return error when failed to save to redis", func(t *testing.T) {
+		mockStoreRepo.EXPECT().
+			GetStore(ctx, storeID).
+			Times(1).
+			Return(&store, nil)
+
+		redis.EXPECT().
+			GetStringKey(gomock.Any(), redisKey).
+			Times(1).
+			Return("", fmt.Errorf("nil"))
+
+		mockProdRepo.EXPECT().
+			GetCategoriesByStoreIdRepo(ctx, gomock.Any()).
+			Times(1).
+			Return(getCategoriesByStoreIdRepoOutput, nil)
+
+		redis.EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Times(2).
+			Return(fmt.Errorf("error"))
+
+		_, err := service.GetCategoriesByStoreId(ctx, input)
+
+		errMsg := status.Errorf(codes.Internal, "Error when getting categories : error")
+
+		assert.Error(t, err)
+		assert.Equal(t, errMsg, err)
+	})
 }

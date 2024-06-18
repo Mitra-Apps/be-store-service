@@ -98,6 +98,9 @@ const (
 	// StoreServiceUpdateProductTypeProcedure is the fully-qualified name of the StoreService's
 	// UpdateProductType RPC.
 	StoreServiceUpdateProductTypeProcedure = "/StoreService/UpdateProductType"
+	// StoreServiceGetCategoriesByStoreIdProcedure is the fully-qualified name of the StoreService's
+	// GetCategoriesByStoreId RPC.
+	StoreServiceGetCategoriesByStoreIdProcedure = "/StoreService/GetCategoriesByStoreId"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -125,6 +128,7 @@ var (
 	storeServiceGetProductTypesMethodDescriptor               = storeServiceServiceDescriptor.Methods().ByName("GetProductTypes")
 	storeServiceUpsertProductTypeMethodDescriptor             = storeServiceServiceDescriptor.Methods().ByName("UpsertProductType")
 	storeServiceUpdateProductTypeMethodDescriptor             = storeServiceServiceDescriptor.Methods().ByName("UpdateProductType")
+	storeServiceGetCategoriesByStoreIdMethodDescriptor        = storeServiceServiceDescriptor.Methods().ByName("GetCategoriesByStoreId")
 )
 
 // StoreServiceClient is a client for the StoreService service.
@@ -158,6 +162,7 @@ type StoreServiceClient interface {
 	GetProductTypes(context.Context, *connect.Request[store.GetProductTypesRequest]) (*connect.Response[store.GetProductTypesResponse], error)
 	UpsertProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
 	UpdateProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
+	GetCategoriesByStoreId(context.Context, *connect.Request[store.GetCategoriesByStoreIdRequest]) (*connect.Response[store.GetCategoriesByStoreIdResponse], error)
 }
 
 // NewStoreServiceClient constructs a client for the StoreService service. By default, it uses the
@@ -302,6 +307,12 @@ func NewStoreServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(storeServiceUpdateProductTypeMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		getCategoriesByStoreId: connect.NewClient[store.GetCategoriesByStoreIdRequest, store.GetCategoriesByStoreIdResponse](
+			httpClient,
+			baseURL+StoreServiceGetCategoriesByStoreIdProcedure,
+			connect.WithSchema(storeServiceGetCategoriesByStoreIdMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -329,6 +340,7 @@ type storeServiceClient struct {
 	getProductTypes               *connect.Client[store.GetProductTypesRequest, store.GetProductTypesResponse]
 	upsertProductType             *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
 	updateProductType             *connect.Client[store.UpsertProductTypeRequest, store.UpsertProductTypeResponse]
+	getCategoriesByStoreId        *connect.Client[store.GetCategoriesByStoreIdRequest, store.GetCategoriesByStoreIdResponse]
 }
 
 // CreateStore calls StoreService.CreateStore.
@@ -441,6 +453,11 @@ func (c *storeServiceClient) UpdateProductType(ctx context.Context, req *connect
 	return c.updateProductType.CallUnary(ctx, req)
 }
 
+// GetCategoriesByStoreId calls StoreService.GetCategoriesByStoreId.
+func (c *storeServiceClient) GetCategoriesByStoreId(ctx context.Context, req *connect.Request[store.GetCategoriesByStoreIdRequest]) (*connect.Response[store.GetCategoriesByStoreIdResponse], error) {
+	return c.getCategoriesByStoreId.CallUnary(ctx, req)
+}
+
 // StoreServiceHandler is an implementation of the StoreService service.
 type StoreServiceHandler interface {
 	// Create a new store
@@ -472,6 +489,7 @@ type StoreServiceHandler interface {
 	GetProductTypes(context.Context, *connect.Request[store.GetProductTypesRequest]) (*connect.Response[store.GetProductTypesResponse], error)
 	UpsertProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
 	UpdateProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error)
+	GetCategoriesByStoreId(context.Context, *connect.Request[store.GetCategoriesByStoreIdRequest]) (*connect.Response[store.GetCategoriesByStoreIdResponse], error)
 }
 
 // NewStoreServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -612,6 +630,12 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(storeServiceUpdateProductTypeMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	storeServiceGetCategoriesByStoreIdHandler := connect.NewUnaryHandler(
+		StoreServiceGetCategoriesByStoreIdProcedure,
+		svc.GetCategoriesByStoreId,
+		connect.WithSchema(storeServiceGetCategoriesByStoreIdMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/StoreService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case StoreServiceCreateStoreProcedure:
@@ -658,6 +682,8 @@ func NewStoreServiceHandler(svc StoreServiceHandler, opts ...connect.HandlerOpti
 			storeServiceUpsertProductTypeHandler.ServeHTTP(w, r)
 		case StoreServiceUpdateProductTypeProcedure:
 			storeServiceUpdateProductTypeHandler.ServeHTTP(w, r)
+		case StoreServiceGetCategoriesByStoreIdProcedure:
+			storeServiceGetCategoriesByStoreIdHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -753,4 +779,8 @@ func (UnimplementedStoreServiceHandler) UpsertProductType(context.Context, *conn
 
 func (UnimplementedStoreServiceHandler) UpdateProductType(context.Context, *connect.Request[store.UpsertProductTypeRequest]) (*connect.Response[store.UpsertProductTypeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.UpdateProductType is not implemented"))
+}
+
+func (UnimplementedStoreServiceHandler) GetCategoriesByStoreId(context.Context, *connect.Request[store.GetCategoriesByStoreIdRequest]) (*connect.Response[store.GetCategoriesByStoreIdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("StoreService.GetCategoriesByStoreId is not implemented"))
 }

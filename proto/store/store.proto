@@ -275,6 +275,12 @@ service StoreService {
             body: "productType"
         };
     }
+
+    rpc GetCategoriesByStoreId(GetCategoriesByStoreIdRequest) returns (GetCategoriesByStoreIdResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/categories/{store_id}/{is_include_deactivated}"
+        };
+    }
 }
 
 // Request message to create a store
@@ -477,4 +483,20 @@ message GetProductTypesResponse {
     int32 code = 1;
     string message = 2;
     repeated ProductType data = 3;
+}
+
+message GetCategoriesByStoreIdRequest {
+    bool is_include_deactivated = 1;
+    string store_id = 2;
+}
+
+message GetCategoriesByStoreIdResponse {
+    int32 code = 1;
+    string message = 2;
+    GetCategoriesByStoreIdResponseItem data = 3;
+}
+
+message GetCategoriesByStoreIdResponseItem {
+    repeated Category category = 3;
+    repeated string uom = 4;
 }

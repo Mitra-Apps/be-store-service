@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
+	"github.com/Mitra-Apps/be-store-service/domain/product/entity"
 	"github.com/google/uuid"
 )
 
@@ -33,6 +34,34 @@ type GetProductCategoriesByStoreIdParams struct {
 	IsIncludeDeactivated bool
 	StoreID              uuid.UUID
 	UserID               uuid.UUID
+}
+
+type GetCategoriesByStoreIdInput struct {
+	IsIncludeDeactivated bool
+	StoreID              uuid.UUID
+	UserID               uuid.UUID
+}
+
+type GetCategoriesByStoreIdOutput struct {
+	Categories []*entity.Category
+}
+
+type GetCategoriesByStoreIdRepoInput struct {
+	IsIncludeDeactivated bool
+	StoreID              uuid.UUID
+}
+
+type GetCategoriesByStoreIdRepoOutput struct {
+	Categories []*entity.Category
+}
+
+type SaveCategoriesByStoreIdToRedisInput struct {
+	IsIncludeDeactivated bool
+	StoreID              uuid.UUID
+}
+
+type SaveCategoriesByStoreIdToRedisOutput struct {
+	Categories []*entity.Category
 }
 
 type JwtCustomClaim struct {

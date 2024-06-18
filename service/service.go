@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/Mitra-Apps/be-store-service/domain/base_model"
 	imageRepository "github.com/Mitra-Apps/be-store-service/domain/image/repository"
@@ -13,6 +15,7 @@ import (
 	errPb "github.com/Mitra-Apps/be-store-service/domain/proto"
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
+	"github.com/Mitra-Apps/be-store-service/external/redis"
 	"github.com/Mitra-Apps/be-store-service/handler/grpc/middleware"
 	"github.com/Mitra-Apps/be-store-service/lib"
 	"github.com/Mitra-Apps/be-store-service/types"
@@ -42,6 +45,8 @@ type Service interface {
 	GetProductCategoriesByStoreId(ctx context.Context, getProductCategoriesByStoreIdParams types.GetProductCategoriesByStoreIdParams) (cat []*prodEntity.ProductCategory, err error)
 	GetProductTypes(ctx context.Context, productCategoryID int64, isIncludeDeactivated bool) (types []*prodEntity.ProductType, err error)
 	GetStoreByUserID(ctx context.Context, userID uuid.UUID) (store *entity.Store, err error)
+	GetCategoriesByStoreId(ctx context.Context, input types.GetCategoriesByStoreIdInput) (output types.GetCategoriesByStoreIdOutput, err error)
+	SaveCategoriesByStoreIdToRedis(ctx context.Context, input types.SaveCategoriesByStoreIdToRedisInput) (output types.SaveCategoriesByStoreIdToRedisOutput, err error)
 }
 
 type service struct {
@@ -49,6 +54,7 @@ type service struct {
 	productRepository prodRepository.ProductRepository
 	storage           repository.Storage
 	imageRepository   imageRepository.ImageRepository
+	redis             redis.RedisInterface
 }
 
 func New(
@@ -56,12 +62,14 @@ func New(
 	prodRepository prodRepository.ProductRepository,
 	storage repository.Storage,
 	imageRepo imageRepository.ImageRepository,
+	redis redis.RedisInterface,
 ) *service {
 	return &service{
 		storeRepository:   storeRepository,
 		productRepository: prodRepository,
 		storage:           storage,
 		imageRepository:   imageRepo,
+		redis:             redis,
 	}
 }
 
@@ -670,4 +678,74 @@ func (s *service) checkPermissionStoreAndUser(ctx context.Context, storeId, user
 	}
 
 	return
+}
+
+func (s *service) GetCategoriesByStoreId(ctx context.Context, input types.GetCategoriesByStoreIdInput) (output types.GetCategoriesByStoreIdOutput, err error) {
+
+	err = s.checkPermissionStoreAndUser(ctx, input.StoreID, input.UserID)
+	if err != nil {
+		return
+	}
+
+	//set redis key
+	redisKey := fmt.Sprintf("%s%s", GetCategoriesRedisPrefix, input.StoreID)
+
+	//get data from redis
+	categoriesRedis, err := s.redis.GetStringKey(ctx, redisKey)
+	if err != nil {
+		if strings.Contains(err.Error(), "nil") {
+			s.redis.Set(ctx, redisKey, EmptyString, time.Hour*24)
+		} else {
+			return output, status.Errorf(codes.Internal, "Error when getting categories : "+err.Error())
+		}
+	}
+
+	//if data from redis is empty
+	if categoriesRedis == EmptyString {
+		saveCategoriesByStoreIdToRedisInput := types.SaveCategoriesByStoreIdToRedisInput{
+			IsIncludeDeactivated: input.IsIncludeDeactivated,
+			StoreID:              input.StoreID,
+		}
+		//get data from tables, save data to redis
+		saveCategoriesByStoreIdToRedisOutput, err := s.SaveCategoriesByStoreIdToRedis(ctx, saveCategoriesByStoreIdToRedisInput)
+		if err != nil {
+			return output, status.Errorf(codes.Internal, "Error when getting categories : "+err.Error())
+		}
+		output.Categories = saveCategoriesByStoreIdToRedisOutput.Categories
+	} else {
+		//unmarshal redis
+		var unmarshaledCategories []*prodEntity.Category
+		err = json.Unmarshal([]byte(categoriesRedis), &unmarshaledCategories)
+		if err != nil {
+			return output, status.Errorf(codes.Internal, "Error when getting categories : "+err.Error())
+		}
+		output.Categories = unmarshaledCategories
+	}
+
+	return output, nil
+}
+
+func (s *service) SaveCategoriesByStoreIdToRedis(ctx context.Context, input types.SaveCategoriesByStoreIdToRedisInput) (output types.SaveCategoriesByStoreIdToRedisOutput, err error) {
+	//set redis key
+	redisKey := fmt.Sprintf("%s%s", GetCategoriesRedisPrefix, input.StoreID)
+
+	//get data from tables
+	getCategoriesByStoreIdRepoOutput, err := s.productRepository.GetCategoriesByStoreIdRepo(ctx, types.GetCategoriesByStoreIdRepoInput(input))
+	if err != nil {
+		return output, err
+	}
+
+	catJson, err := json.Marshal(getCategoriesByStoreIdRepoOutput.Categories)
+	if err != nil {
+		return output, err
+	}
+
+	//save to redis
+	err = s.redis.Set(ctx, redisKey, catJson, time.Hour*24)
+	if err != nil {
+		return output, err
+	}
+
+	output.Categories = getCategoriesByStoreIdRepoOutput.Categories
+	return output, nil
 }

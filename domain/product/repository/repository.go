@@ -37,4 +37,5 @@ type ProductRepository interface {
 	DeleteProductImages(ctx context.Context, productImages []*entity.ProductImage) error
 	DeleteProductById(ctx context.Context, id uuid.UUID) error
 	GetProductTypeById(ctx context.Context, id int64) (*entity.ProductType, error)
+	GetCategoriesByStoreIdRepo(ctx context.Context, input types.GetCategoriesByStoreIdRepoInput) (output types.GetCategoriesByStoreIdRepoOutput, err error)
 }
