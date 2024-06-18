@@ -13,6 +13,7 @@ services:
       - DB_PASSWORD=123456
       - DB_NAME=store-service
       - GRPC_UTILITY_HOST=stag-utility-service:7300
+      - GRPC_USER_HOST=stag-user-service:7100
       - STORAGE_ENDPOINT=172.27.0.3:9000
       - STORAGE_PUBLIC_URL=http://172.19.14.96:9100
       - STORAGE_ACCESS_KEY=18qnD4xSmhYZPXbTOICR

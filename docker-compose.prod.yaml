@@ -13,6 +13,7 @@ services:
       - DB_PASSWORD=123456
       - DB_NAME=store-service
       - GRPC_UTILITY_HOST=stag-utility-service:9300
+      - GRPC_USER_HOST=stag-user-service:9100
       - JWT_SECRET=secret
       - REDIS_SERVER=redis_prod:6380
       - REDIS_PASSWORD=

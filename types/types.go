@@ -34,3 +34,12 @@ type GetProductCategoriesByStoreIdParams struct {
 	StoreID              uuid.UUID
 	UserID               uuid.UUID
 }
+
+type JwtCustomClaim struct {
+	Roles            []string         `json:"roles"`
+	RegisteredClaims RegisteredClaims `json:"registered_claims"`
+}
+
+type RegisteredClaims struct {
+	Subject string `json:"sub"`
+}
