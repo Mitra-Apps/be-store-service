@@ -694,7 +694,7 @@ func (s *service) GetCategoriesByStoreId(ctx context.Context, input types.GetCat
 	categoriesRedis, err := s.redis.GetStringKey(ctx, redisKey)
 	if err != nil {
 		if strings.Contains(err.Error(), "nil") {
-			s.redis.Set(ctx, redisKey, EmptyString, time.Minute*10)
+			s.redis.Set(ctx, redisKey, EmptyString, time.Hour*24)
 		} else {
 			return output, status.Errorf(codes.Internal, "Error when getting categories : "+err.Error())
 		}
@@ -741,7 +741,7 @@ func (s *service) SaveCategoriesByStoreIdToRedis(ctx context.Context, input type
 	}
 
 	//save to redis
-	err = s.redis.Set(ctx, redisKey, catJson, time.Minute*10)
+	err = s.redis.Set(ctx, redisKey, catJson, time.Hour*24)
 	if err != nil {
 		return output, err
 	}
