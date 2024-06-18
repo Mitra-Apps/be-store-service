@@ -63,3 +63,12 @@ type SaveCategoriesByStoreIdToRedisInput struct {
 type SaveCategoriesByStoreIdToRedisOutput struct {
 	Categories []*entity.Category
 }
+
+type JwtCustomClaim struct {
+	Roles            []string         `json:"roles"`
+	RegisteredClaims RegisteredClaims `json:"registered_claims"`
+}
+
+type RegisteredClaims struct {
+	Subject string `json:"sub"`
+}
