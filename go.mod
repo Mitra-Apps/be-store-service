@@ -4,7 +4,6 @@ go 1.21.3
 
 require (
 	connectrpc.com/connect v1.15.0
-	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/Mitra-Apps/be-user-service v0.0.0-20240614060715-0f3a6ff25b54
 	github.com/Mitra-Apps/be-utility-service v0.0.2-0.20240612055801-2cc3ffcc67df
 	github.com/envoyproxy/protoc-gen-validate v1.0.4

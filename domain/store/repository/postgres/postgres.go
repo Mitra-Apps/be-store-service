@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Mitra-Apps/be-store-service/domain/store/entity"
 	"github.com/Mitra-Apps/be-store-service/domain/store/repository"
@@ -13,15 +14,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type postgres struct {
+type postgresImpl struct {
 	db *gorm.DB
 }
 
 func NewPostgres(db *gorm.DB) repository.StoreServiceRepository {
-	return &postgres{db}
+	return &postgresImpl{db}
 }
 
-func (p *postgres) CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error) {
+func (p *postgresImpl) CreateStore(ctx context.Context, store *entity.Store) (*entity.Store, error) {
 	tx := p.db.WithContext(ctx).Begin()
 
 	if err := tx.Save(store).Error; err != nil {
@@ -36,7 +37,7 @@ func (p *postgres) CreateStore(ctx context.Context, store *entity.Store) (*entit
 	return store, nil
 }
 
-func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store, error) {
+func (p *postgresImpl) GetStore(ctx context.Context, storeID string) (*entity.Store, error) {
 	var store entity.Store
 	err := p.db.WithContext(ctx).
 		Model(&store).
@@ -54,7 +55,8 @@ func (p *postgres) GetStore(ctx context.Context, storeID string) (*entity.Store,
 	return &store, nil
 }
 
-func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*entity.Store, error) {
+// TODO: need to check the logic again
+func (p *postgresImpl) UpdateStore(ctx context.Context, update *entity.Store) (*entity.Store, error) {
 	if update.ID == uuid.Nil {
 		return nil, status.Errorf(codes.InvalidArgument, "store id is required")
 	}
@@ -77,7 +79,7 @@ func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*enti
 			"is_active":         update.IsActive,
 		}).Error
 		if err != nil {
-			if err == gorm.ErrRecordNotFound {
+			if strings.Contains(err.Error(), "not found") {
 				return status.Errorf(codes.NotFound, "store with ID %s not found", update.ID.String())
 			}
 
@@ -102,7 +104,7 @@ func (p *postgres) UpdateStore(ctx context.Context, update *entity.Store) (*enti
 }
 
 // updateStoreHours is a helper function to update the store hours.
-func (p *postgres) updateStoreHours(ctx context.Context, tx *gorm.DB, storeID uuid.UUID, hours []*entity.StoreHour) error {
+func (p *postgresImpl) updateStoreHours(ctx context.Context, tx *gorm.DB, storeID uuid.UUID, hours []*entity.StoreHour) error {
 	if err := tx.Unscoped().Delete(hours, "store_id = ?", storeID.String()).Error; err != nil {
 		return err
 	}
@@ -115,7 +117,7 @@ func (p *postgres) updateStoreHours(ctx context.Context, tx *gorm.DB, storeID uu
 }
 
 // updateStoreImages is a helper function to update the store images.
-func (p *postgres) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID uuid.UUID, images []*entity.StoreImage) error {
+func (p *postgresImpl) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID uuid.UUID, images []*entity.StoreImage) error {
 	if err := tx.Unscoped().Delete(images, "store_id = ?", storeID.String()).Error; err != nil {
 		return err
 	}
@@ -127,7 +129,7 @@ func (p *postgres) updateStoreImages(ctx context.Context, tx *gorm.DB, storeID u
 	return nil
 }
 
-func (p *postgres) DeleteStores(ctx context.Context, storeIds []string) error {
+func (p *postgresImpl) DeleteStores(ctx context.Context, storeIds []string) error {
 	return p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Exec("DELETE FROM store_hours WHERE store_id IN (?)", storeIds).Error; err != nil {
 			return err
@@ -145,7 +147,7 @@ func (p *postgres) DeleteStores(ctx context.Context, storeIds []string) error {
 	})
 }
 
-func (p *postgres) ListStores(ctx context.Context, page, pageSize int) ([]*entity.Store, error) {
+func (p *postgresImpl) ListStores(ctx context.Context, page, pageSize int) ([]*entity.Store, error) {
 	var stores []*entity.Store
 	offset := (page - 1) * pageSize
 	if err := p.db.WithContext(ctx).Preload("Hours").Preload("Images").Offset(offset).Limit(pageSize).Find(&stores).Error; err != nil {
@@ -154,7 +156,7 @@ func (p *postgres) ListStores(ctx context.Context, page, pageSize int) ([]*entit
 	return stores, nil
 }
 
-func (p *postgres) OpenCloseStore(ctx context.Context, storeId uuid.UUID, isActive bool) error {
+func (p *postgresImpl) OpenCloseStore(ctx context.Context, storeId uuid.UUID, isActive bool) error {
 	tx := p.db.WithContext(ctx).Model(entity.Store{}).Where("id = ?", storeId).
 		UpdateColumn("is_active", isActive)
 	if tx.Error != nil {
@@ -164,7 +166,7 @@ func (p *postgres) OpenCloseStore(ctx context.Context, storeId uuid.UUID, isActi
 }
 
 // GetStoreByUserID retrieves a store by its user ID.
-func (p *postgres) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (*entity.Store, error) {
+func (p *postgresImpl) GetStoreByUserID(ctx context.Context, userID uuid.UUID) (*entity.Store, error) {
 	var store entity.Store
 	if err := p.db.WithContext(ctx).
 		Preload("Hours").
